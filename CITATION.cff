@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "Please cite FlashOS VoiceBoot and retain the original author credit."
+type: software
+title: FlashOS VoiceBoot
+authors:
+  - family-names: Zotov
+    given-names: Andrey Anatolyevich
+version: 2026.09.09.3
+date-released: 2026-09-09
+url: "https://github.com/andreykadelite/flashos-voiceboot"
+license: MIT
+abstract: "Original FlashOS software: a talking multiboot USB environment and Windows installer. Bundled third-party software and voices have separate licenses."

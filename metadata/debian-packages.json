@@ -1,0 +1,2864 @@
+[
+  {
+    "binary": "adduser",
+    "binary_version": "3.152",
+    "source": "adduser",
+    "source_version": "3.152"
+  },
+  {
+    "binary": "alsa-firmware-loaders",
+    "binary_version": "1.2.14-1",
+    "source": "alsa-tools",
+    "source_version": "1.2.14-1"
+  },
+  {
+    "binary": "alsa-ucm-conf",
+    "binary_version": "1.2.16.1-1~bpo13+1",
+    "source": "alsa-ucm-conf",
+    "source_version": "1.2.16.1-1~bpo13+1"
+  },
+  {
+    "binary": "alsa-utils",
+    "binary_version": "1.2.14-1",
+    "source": "alsa-utils",
+    "source_version": "1.2.14-1"
+  },
+  {
+    "binary": "apt",
+    "binary_version": "3.0.3",
+    "source": "apt",
+    "source_version": "3.0.3"
+  },
+  {
+    "binary": "base-files",
+    "binary_version": "13.8+deb13u6",
+    "source": "base-files",
+    "source_version": "13.8+deb13u6"
+  },
+  {
+    "binary": "base-passwd",
+    "binary_version": "3.6.7",
+    "source": "base-passwd",
+    "source_version": "3.6.7"
+  },
+  {
+    "binary": "bash",
+    "binary_version": "5.2.37-2+b9",
+    "source": "bash",
+    "source_version": "5.2.37-2"
+  },
+  {
+    "binary": "bind9-dnsutils",
+    "binary_version": "1:9.20.26-1~deb13u1",
+    "source": "bind9",
+    "source_version": "1:9.20.26-1~deb13u1"
+  },
+  {
+    "binary": "bind9-host",
+    "binary_version": "1:9.20.26-1~deb13u1",
+    "source": "bind9",
+    "source_version": "1:9.20.26-1~deb13u1"
+  },
+  {
+    "binary": "bind9-libs:amd64",
+    "binary_version": "1:9.20.26-1~deb13u1",
+    "source": "bind9",
+    "source_version": "1:9.20.26-1~deb13u1"
+  },
+  {
+    "binary": "blt",
+    "binary_version": "2.5.3+dfsg-8",
+    "source": "blt",
+    "source_version": "2.5.3+dfsg-8"
+  },
+  {
+    "binary": "bsdutils",
+    "binary_version": "1:2.41.5-0+deb13u1",
+    "source": "util-linux",
+    "source_version": "2.41.5-0+deb13u1"
+  },
+  {
+    "binary": "btrfs-progs",
+    "binary_version": "6.14-1",
+    "source": "btrfs-progs",
+    "source_version": "6.14-1"
+  },
+  {
+    "binary": "busybox",
+    "binary_version": "1:1.37.0-6+b8",
+    "source": "busybox",
+    "source_version": "1:1.37.0-6"
+  },
+  {
+    "binary": "ca-certificates",
+    "binary_version": "20250419",
+    "source": "ca-certificates",
+    "source_version": "20250419"
+  },
+  {
+    "binary": "console-setup-linux",
+    "binary_version": "1.242~deb13u1",
+    "source": "console-setup",
+    "source_version": "1.242~deb13u1"
+  },
+  {
+    "binary": "coreutils",
+    "binary_version": "9.7-3",
+    "source": "coreutils",
+    "source_version": "9.7-3"
+  },
+  {
+    "binary": "cpio",
+    "binary_version": "2.15+dfsg-2",
+    "source": "cpio",
+    "source_version": "2.15+dfsg-2"
+  },
+  {
+    "binary": "cpp",
+    "binary_version": "4:14.2.0-1",
+    "source": "gcc-defaults",
+    "source_version": "1.220"
+  },
+  {
+    "binary": "cpp-14",
+    "binary_version": "14.2.0-19",
+    "source": "gcc-14",
+    "source_version": "14.2.0-19"
+  },
+  {
+    "binary": "cpp-14-x86-64-linux-gnu",
+    "binary_version": "14.2.0-19",
+    "source": "gcc-14",
+    "source_version": "14.2.0-19"
+  },
+  {
+    "binary": "cpp-x86-64-linux-gnu",
+    "binary_version": "4:14.2.0-1",
+    "source": "gcc-defaults",
+    "source_version": "1.220"
+  },
+  {
+    "binary": "curl",
+    "binary_version": "8.14.1-2+deb13u4",
+    "source": "curl",
+    "source_version": "8.14.1-2+deb13u4"
+  },
+  {
+    "binary": "dash",
+    "binary_version": "0.5.12-12",
+    "source": "dash",
+    "source_version": "0.5.12-12"
+  },
+  {
+    "binary": "dbus",
+    "binary_version": "1.16.2-2",
+    "source": "dbus",
+    "source_version": "1.16.2-2"
+  },
+  {
+    "binary": "dbus-bin",
+    "binary_version": "1.16.2-2",
+    "source": "dbus",
+    "source_version": "1.16.2-2"
+  },
+  {
+    "binary": "dbus-daemon",
+    "binary_version": "1.16.2-2",
+    "source": "dbus",
+    "source_version": "1.16.2-2"
+  },
+  {
+    "binary": "dbus-session-bus-common",
+    "binary_version": "1.16.2-2",
+    "source": "dbus",
+    "source_version": "1.16.2-2"
+  },
+  {
+    "binary": "dbus-system-bus-common",
+    "binary_version": "1.16.2-2",
+    "source": "dbus",
+    "source_version": "1.16.2-2"
+  },
+  {
+    "binary": "dbus-user-session",
+    "binary_version": "1.16.2-2",
+    "source": "dbus",
+    "source_version": "1.16.2-2"
+  },
+  {
+    "binary": "dconf-gsettings-backend:amd64",
+    "binary_version": "0.40.0-5",
+    "source": "dconf",
+    "source_version": "0.40.0-5"
+  },
+  {
+    "binary": "dconf-service",
+    "binary_version": "0.40.0-5",
+    "source": "dconf",
+    "source_version": "0.40.0-5"
+  },
+  {
+    "binary": "debconf",
+    "binary_version": "1.5.91",
+    "source": "debconf",
+    "source_version": "1.5.91"
+  },
+  {
+    "binary": "debian-archive-keyring",
+    "binary_version": "2025.1",
+    "source": "debian-archive-keyring",
+    "source_version": "2025.1"
+  },
+  {
+    "binary": "debianutils",
+    "binary_version": "5.23.2",
+    "source": "debianutils",
+    "source_version": "5.23.2"
+  },
+  {
+    "binary": "dhcpcd-base",
+    "binary_version": "1:10.1.0-11+deb13u3",
+    "source": "dhcpcd",
+    "source_version": "1:10.1.0-11+deb13u3"
+  },
+  {
+    "binary": "diffutils",
+    "binary_version": "1:3.10-4",
+    "source": "diffutils",
+    "source_version": "1:3.10-4"
+  },
+  {
+    "binary": "dirmngr",
+    "binary_version": "2.4.7-21+deb13u1+b4",
+    "source": "gnupg2",
+    "source_version": "2.4.7-21+deb13u1"
+  },
+  {
+    "binary": "dmidecode",
+    "binary_version": "3.6-2",
+    "source": "dmidecode",
+    "source_version": "3.6-2"
+  },
+  {
+    "binary": "dmsetup",
+    "binary_version": "2:1.02.205-2",
+    "source": "lvm2",
+    "source_version": "2.03.31-2"
+  },
+  {
+    "binary": "dosfstools",
+    "binary_version": "4.2-1.2",
+    "source": "dosfstools",
+    "source_version": "4.2-1.2"
+  },
+  {
+    "binary": "dpkg",
+    "binary_version": "1.22.22",
+    "source": "dpkg",
+    "source_version": "1.22.22"
+  },
+  {
+    "binary": "dracut-install",
+    "binary_version": "106-6",
+    "source": "dracut",
+    "source_version": "106-6"
+  },
+  {
+    "binary": "e2fsprogs",
+    "binary_version": "1.47.2-3+b11",
+    "source": "e2fsprogs",
+    "source_version": "1.47.2-3"
+  },
+  {
+    "binary": "efibootmgr",
+    "binary_version": "18-2",
+    "source": "efibootmgr",
+    "source_version": "18-2"
+  },
+  {
+    "binary": "espeak-ng",
+    "binary_version": "1.52.0+dfsg-5",
+    "source": "espeak-ng",
+    "source_version": "1.52.0+dfsg-5"
+  },
+  {
+    "binary": "espeak-ng-data:amd64",
+    "binary_version": "1.52.0+dfsg-5",
+    "source": "espeak-ng",
+    "source_version": "1.52.0+dfsg-5"
+  },
+  {
+    "binary": "ethtool",
+    "binary_version": "1:6.14.2-1",
+    "source": "ethtool",
+    "source_version": "1:6.14.2-1"
+  },
+  {
+    "binary": "exfatprogs",
+    "binary_version": "1.2.9-1+deb13u1",
+    "source": "exfatprogs",
+    "source_version": "1.2.9-1+deb13u1"
+  },
+  {
+    "binary": "fdisk",
+    "binary_version": "2.41.5-0+deb13u1",
+    "source": "util-linux",
+    "source_version": "2.41.5-0+deb13u1"
+  },
+  {
+    "binary": "findutils",
+    "binary_version": "4.10.0-3",
+    "source": "findutils",
+    "source_version": "4.10.0-3"
+  },
+  {
+    "binary": "firmware-amd-graphics",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-ast",
+    "binary_version": "20140808-10",
+    "source": "firmware-ast",
+    "source_version": "20140808-10"
+  },
+  {
+    "binary": "firmware-ath9k-htc",
+    "binary_version": "1.4.0-110-ge888634+dfsg1-0.1",
+    "source": "open-ath9k-htc-firmware",
+    "source_version": "1.4.0-110-ge888634+dfsg1-0.1"
+  },
+  {
+    "binary": "firmware-atheros",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-bnx2",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-bnx2x",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-brcm80211",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-carl9170",
+    "binary_version": "1.9.9-450-gad1c721+dfsg-0.1",
+    "source": "carl9170fw",
+    "source_version": "1.9.9-450-gad1c721+dfsg-0.1"
+  },
+  {
+    "binary": "firmware-cavium",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-cirrus",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-intel-graphics",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-intel-misc",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-intel-sound",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-iwlwifi",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-libertas",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-linux-free",
+    "binary_version": "20241210-2",
+    "source": "firmware-free",
+    "source_version": "20241210-2"
+  },
+  {
+    "binary": "firmware-mediatek",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-misc-nonfree",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-myricom",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-netronome",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-netxen",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-nvidia-graphics",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-qlogic",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-realtek",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-sof-signed",
+    "binary_version": "2025.01-1",
+    "source": "firmware-sof",
+    "source_version": "2025.01-1"
+  },
+  {
+    "binary": "firmware-ti-connectivity",
+    "binary_version": "20260622-1~bpo13+1",
+    "source": "firmware-nonfree",
+    "source_version": "20260622-1~bpo13+1"
+  },
+  {
+    "binary": "firmware-zd1211",
+    "binary_version": "1:1.5-13",
+    "source": "zd1211-firmware",
+    "source_version": "1:1.5-13"
+  },
+  {
+    "binary": "fontconfig-config",
+    "binary_version": "2.15.0-2.3",
+    "source": "fontconfig",
+    "source_version": "2.15.0-2.3"
+  },
+  {
+    "binary": "fonts-dejavu-core",
+    "binary_version": "2.37-8",
+    "source": "fonts-dejavu",
+    "source_version": "2.37-8"
+  },
+  {
+    "binary": "fonts-dejavu-mono",
+    "binary_version": "2.37-8",
+    "source": "fonts-dejavu",
+    "source_version": "2.37-8"
+  },
+  {
+    "binary": "fuse3",
+    "binary_version": "3.17.2-3",
+    "source": "fuse3",
+    "source_version": "3.17.2-3"
+  },
+  {
+    "binary": "fxload",
+    "binary_version": "0.0.20081013-3",
+    "source": "fxload",
+    "source_version": "0.0.20081013-3"
+  },
+  {
+    "binary": "gcc-14-base:amd64",
+    "binary_version": "14.2.0-19",
+    "source": "gcc-14",
+    "source_version": "14.2.0-19"
+  },
+  {
+    "binary": "gddrescue",
+    "binary_version": "1.29-1",
+    "source": "gddrescue",
+    "source_version": "1.29-1"
+  },
+  {
+    "binary": "gdisk",
+    "binary_version": "1.0.10-2",
+    "source": "gdisk",
+    "source_version": "1.0.10-2"
+  },
+  {
+    "binary": "gettext-base",
+    "binary_version": "0.23.1-2",
+    "source": "gettext",
+    "source_version": "0.23.1-2"
+  },
+  {
+    "binary": "gnupg",
+    "binary_version": "2.4.7-21+deb13u1",
+    "source": "gnupg2",
+    "source_version": "2.4.7-21+deb13u1"
+  },
+  {
+    "binary": "gnupg-l10n",
+    "binary_version": "2.4.7-21+deb13u1",
+    "source": "gnupg2",
+    "source_version": "2.4.7-21+deb13u1"
+  },
+  {
+    "binary": "gnupg-utils",
+    "binary_version": "2.4.7-21+deb13u1+b4",
+    "source": "gnupg2",
+    "source_version": "2.4.7-21+deb13u1"
+  },
+  {
+    "binary": "gpg",
+    "binary_version": "2.4.7-21+deb13u1+b4",
+    "source": "gnupg2",
+    "source_version": "2.4.7-21+deb13u1"
+  },
+  {
+    "binary": "gpg-agent",
+    "binary_version": "2.4.7-21+deb13u1+b4",
+    "source": "gnupg2",
+    "source_version": "2.4.7-21+deb13u1"
+  },
+  {
+    "binary": "gpg-wks-client",
+    "binary_version": "2.4.7-21+deb13u1+b4",
+    "source": "gnupg2",
+    "source_version": "2.4.7-21+deb13u1"
+  },
+  {
+    "binary": "gpgconf",
+    "binary_version": "2.4.7-21+deb13u1+b4",
+    "source": "gnupg2",
+    "source_version": "2.4.7-21+deb13u1"
+  },
+  {
+    "binary": "gpgsm",
+    "binary_version": "2.4.7-21+deb13u1+b4",
+    "source": "gnupg2",
+    "source_version": "2.4.7-21+deb13u1"
+  },
+  {
+    "binary": "gpgv",
+    "binary_version": "2.4.7-21+deb13u1+b4",
+    "source": "gnupg2",
+    "source_version": "2.4.7-21+deb13u1"
+  },
+  {
+    "binary": "grep",
+    "binary_version": "3.11-4",
+    "source": "grep",
+    "source_version": "3.11-4"
+  },
+  {
+    "binary": "grub-common",
+    "binary_version": "2.12-9+deb13u2",
+    "source": "grub2",
+    "source_version": "2.12-9+deb13u2"
+  },
+  {
+    "binary": "grub-efi-amd64-bin",
+    "binary_version": "2.12-9+deb13u2",
+    "source": "grub2",
+    "source_version": "2.12-9+deb13u2"
+  },
+  {
+    "binary": "grub-efi-amd64-signed",
+    "binary_version": "1+2.12+9+deb13u2",
+    "source": "grub-efi-amd64-signed",
+    "source_version": "1+2.12+9+deb13u2"
+  },
+  {
+    "binary": "grub-efi-amd64-unsigned",
+    "binary_version": "2.12-9+deb13u2",
+    "source": "grub2",
+    "source_version": "2.12-9+deb13u2"
+  },
+  {
+    "binary": "grub2-common",
+    "binary_version": "2.12-9+deb13u2",
+    "source": "grub2",
+    "source_version": "2.12-9+deb13u2"
+  },
+  {
+    "binary": "gzip",
+    "binary_version": "1.13-1",
+    "source": "gzip",
+    "source_version": "1.13-1"
+  },
+  {
+    "binary": "hdparm",
+    "binary_version": "9.65+ds-1.1",
+    "source": "hdparm",
+    "source_version": "9.65+ds-1.1"
+  },
+  {
+    "binary": "hostname",
+    "binary_version": "3.25",
+    "source": "hostname",
+    "source_version": "3.25"
+  },
+  {
+    "binary": "hwinfo",
+    "binary_version": "21.82-1.1+b2",
+    "source": "hwinfo",
+    "source_version": "21.82-1.1"
+  },
+  {
+    "binary": "init-system-helpers",
+    "binary_version": "1.69~deb13u1",
+    "source": "init-system-helpers",
+    "source_version": "1.69~deb13u1"
+  },
+  {
+    "binary": "initramfs-tools",
+    "binary_version": "0.148.4",
+    "source": "initramfs-tools",
+    "source_version": "0.148.4"
+  },
+  {
+    "binary": "initramfs-tools-bin",
+    "binary_version": "0.148.4",
+    "source": "initramfs-tools",
+    "source_version": "0.148.4"
+  },
+  {
+    "binary": "initramfs-tools-core",
+    "binary_version": "0.148.4",
+    "source": "initramfs-tools",
+    "source_version": "0.148.4"
+  },
+  {
+    "binary": "iproute2",
+    "binary_version": "6.15.0-1",
+    "source": "iproute2",
+    "source_version": "6.15.0-1"
+  },
+  {
+    "binary": "iputils-ping",
+    "binary_version": "3:20240905-3",
+    "source": "iputils",
+    "source_version": "3:20240905-3"
+  },
+  {
+    "binary": "iw",
+    "binary_version": "6.9-1",
+    "source": "iw",
+    "source_version": "6.9-1"
+  },
+  {
+    "binary": "kbd",
+    "binary_version": "2.7.1-2",
+    "source": "kbd",
+    "source_version": "2.7.1-2"
+  },
+  {
+    "binary": "keyboard-configuration",
+    "binary_version": "1.242~deb13u1",
+    "source": "console-setup",
+    "source_version": "1.242~deb13u1"
+  },
+  {
+    "binary": "klibc-utils",
+    "binary_version": "2.0.14-1",
+    "source": "klibc",
+    "source_version": "2.0.14-1"
+  },
+  {
+    "binary": "kmod",
+    "binary_version": "34.2-2",
+    "source": "kmod",
+    "source_version": "34.2-2"
+  },
+  {
+    "binary": "libabsl20240722:amd64",
+    "binary_version": "20240722.0-4",
+    "source": "abseil",
+    "source_version": "20240722.0-4"
+  },
+  {
+    "binary": "libacl1:amd64",
+    "binary_version": "2.3.2-2+b1",
+    "source": "acl",
+    "source_version": "2.3.2-2"
+  },
+  {
+    "binary": "libao-common",
+    "binary_version": "1.2.2+20180113-1.2",
+    "source": "libao",
+    "source_version": "1.2.2+20180113-1.2"
+  },
+  {
+    "binary": "libao4:amd64",
+    "binary_version": "1.2.2+20180113-1.2",
+    "source": "libao",
+    "source_version": "1.2.2+20180113-1.2"
+  },
+  {
+    "binary": "libapparmor1:amd64",
+    "binary_version": "4.1.0-1",
+    "source": "apparmor",
+    "source_version": "4.1.0-1"
+  },
+  {
+    "binary": "libapt-pkg7.0:amd64",
+    "binary_version": "3.0.3",
+    "source": "apt",
+    "source_version": "3.0.3"
+  },
+  {
+    "binary": "libasound2-data",
+    "binary_version": "1.2.16.1-1~bpo13+1",
+    "source": "alsa-lib",
+    "source_version": "1.2.16.1-1~bpo13+1"
+  },
+  {
+    "binary": "libasound2t64:amd64",
+    "binary_version": "1.2.16.1-1~bpo13+1",
+    "source": "alsa-lib",
+    "source_version": "1.2.16.1-1~bpo13+1"
+  },
+  {
+    "binary": "libassuan9:amd64",
+    "binary_version": "3.0.2-2",
+    "source": "libassuan",
+    "source_version": "3.0.2-2"
+  },
+  {
+    "binary": "libasyncns0:amd64",
+    "binary_version": "0.8-6+b5",
+    "source": "libasyncns",
+    "source_version": "0.8-6"
+  },
+  {
+    "binary": "libatomic1:amd64",
+    "binary_version": "14.2.0-19",
+    "source": "gcc-14",
+    "source_version": "14.2.0-19"
+  },
+  {
+    "binary": "libatopology2t64:amd64",
+    "binary_version": "1.2.16.1-1~bpo13+1",
+    "source": "alsa-lib",
+    "source_version": "1.2.16.1-1~bpo13+1"
+  },
+  {
+    "binary": "libattr1:amd64",
+    "binary_version": "1:2.5.2-3",
+    "source": "attr",
+    "source_version": "1:2.5.2-3"
+  },
+  {
+    "binary": "libaudit-common",
+    "binary_version": "1:4.0.2-2",
+    "source": "audit",
+    "source_version": "1:4.0.2-2"
+  },
+  {
+    "binary": "libaudit1:amd64",
+    "binary_version": "1:4.0.2-2+b2",
+    "source": "audit",
+    "source_version": "1:4.0.2-2"
+  },
+  {
+    "binary": "libavahi-client3:amd64",
+    "binary_version": "0.8-16",
+    "source": "avahi",
+    "source_version": "0.8-16"
+  },
+  {
+    "binary": "libavahi-common-data:amd64",
+    "binary_version": "0.8-16",
+    "source": "avahi",
+    "source_version": "0.8-16"
+  },
+  {
+    "binary": "libavahi-common3:amd64",
+    "binary_version": "0.8-16",
+    "source": "avahi",
+    "source_version": "0.8-16"
+  },
+  {
+    "binary": "libblkid1:amd64",
+    "binary_version": "2.41.5-0+deb13u1",
+    "source": "util-linux",
+    "source_version": "2.41.5-0+deb13u1"
+  },
+  {
+    "binary": "libbluetooth3:amd64",
+    "binary_version": "5.82-1.1",
+    "source": "bluez",
+    "source_version": "5.82-1.1"
+  },
+  {
+    "binary": "libbpf1:amd64",
+    "binary_version": "1:1.5.0-3",
+    "source": "libbpf",
+    "source_version": "1.5.0-3"
+  },
+  {
+    "binary": "libbrotli1:amd64",
+    "binary_version": "1.1.0-2+b7",
+    "source": "brotli",
+    "source_version": "1.1.0-2"
+  },
+  {
+    "binary": "libbsd0:amd64",
+    "binary_version": "0.12.2-2",
+    "source": "libbsd",
+    "source_version": "0.12.2-2"
+  },
+  {
+    "binary": "libbz2-1.0:amd64",
+    "binary_version": "1.0.8-6",
+    "source": "bzip2",
+    "source_version": "1.0.8-6"
+  },
+  {
+    "binary": "libc-bin",
+    "binary_version": "2.41-12+deb13u3",
+    "source": "glibc",
+    "source_version": "2.41-12+deb13u3"
+  },
+  {
+    "binary": "libc-l10n",
+    "binary_version": "2.41-12+deb13u3",
+    "source": "glibc",
+    "source_version": "2.41-12+deb13u3"
+  },
+  {
+    "binary": "libc6:amd64",
+    "binary_version": "2.41-12+deb13u3",
+    "source": "glibc",
+    "source_version": "2.41-12+deb13u3"
+  },
+  {
+    "binary": "libcap-ng0:amd64",
+    "binary_version": "0.8.5-4+b1",
+    "source": "libcap-ng",
+    "source_version": "0.8.5-4"
+  },
+  {
+    "binary": "libcap2:amd64",
+    "binary_version": "1:2.75-10+deb13u1+b1",
+    "source": "libcap2",
+    "source_version": "1:2.75-10+deb13u1"
+  },
+  {
+    "binary": "libcap2-bin",
+    "binary_version": "1:2.75-10+deb13u1+b1",
+    "source": "libcap2",
+    "source_version": "1:2.75-10+deb13u1"
+  },
+  {
+    "binary": "libcom-err2:amd64",
+    "binary_version": "1.47.2-3+b11",
+    "source": "e2fsprogs",
+    "source_version": "1.47.2-3"
+  },
+  {
+    "binary": "libconfig++11:amd64",
+    "binary_version": "1.7.3-2",
+    "source": "libconfig",
+    "source_version": "1.7.3-2"
+  },
+  {
+    "binary": "libcrypt1:amd64",
+    "binary_version": "1:4.4.38-1",
+    "source": "libxcrypt",
+    "source_version": "1:4.4.38-1"
+  },
+  {
+    "binary": "libcurl3t64-gnutls:amd64",
+    "binary_version": "8.14.1-2+deb13u4",
+    "source": "curl",
+    "source_version": "8.14.1-2+deb13u4"
+  },
+  {
+    "binary": "libcurl4t64:amd64",
+    "binary_version": "8.14.1-2+deb13u4",
+    "source": "curl",
+    "source_version": "8.14.1-2+deb13u4"
+  },
+  {
+    "binary": "libdb5.3t64:amd64",
+    "binary_version": "5.3.28+dfsg2-9",
+    "source": "db5.3",
+    "source_version": "5.3.28+dfsg2-9"
+  },
+  {
+    "binary": "libdbus-1-3:amd64",
+    "binary_version": "1.16.2-2",
+    "source": "dbus",
+    "source_version": "1.16.2-2"
+  },
+  {
+    "binary": "libdconf1:amd64",
+    "binary_version": "0.40.0-5",
+    "source": "dconf",
+    "source_version": "0.40.0-5"
+  },
+  {
+    "binary": "libdebconfclient0:amd64",
+    "binary_version": "0.280",
+    "source": "cdebconf",
+    "source_version": "0.280"
+  },
+  {
+    "binary": "libdevmapper1.02.1:amd64",
+    "binary_version": "2:1.02.205-2",
+    "source": "lvm2",
+    "source_version": "2.03.31-2"
+  },
+  {
+    "binary": "libdrm-amdgpu1:amd64",
+    "binary_version": "2.4.124-2",
+    "source": "libdrm",
+    "source_version": "2.4.124-2"
+  },
+  {
+    "binary": "libdrm-common",
+    "binary_version": "2.4.124-2",
+    "source": "libdrm",
+    "source_version": "2.4.124-2"
+  },
+  {
+    "binary": "libdrm-intel1:amd64",
+    "binary_version": "2.4.124-2",
+    "source": "libdrm",
+    "source_version": "2.4.124-2"
+  },
+  {
+    "binary": "libdrm2:amd64",
+    "binary_version": "2.4.124-2",
+    "source": "libdrm",
+    "source_version": "2.4.124-2"
+  },
+  {
+    "binary": "libebur128-1:amd64",
+    "binary_version": "1.2.6-1+b2",
+    "source": "libebur128",
+    "source_version": "1.2.6-1"
+  },
+  {
+    "binary": "libedit2:amd64",
+    "binary_version": "3.1-20250104-1",
+    "source": "libedit",
+    "source_version": "3.1-20250104-1"
+  },
+  {
+    "binary": "libefiboot1t64:amd64",
+    "binary_version": "38-3.1+b1",
+    "source": "efivar",
+    "source_version": "38-3.1"
+  },
+  {
+    "binary": "libefivar1t64:amd64",
+    "binary_version": "38-3.1+b1",
+    "source": "efivar",
+    "source_version": "38-3.1"
+  },
+  {
+    "binary": "libegl-mesa0:amd64",
+    "binary_version": "25.0.7-2+deb13u1",
+    "source": "mesa",
+    "source_version": "25.0.7-2+deb13u1"
+  },
+  {
+    "binary": "libegl1:amd64",
+    "binary_version": "1.7.0-1+b2",
+    "source": "libglvnd",
+    "source_version": "1.7.0-1"
+  },
+  {
+    "binary": "libelf1t64:amd64",
+    "binary_version": "0.192-4",
+    "source": "elfutils",
+    "source_version": "0.192-4"
+  },
+  {
+    "binary": "libepoxy0:amd64",
+    "binary_version": "1.5.10-2",
+    "source": "libepoxy",
+    "source_version": "1.5.10-2"
+  },
+  {
+    "binary": "libespeak-ng1:amd64",
+    "binary_version": "1.52.0+dfsg-5",
+    "source": "espeak-ng",
+    "source_version": "1.52.0+dfsg-5"
+  },
+  {
+    "binary": "libevdev2:amd64",
+    "binary_version": "1.13.4+dfsg-1",
+    "source": "libevdev",
+    "source_version": "1.13.4+dfsg-1"
+  },
+  {
+    "binary": "libexpat1:amd64",
+    "binary_version": "2.8.3-1~deb13u1",
+    "source": "expat",
+    "source_version": "2.8.3-1~deb13u1"
+  },
+  {
+    "binary": "libext2fs2t64:amd64",
+    "binary_version": "1.47.2-3+b11",
+    "source": "e2fsprogs",
+    "source_version": "1.47.2-3"
+  },
+  {
+    "binary": "libfdisk1:amd64",
+    "binary_version": "2.41.5-0+deb13u1",
+    "source": "util-linux",
+    "source_version": "2.41.5-0+deb13u1"
+  },
+  {
+    "binary": "libffado2:amd64",
+    "binary_version": "2.4.9-2",
+    "source": "libffado",
+    "source_version": "2.4.9-2"
+  },
+  {
+    "binary": "libffi8:amd64",
+    "binary_version": "3.4.8-2",
+    "source": "libffi",
+    "source_version": "3.4.8-2"
+  },
+  {
+    "binary": "libfftw3-single3:amd64",
+    "binary_version": "3.3.10-2+b1",
+    "source": "fftw3",
+    "source_version": "3.3.10-2"
+  },
+  {
+    "binary": "libflac14:amd64",
+    "binary_version": "1.5.0+ds-2",
+    "source": "flac",
+    "source_version": "1.5.0+ds-2"
+  },
+  {
+    "binary": "libfontconfig1:amd64",
+    "binary_version": "2.15.0-2.3",
+    "source": "fontconfig",
+    "source_version": "2.15.0-2.3"
+  },
+  {
+    "binary": "libfontenc1:amd64",
+    "binary_version": "1:1.1.8-1+b2",
+    "source": "libfontenc",
+    "source_version": "1:1.1.8-1"
+  },
+  {
+    "binary": "libfreetype6:amd64",
+    "binary_version": "2.13.3+dfsg-1+deb13u1",
+    "source": "freetype",
+    "source_version": "2.13.3+dfsg-1+deb13u1"
+  },
+  {
+    "binary": "libfstrm0:amd64",
+    "binary_version": "0.6.1-1+b3",
+    "source": "fstrm",
+    "source_version": "0.6.1-1"
+  },
+  {
+    "binary": "libfuse3-4:amd64",
+    "binary_version": "3.17.2-3",
+    "source": "fuse3",
+    "source_version": "3.17.2-3"
+  },
+  {
+    "binary": "libgbm1:amd64",
+    "binary_version": "25.0.7-2+deb13u1",
+    "source": "mesa",
+    "source_version": "25.0.7-2+deb13u1"
+  },
+  {
+    "binary": "libgcc-s1:amd64",
+    "binary_version": "14.2.0-19",
+    "source": "gcc-14",
+    "source_version": "14.2.0-19"
+  },
+  {
+    "binary": "libgcrypt20:amd64",
+    "binary_version": "1.11.0-7+deb13u1",
+    "source": "libgcrypt20",
+    "source_version": "1.11.0-7+deb13u1"
+  },
+  {
+    "binary": "libgl1:amd64",
+    "binary_version": "1.7.0-1+b2",
+    "source": "libglvnd",
+    "source_version": "1.7.0-1"
+  },
+  {
+    "binary": "libgl1-mesa-dri:amd64",
+    "binary_version": "25.0.7-2+deb13u1",
+    "source": "mesa",
+    "source_version": "25.0.7-2+deb13u1"
+  },
+  {
+    "binary": "libgles2:amd64",
+    "binary_version": "1.7.0-1+b2",
+    "source": "libglvnd",
+    "source_version": "1.7.0-1"
+  },
+  {
+    "binary": "libglib2.0-0t64:amd64",
+    "binary_version": "2.84.4-3~deb13u3",
+    "source": "glib2.0",
+    "source_version": "2.84.4-3~deb13u3"
+  },
+  {
+    "binary": "libglibmm-2.4-1t64:amd64",
+    "binary_version": "2.66.8-1",
+    "source": "glibmm2.4",
+    "source_version": "2.66.8-1"
+  },
+  {
+    "binary": "libglvnd0:amd64",
+    "binary_version": "1.7.0-1+b2",
+    "source": "libglvnd",
+    "source_version": "1.7.0-1"
+  },
+  {
+    "binary": "libglx-mesa0:amd64",
+    "binary_version": "25.0.7-2+deb13u1",
+    "source": "mesa",
+    "source_version": "25.0.7-2+deb13u1"
+  },
+  {
+    "binary": "libglx0:amd64",
+    "binary_version": "1.7.0-1+b2",
+    "source": "libglvnd",
+    "source_version": "1.7.0-1"
+  },
+  {
+    "binary": "libgmp10:amd64",
+    "binary_version": "2:6.3.0+dfsg-3",
+    "source": "gmp",
+    "source_version": "2:6.3.0+dfsg-3"
+  },
+  {
+    "binary": "libgnutls30t64:amd64",
+    "binary_version": "3.8.9-3+deb13u4",
+    "source": "gnutls28",
+    "source_version": "3.8.9-3+deb13u4"
+  },
+  {
+    "binary": "libgomp1:amd64",
+    "binary_version": "14.2.0-19",
+    "source": "gcc-14",
+    "source_version": "14.2.0-19"
+  },
+  {
+    "binary": "libgpg-error0:amd64",
+    "binary_version": "1.51-4",
+    "source": "libgpg-error",
+    "source_version": "1.51-4"
+  },
+  {
+    "binary": "libgssapi-krb5-2:amd64",
+    "binary_version": "1.21.3-5+deb13u1",
+    "source": "krb5",
+    "source_version": "1.21.3-5+deb13u1"
+  },
+  {
+    "binary": "libgudev-1.0-0:amd64",
+    "binary_version": "238-6",
+    "source": "libgudev",
+    "source_version": "238-6"
+  },
+  {
+    "binary": "libhd21t64:amd64",
+    "binary_version": "21.82-1.1+b2",
+    "source": "hwinfo",
+    "source_version": "21.82-1.1"
+  },
+  {
+    "binary": "libhogweed6t64:amd64",
+    "binary_version": "3.10.1-1",
+    "source": "nettle",
+    "source_version": "3.10.1-1"
+  },
+  {
+    "binary": "libice6:amd64",
+    "binary_version": "2:1.1.1-1",
+    "source": "libice",
+    "source_version": "2:1.1.1-1"
+  },
+  {
+    "binary": "libicu76:amd64",
+    "binary_version": "76.1-4",
+    "source": "icu",
+    "source_version": "76.1-4"
+  },
+  {
+    "binary": "libidn2-0:amd64",
+    "binary_version": "2.3.8-2",
+    "source": "libidn2",
+    "source_version": "2.3.8-2"
+  },
+  {
+    "binary": "libiec61883-0:amd64",
+    "binary_version": "1.2.0-7",
+    "source": "libiec61883",
+    "source_version": "1.2.0-7"
+  },
+  {
+    "binary": "libinih1:amd64",
+    "binary_version": "59-1",
+    "source": "libinih",
+    "source_version": "59-1"
+  },
+  {
+    "binary": "libinput-bin",
+    "binary_version": "1.28.1-1+deb13u1",
+    "source": "libinput",
+    "source_version": "1.28.1-1+deb13u1"
+  },
+  {
+    "binary": "libinput10:amd64",
+    "binary_version": "1.28.1-1+deb13u1",
+    "source": "libinput",
+    "source_version": "1.28.1-1+deb13u1"
+  },
+  {
+    "binary": "libipsec-mb2",
+    "binary_version": "2.0-1+b1",
+    "source": "intel-ipsec-mb",
+    "source_version": "2.0-1"
+  },
+  {
+    "binary": "libisl23:amd64",
+    "binary_version": "0.27-1",
+    "source": "isl",
+    "source_version": "0.27-1"
+  },
+  {
+    "binary": "libjansson4:amd64",
+    "binary_version": "2.14-2+b3",
+    "source": "jansson",
+    "source_version": "2.14-2"
+  },
+  {
+    "binary": "libjemalloc2:amd64",
+    "binary_version": "5.3.0-3",
+    "source": "jemalloc",
+    "source_version": "5.3.0-3"
+  },
+  {
+    "binary": "libjpeg62-turbo:amd64",
+    "binary_version": "1:2.1.5-4",
+    "source": "libjpeg-turbo",
+    "source_version": "1:2.1.5-4"
+  },
+  {
+    "binary": "libjson-c5:amd64",
+    "binary_version": "0.18+ds-1",
+    "source": "json-c",
+    "source_version": "0.18+ds-1"
+  },
+  {
+    "binary": "libjudydebian1",
+    "binary_version": "1.0.5-5.1",
+    "source": "judy",
+    "source_version": "1.0.5-5.1"
+  },
+  {
+    "binary": "libk5crypto3:amd64",
+    "binary_version": "1.21.3-5+deb13u1",
+    "source": "krb5",
+    "source_version": "1.21.3-5+deb13u1"
+  },
+  {
+    "binary": "libkeyutils1:amd64",
+    "binary_version": "1.6.3-6",
+    "source": "keyutils",
+    "source_version": "1.6.3-6"
+  },
+  {
+    "binary": "libklibc:amd64",
+    "binary_version": "2.0.14-1",
+    "source": "klibc",
+    "source_version": "2.0.14-1"
+  },
+  {
+    "binary": "libkmod2:amd64",
+    "binary_version": "34.2-2",
+    "source": "kmod",
+    "source_version": "34.2-2"
+  },
+  {
+    "binary": "libkrb5-3:amd64",
+    "binary_version": "1.21.3-5+deb13u1",
+    "source": "krb5",
+    "source_version": "1.21.3-5+deb13u1"
+  },
+  {
+    "binary": "libkrb5support0:amd64",
+    "binary_version": "1.21.3-5+deb13u1",
+    "source": "krb5",
+    "source_version": "1.21.3-5+deb13u1"
+  },
+  {
+    "binary": "libksba8:amd64",
+    "binary_version": "1.6.7-2+b1",
+    "source": "libksba",
+    "source_version": "1.6.7-2"
+  },
+  {
+    "binary": "liblastlog2-2:amd64",
+    "binary_version": "2.41.5-0+deb13u1",
+    "source": "util-linux",
+    "source_version": "2.41.5-0+deb13u1"
+  },
+  {
+    "binary": "libldap2:amd64",
+    "binary_version": "2.6.10+dfsg-1",
+    "source": "openldap",
+    "source_version": "2.6.10+dfsg-1"
+  },
+  {
+    "binary": "liblilv-0-0:amd64",
+    "binary_version": "0.24.26-1",
+    "source": "lilv",
+    "source_version": "0.24.26-1"
+  },
+  {
+    "binary": "libllvm19:amd64",
+    "binary_version": "1:19.1.7-3+b1",
+    "source": "llvm-toolchain-19",
+    "source_version": "1:19.1.7-3"
+  },
+  {
+    "binary": "liblmdb0:amd64",
+    "binary_version": "0.9.31-1+b2",
+    "source": "lmdb",
+    "source_version": "0.9.31-1"
+  },
+  {
+    "binary": "liblocale-gettext-perl",
+    "binary_version": "1.07-7+b1",
+    "source": "liblocale-gettext-perl",
+    "source_version": "1.07-7"
+  },
+  {
+    "binary": "liblua5.4-0:amd64",
+    "binary_version": "5.4.7-1+b2",
+    "source": "lua5.4",
+    "source_version": "5.4.7-1"
+  },
+  {
+    "binary": "liblz4-1:amd64",
+    "binary_version": "1.10.0-4",
+    "source": "lz4",
+    "source_version": "1.10.0-4"
+  },
+  {
+    "binary": "liblzma5:amd64",
+    "binary_version": "5.8.1-1+deb13u1",
+    "source": "xz-utils",
+    "source_version": "5.8.1-1+deb13u1"
+  },
+  {
+    "binary": "liblzo2-2:amd64",
+    "binary_version": "2.10-3+b1",
+    "source": "lzo2",
+    "source_version": "2.10-3"
+  },
+  {
+    "binary": "libmaxminddb0:amd64",
+    "binary_version": "1.12.2-1",
+    "source": "libmaxminddb",
+    "source_version": "1.12.2-1"
+  },
+  {
+    "binary": "libmd0:amd64",
+    "binary_version": "1.1.0-2+b1",
+    "source": "libmd",
+    "source_version": "1.1.0-2"
+  },
+  {
+    "binary": "libmm-glib0:amd64",
+    "binary_version": "1.24.0-1+deb13u1",
+    "source": "modemmanager",
+    "source_version": "1.24.0-1+deb13u1"
+  },
+  {
+    "binary": "libmnl0:amd64",
+    "binary_version": "1.0.5-3",
+    "source": "libmnl",
+    "source_version": "1.0.5-3"
+  },
+  {
+    "binary": "libmount1:amd64",
+    "binary_version": "2.41.5-0+deb13u1",
+    "source": "util-linux",
+    "source_version": "2.41.5-0+deb13u1"
+  },
+  {
+    "binary": "libmp3lame0:amd64",
+    "binary_version": "3.100-6+b3",
+    "source": "lame",
+    "source_version": "3.100-6"
+  },
+  {
+    "binary": "libmpc3:amd64",
+    "binary_version": "1.3.1-1+b3",
+    "source": "mpclib3",
+    "source_version": "1.3.1-1"
+  },
+  {
+    "binary": "libmpfr6:amd64",
+    "binary_version": "4.2.2-1",
+    "source": "mpfr4",
+    "source_version": "4.2.2-1"
+  },
+  {
+    "binary": "libmpg123-0t64:amd64",
+    "binary_version": "1.32.10-1+deb13u1",
+    "source": "mpg123",
+    "source_version": "1.32.10-1+deb13u1"
+  },
+  {
+    "binary": "libmtdev1t64:amd64",
+    "binary_version": "1.1.7-1",
+    "source": "mtdev",
+    "source_version": "1.1.7-1"
+  },
+  {
+    "binary": "libmysofa1:amd64",
+    "binary_version": "1.3.3+dfsg-1",
+    "source": "libmysofa",
+    "source_version": "1.3.3+dfsg-1"
+  },
+  {
+    "binary": "libncurses6:amd64",
+    "binary_version": "6.5+20250216-2",
+    "source": "ncurses",
+    "source_version": "6.5+20250216-2"
+  },
+  {
+    "binary": "libncursesw6:amd64",
+    "binary_version": "6.5+20250216-2",
+    "source": "ncurses",
+    "source_version": "6.5+20250216-2"
+  },
+  {
+    "binary": "libndp0:amd64",
+    "binary_version": "1.9-1+b1",
+    "source": "libndp",
+    "source_version": "1.9-1"
+  },
+  {
+    "binary": "libnettle8t64:amd64",
+    "binary_version": "3.10.1-1",
+    "source": "nettle",
+    "source_version": "3.10.1-1"
+  },
+  {
+    "binary": "libnewt0.52:amd64",
+    "binary_version": "0.52.25-1",
+    "source": "newt",
+    "source_version": "0.52.25-1"
+  },
+  {
+    "binary": "libnghttp2-14:amd64",
+    "binary_version": "1.64.0-1.1+deb13u1",
+    "source": "nghttp2",
+    "source_version": "1.64.0-1.1+deb13u1"
+  },
+  {
+    "binary": "libnghttp3-9:amd64",
+    "binary_version": "1.8.0-1",
+    "source": "nghttp3",
+    "source_version": "1.8.0-1"
+  },
+  {
+    "binary": "libngtcp2-16:amd64",
+    "binary_version": "1.11.0-1+deb13u1",
+    "source": "ngtcp2",
+    "source_version": "1.11.0-1+deb13u1"
+  },
+  {
+    "binary": "libngtcp2-crypto-gnutls8:amd64",
+    "binary_version": "1.11.0-1+deb13u1",
+    "source": "ngtcp2",
+    "source_version": "1.11.0-1+deb13u1"
+  },
+  {
+    "binary": "libnl-3-200:amd64",
+    "binary_version": "3.7.0-2",
+    "source": "libnl3",
+    "source_version": "3.7.0-2"
+  },
+  {
+    "binary": "libnl-genl-3-200:amd64",
+    "binary_version": "3.7.0-2",
+    "source": "libnl3",
+    "source_version": "3.7.0-2"
+  },
+  {
+    "binary": "libnl-route-3-200:amd64",
+    "binary_version": "3.7.0-2",
+    "source": "libnl3",
+    "source_version": "3.7.0-2"
+  },
+  {
+    "binary": "libnm0:amd64",
+    "binary_version": "1.52.1-1",
+    "source": "network-manager",
+    "source_version": "1.52.1-1"
+  },
+  {
+    "binary": "libnpth0t64:amd64",
+    "binary_version": "1.8-3",
+    "source": "npth",
+    "source_version": "1.8-3"
+  },
+  {
+    "binary": "libntfs-3g89t64:amd64",
+    "binary_version": "1:2022.10.3-5+deb13u2",
+    "source": "ntfs-3g",
+    "source_version": "1:2022.10.3-5+deb13u2"
+  },
+  {
+    "binary": "libnvme1t64",
+    "binary_version": "1.13-2",
+    "source": "libnvme",
+    "source_version": "1.13-2"
+  },
+  {
+    "binary": "libogg0:amd64",
+    "binary_version": "1.3.5-3+b2",
+    "source": "libogg",
+    "source_version": "1.3.5-3"
+  },
+  {
+    "binary": "libopenfec1:amd64",
+    "binary_version": "1.4.2.11+dfsg-1",
+    "source": "openfec",
+    "source_version": "1.4.2.11+dfsg-1"
+  },
+  {
+    "binary": "libopus0:amd64",
+    "binary_version": "1.5.2-2",
+    "source": "opus",
+    "source_version": "1.5.2-2"
+  },
+  {
+    "binary": "libp11-kit0:amd64",
+    "binary_version": "0.25.5-3",
+    "source": "p11-kit",
+    "source_version": "0.25.5-3"
+  },
+  {
+    "binary": "libpam-modules:amd64",
+    "binary_version": "1.7.0-5",
+    "source": "pam",
+    "source_version": "1.7.0-5"
+  },
+  {
+    "binary": "libpam-modules-bin",
+    "binary_version": "1.7.0-5",
+    "source": "pam",
+    "source_version": "1.7.0-5"
+  },
+  {
+    "binary": "libpam-runtime",
+    "binary_version": "1.7.0-5",
+    "source": "pam",
+    "source_version": "1.7.0-5"
+  },
+  {
+    "binary": "libpam-systemd:amd64",
+    "binary_version": "257.13-1~deb13u1",
+    "source": "systemd",
+    "source_version": "257.13-1~deb13u1"
+  },
+  {
+    "binary": "libpam0g:amd64",
+    "binary_version": "1.7.0-5",
+    "source": "pam",
+    "source_version": "1.7.0-5"
+  },
+  {
+    "binary": "libparted2t64:amd64",
+    "binary_version": "3.6-5",
+    "source": "parted",
+    "source_version": "3.6-5"
+  },
+  {
+    "binary": "libpcaudio0:amd64",
+    "binary_version": "1.3-1",
+    "source": "pcaudiolib",
+    "source_version": "1.3-1"
+  },
+  {
+    "binary": "libpci3:amd64",
+    "binary_version": "1:3.13.0-2",
+    "source": "pciutils",
+    "source_version": "1:3.13.0-2"
+  },
+  {
+    "binary": "libpciaccess0:amd64",
+    "binary_version": "0.17-3+b3",
+    "source": "libpciaccess",
+    "source_version": "0.17-3"
+  },
+  {
+    "binary": "libpcre2-8-0:amd64",
+    "binary_version": "10.46-1~deb13u1",
+    "source": "pcre2",
+    "source_version": "10.46-1~deb13u1"
+  },
+  {
+    "binary": "libpcsclite1:amd64",
+    "binary_version": "2.3.3-1",
+    "source": "pcsc-lite",
+    "source_version": "2.3.3-1"
+  },
+  {
+    "binary": "libpipewire-0.3-0t64:amd64",
+    "binary_version": "1.4.9-1~bpo13+2",
+    "source": "pipewire",
+    "source_version": "1.4.9-1~bpo13+2"
+  },
+  {
+    "binary": "libpipewire-0.3-modules:amd64",
+    "binary_version": "1.4.9-1~bpo13+2",
+    "source": "pipewire",
+    "source_version": "1.4.9-1~bpo13+2"
+  },
+  {
+    "binary": "libpixman-1-0:amd64",
+    "binary_version": "0.44.0-3",
+    "source": "pixman",
+    "source_version": "0.44.0-3"
+  },
+  {
+    "binary": "libpng16-16t64:amd64",
+    "binary_version": "1.6.48-1+deb13u5",
+    "source": "libpng1.6",
+    "source_version": "1.6.48-1+deb13u5"
+  },
+  {
+    "binary": "libpopt0:amd64",
+    "binary_version": "1.19+dfsg-2",
+    "source": "popt",
+    "source_version": "1.19+dfsg-2"
+  },
+  {
+    "binary": "libproc2-0:amd64",
+    "binary_version": "2:4.0.4-9",
+    "source": "procps",
+    "source_version": "2:4.0.4-9"
+  },
+  {
+    "binary": "libprotobuf-c1:amd64",
+    "binary_version": "1.5.1-1",
+    "source": "protobuf-c",
+    "source_version": "1.5.1-1"
+  },
+  {
+    "binary": "libpsl5t64:amd64",
+    "binary_version": "0.21.2-1.1+b1",
+    "source": "libpsl",
+    "source_version": "0.21.2-1.1"
+  },
+  {
+    "binary": "libpulse0:amd64",
+    "binary_version": "17.0+dfsg1-2+b1",
+    "source": "pulseaudio",
+    "source_version": "17.0+dfsg1-2"
+  },
+  {
+    "binary": "libpython3-stdlib:amd64",
+    "binary_version": "3.13.5-1",
+    "source": "python3-defaults",
+    "source_version": "3.13.5-1"
+  },
+  {
+    "binary": "libpython3.13-minimal:amd64",
+    "binary_version": "3.13.5-2+deb13u4",
+    "source": "python3.13",
+    "source_version": "3.13.5-2+deb13u4"
+  },
+  {
+    "binary": "libpython3.13-stdlib:amd64",
+    "binary_version": "3.13.5-2+deb13u4",
+    "source": "python3.13",
+    "source_version": "3.13.5-2+deb13u4"
+  },
+  {
+    "binary": "libraw1394-11:amd64",
+    "binary_version": "2.1.2-2+b2",
+    "source": "libraw1394",
+    "source_version": "2.1.2-2"
+  },
+  {
+    "binary": "libreadline8t64:amd64",
+    "binary_version": "8.2-6",
+    "source": "readline",
+    "source_version": "8.2-6"
+  },
+  {
+    "binary": "libreiserfscore0t64",
+    "binary_version": "1:3.6.27-9",
+    "source": "reiserfsprogs",
+    "source_version": "1:3.6.27-9"
+  },
+  {
+    "binary": "libroc0.4:amd64",
+    "binary_version": "0.4.0+dfsg-5",
+    "source": "roc-toolkit",
+    "source_version": "0.4.0+dfsg-5"
+  },
+  {
+    "binary": "librtmp1:amd64",
+    "binary_version": "2.4+20151223.gitfa8646d.1-2+b5",
+    "source": "rtmpdump",
+    "source_version": "2.4+20151223.gitfa8646d.1-2"
+  },
+  {
+    "binary": "libsamplerate0:amd64",
+    "binary_version": "0.2.2-4+b2",
+    "source": "libsamplerate",
+    "source_version": "0.2.2-4"
+  },
+  {
+    "binary": "libsasl2-2:amd64",
+    "binary_version": "2.1.28+dfsg1-9",
+    "source": "cyrus-sasl2",
+    "source_version": "2.1.28+dfsg1-9"
+  },
+  {
+    "binary": "libsasl2-modules-db:amd64",
+    "binary_version": "2.1.28+dfsg1-9",
+    "source": "cyrus-sasl2",
+    "source_version": "2.1.28+dfsg1-9"
+  },
+  {
+    "binary": "libsctp1:amd64",
+    "binary_version": "1.0.21+dfsg-1",
+    "source": "lksctp-tools",
+    "source_version": "1.0.21+dfsg-1"
+  },
+  {
+    "binary": "libseccomp2:amd64",
+    "binary_version": "2.6.0-2",
+    "source": "libseccomp",
+    "source_version": "2.6.0-2"
+  },
+  {
+    "binary": "libselinux1:amd64",
+    "binary_version": "3.8.1-1",
+    "source": "libselinux",
+    "source_version": "3.8.1-1"
+  },
+  {
+    "binary": "libsemanage-common",
+    "binary_version": "3.8.1-1",
+    "source": "libsemanage",
+    "source_version": "3.8.1-1"
+  },
+  {
+    "binary": "libsemanage2:amd64",
+    "binary_version": "3.8.1-1",
+    "source": "libsemanage",
+    "source_version": "3.8.1-1"
+  },
+  {
+    "binary": "libsensors-config",
+    "binary_version": "1:3.6.2-2",
+    "source": "lm-sensors",
+    "source_version": "1:3.6.2-2"
+  },
+  {
+    "binary": "libsensors5:amd64",
+    "binary_version": "1:3.6.2-2",
+    "source": "lm-sensors",
+    "source_version": "1:3.6.2-2"
+  },
+  {
+    "binary": "libsepol2:amd64",
+    "binary_version": "3.8.1-1",
+    "source": "libsepol",
+    "source_version": "3.8.1-1"
+  },
+  {
+    "binary": "libserd-0-0:amd64",
+    "binary_version": "0.32.4-1",
+    "source": "serd",
+    "source_version": "0.32.4-1"
+  },
+  {
+    "binary": "libsgutils2-1.48:amd64",
+    "binary_version": "1.48-2",
+    "source": "sg3-utils",
+    "source_version": "1.48-2"
+  },
+  {
+    "binary": "libsigc++-2.0-0v5:amd64",
+    "binary_version": "2.12.1-3",
+    "source": "libsigc++-2.0",
+    "source_version": "2.12.1-3"
+  },
+  {
+    "binary": "libslang2:amd64",
+    "binary_version": "2.3.3-5+b2",
+    "source": "slang2",
+    "source_version": "2.3.3-5"
+  },
+  {
+    "binary": "libsm6:amd64",
+    "binary_version": "2:1.2.6-1",
+    "source": "libsm",
+    "source_version": "2:1.2.6-1"
+  },
+  {
+    "binary": "libsmartcols1:amd64",
+    "binary_version": "2.41.5-0+deb13u1",
+    "source": "util-linux",
+    "source_version": "2.41.5-0+deb13u1"
+  },
+  {
+    "binary": "libsndfile1:amd64",
+    "binary_version": "1.2.2-2+deb13u1",
+    "source": "libsndfile",
+    "source_version": "1.2.2-2+deb13u1"
+  },
+  {
+    "binary": "libsonic0:amd64",
+    "binary_version": "0.2.0-13+b1",
+    "source": "sonic",
+    "source_version": "0.2.0-13"
+  },
+  {
+    "binary": "libsord-0-0:amd64",
+    "binary_version": "0.16.18-1",
+    "source": "sord",
+    "source_version": "0.16.18-1"
+  },
+  {
+    "binary": "libspa-0.2-modules:amd64",
+    "binary_version": "1.4.9-1~bpo13+2",
+    "source": "pipewire",
+    "source_version": "1.4.9-1~bpo13+2"
+  },
+  {
+    "binary": "libspeexdsp1:amd64",
+    "binary_version": "1.2.1-3",
+    "source": "speexdsp",
+    "source_version": "1.2.1-3"
+  },
+  {
+    "binary": "libsqlite3-0:amd64",
+    "binary_version": "3.46.1-7+deb13u1",
+    "source": "sqlite3",
+    "source_version": "3.46.1-7+deb13u1"
+  },
+  {
+    "binary": "libsratom-0-0:amd64",
+    "binary_version": "0.6.18-1",
+    "source": "sratom",
+    "source_version": "0.6.18-1"
+  },
+  {
+    "binary": "libss2:amd64",
+    "binary_version": "1.47.2-3+b11",
+    "source": "e2fsprogs",
+    "source_version": "1.47.2-3"
+  },
+  {
+    "binary": "libssh2-1t64:amd64",
+    "binary_version": "1.11.1-1+deb13u1",
+    "source": "libssh2",
+    "source_version": "1.11.1-1+deb13u1"
+  },
+  {
+    "binary": "libssl3t64:amd64",
+    "binary_version": "3.5.6-1~deb13u2",
+    "source": "openssl",
+    "source_version": "3.5.6-1~deb13u2"
+  },
+  {
+    "binary": "libstdc++6:amd64",
+    "binary_version": "14.2.0-19",
+    "source": "gcc-14",
+    "source_version": "14.2.0-19"
+  },
+  {
+    "binary": "libsystemd-shared:amd64",
+    "binary_version": "257.13-1~deb13u1",
+    "source": "systemd",
+    "source_version": "257.13-1~deb13u1"
+  },
+  {
+    "binary": "libsystemd0:amd64",
+    "binary_version": "257.13-1~deb13u1",
+    "source": "systemd",
+    "source_version": "257.13-1~deb13u1"
+  },
+  {
+    "binary": "libtasn1-6:amd64",
+    "binary_version": "4.20.0-2+deb13u1",
+    "source": "libtasn1-6",
+    "source_version": "4.20.0-2+deb13u1"
+  },
+  {
+    "binary": "libtcl8.6:amd64",
+    "binary_version": "8.6.16+dfsg-1",
+    "source": "tcl8.6",
+    "source_version": "8.6.16+dfsg-1"
+  },
+  {
+    "binary": "libteamdctl0:amd64",
+    "binary_version": "1.31-1+b2",
+    "source": "libteam",
+    "source_version": "1.31-1"
+  },
+  {
+    "binary": "libtinfo6:amd64",
+    "binary_version": "6.5+20250216-2",
+    "source": "ncurses",
+    "source_version": "6.5+20250216-2"
+  },
+  {
+    "binary": "libtirpc-common",
+    "binary_version": "1.3.6+ds-1",
+    "source": "libtirpc",
+    "source_version": "1.3.6+ds-1"
+  },
+  {
+    "binary": "libtirpc3t64:amd64",
+    "binary_version": "1.3.6+ds-1",
+    "source": "libtirpc",
+    "source_version": "1.3.6+ds-1"
+  },
+  {
+    "binary": "libtk8.6:amd64",
+    "binary_version": "8.6.16-1",
+    "source": "tk8.6",
+    "source_version": "8.6.16-1"
+  },
+  {
+    "binary": "libudev1:amd64",
+    "binary_version": "257.13-1~deb13u1",
+    "source": "systemd",
+    "source_version": "257.13-1~deb13u1"
+  },
+  {
+    "binary": "libunistring5:amd64",
+    "binary_version": "1.3-2",
+    "source": "libunistring",
+    "source_version": "1.3-2"
+  },
+  {
+    "binary": "libunwind8:amd64",
+    "binary_version": "1.8.1-0.1",
+    "source": "libunwind",
+    "source_version": "1.8.1-0.1"
+  },
+  {
+    "binary": "liburcu8t64:amd64",
+    "binary_version": "0.15.2-2",
+    "source": "liburcu",
+    "source_version": "0.15.2-2"
+  },
+  {
+    "binary": "libusb-1.0-0:amd64",
+    "binary_version": "2:1.0.28-1",
+    "source": "libusb-1.0",
+    "source_version": "2:1.0.28-1"
+  },
+  {
+    "binary": "libuuid1:amd64",
+    "binary_version": "2.41.5-0+deb13u1",
+    "source": "util-linux",
+    "source_version": "2.41.5-0+deb13u1"
+  },
+  {
+    "binary": "libuv1t64:amd64",
+    "binary_version": "1.50.0-2",
+    "source": "libuv1",
+    "source_version": "1.50.0-2"
+  },
+  {
+    "binary": "libvorbis0a:amd64",
+    "binary_version": "1.3.7-3",
+    "source": "libvorbis",
+    "source_version": "1.3.7-3"
+  },
+  {
+    "binary": "libvorbisenc2:amd64",
+    "binary_version": "1.3.7-3",
+    "source": "libvorbis",
+    "source_version": "1.3.7-3"
+  },
+  {
+    "binary": "libvulkan1:amd64",
+    "binary_version": "1.4.309.0-1",
+    "source": "vulkan-loader",
+    "source_version": "1.4.309.0-1"
+  },
+  {
+    "binary": "libwacom-common",
+    "binary_version": "2.14.0-1",
+    "source": "libwacom",
+    "source_version": "2.14.0-1"
+  },
+  {
+    "binary": "libwacom9:amd64",
+    "binary_version": "2.14.0-1",
+    "source": "libwacom",
+    "source_version": "2.14.0-1"
+  },
+  {
+    "binary": "libwayland-client0:amd64",
+    "binary_version": "1.23.1-3",
+    "source": "wayland",
+    "source_version": "1.23.1-3"
+  },
+  {
+    "binary": "libwayland-server0:amd64",
+    "binary_version": "1.23.1-3",
+    "source": "wayland",
+    "source_version": "1.23.1-3"
+  },
+  {
+    "binary": "libwebrtc-audio-processing-1-3:amd64",
+    "binary_version": "1.3-3+b1",
+    "source": "webrtc-audio-processing",
+    "source_version": "1.3-3"
+  },
+  {
+    "binary": "libwireplumber-0.5-0:amd64",
+    "binary_version": "0.5.12-1~bpo13+1",
+    "source": "wireplumber",
+    "source_version": "0.5.12-1~bpo13+1"
+  },
+  {
+    "binary": "libx11-6:amd64",
+    "binary_version": "2:1.8.12-1",
+    "source": "libx11",
+    "source_version": "2:1.8.12-1"
+  },
+  {
+    "binary": "libx11-data",
+    "binary_version": "2:1.8.12-1",
+    "source": "libx11",
+    "source_version": "2:1.8.12-1"
+  },
+  {
+    "binary": "libx11-xcb1:amd64",
+    "binary_version": "2:1.8.12-1",
+    "source": "libx11",
+    "source_version": "2:1.8.12-1"
+  },
+  {
+    "binary": "libx86emu3:amd64",
+    "binary_version": "3.5-1.1",
+    "source": "libx86emu",
+    "source_version": "3.5-1.1"
+  },
+  {
+    "binary": "libxau6:amd64",
+    "binary_version": "1:1.0.11-1",
+    "source": "libxau",
+    "source_version": "1:1.0.11-1"
+  },
+  {
+    "binary": "libxaw7:amd64",
+    "binary_version": "2:1.0.16-1",
+    "source": "libxaw",
+    "source_version": "2:1.0.16-1"
+  },
+  {
+    "binary": "libxcb-dri3-0:amd64",
+    "binary_version": "1.17.0-2+b1",
+    "source": "libxcb",
+    "source_version": "1.17.0-2"
+  },
+  {
+    "binary": "libxcb-glx0:amd64",
+    "binary_version": "1.17.0-2+b1",
+    "source": "libxcb",
+    "source_version": "1.17.0-2"
+  },
+  {
+    "binary": "libxcb-present0:amd64",
+    "binary_version": "1.17.0-2+b1",
+    "source": "libxcb",
+    "source_version": "1.17.0-2"
+  },
+  {
+    "binary": "libxcb-randr0:amd64",
+    "binary_version": "1.17.0-2+b1",
+    "source": "libxcb",
+    "source_version": "1.17.0-2"
+  },
+  {
+    "binary": "libxcb-shm0:amd64",
+    "binary_version": "1.17.0-2+b1",
+    "source": "libxcb",
+    "source_version": "1.17.0-2"
+  },
+  {
+    "binary": "libxcb-sync1:amd64",
+    "binary_version": "1.17.0-2+b1",
+    "source": "libxcb",
+    "source_version": "1.17.0-2"
+  },
+  {
+    "binary": "libxcb-xfixes0:amd64",
+    "binary_version": "1.17.0-2+b1",
+    "source": "libxcb",
+    "source_version": "1.17.0-2"
+  },
+  {
+    "binary": "libxcb1:amd64",
+    "binary_version": "1.17.0-2+b1",
+    "source": "libxcb",
+    "source_version": "1.17.0-2"
+  },
+  {
+    "binary": "libxcursor1:amd64",
+    "binary_version": "1:1.2.3-1",
+    "source": "libxcursor",
+    "source_version": "1:1.2.3-1"
+  },
+  {
+    "binary": "libxcvt0:amd64",
+    "binary_version": "0.1.3-1",
+    "source": "libxcvt",
+    "source_version": "0.1.3-1"
+  },
+  {
+    "binary": "libxdmcp6:amd64",
+    "binary_version": "1:1.1.5-1",
+    "source": "libxdmcp",
+    "source_version": "1:1.1.5-1"
+  },
+  {
+    "binary": "libxext6:amd64",
+    "binary_version": "2:1.3.4-1+b3",
+    "source": "libxext",
+    "source_version": "2:1.3.4-1"
+  },
+  {
+    "binary": "libxfixes3:amd64",
+    "binary_version": "1:6.0.0-2+b4",
+    "source": "libxfixes",
+    "source_version": "1:6.0.0-2"
+  },
+  {
+    "binary": "libxfont2:amd64",
+    "binary_version": "1:2.0.6-1+deb13u1",
+    "source": "libxfont",
+    "source_version": "1:2.0.6-1+deb13u1"
+  },
+  {
+    "binary": "libxft2:amd64",
+    "binary_version": "2.3.6-1+b4",
+    "source": "xft",
+    "source_version": "2.3.6-1"
+  },
+  {
+    "binary": "libxi6:amd64",
+    "binary_version": "2:1.8.2-1",
+    "source": "libxi",
+    "source_version": "2:1.8.2-1"
+  },
+  {
+    "binary": "libxkbfile1:amd64",
+    "binary_version": "1:1.1.0-1+b4",
+    "source": "libxkbfile",
+    "source_version": "1:1.1.0-1"
+  },
+  {
+    "binary": "libxml++2.6-2v5:amd64",
+    "binary_version": "2.42.3-2",
+    "source": "libxml++2.6",
+    "source_version": "2.42.3-2"
+  },
+  {
+    "binary": "libxml2:amd64",
+    "binary_version": "2.12.7+dfsg+really2.9.14-2.1+deb13u3",
+    "source": "libxml2",
+    "source_version": "2.12.7+dfsg+really2.9.14-2.1+deb13u3"
+  },
+  {
+    "binary": "libxmu6:amd64",
+    "binary_version": "2:1.1.3-3+b4",
+    "source": "libxmu",
+    "source_version": "2:1.1.3-3"
+  },
+  {
+    "binary": "libxmuu1:amd64",
+    "binary_version": "2:1.1.3-3+b4",
+    "source": "libxmu",
+    "source_version": "2:1.1.3-3"
+  },
+  {
+    "binary": "libxpm4:amd64",
+    "binary_version": "1:3.5.17-1+deb13u1",
+    "source": "libxpm",
+    "source_version": "1:3.5.17-1+deb13u1"
+  },
+  {
+    "binary": "libxrandr2:amd64",
+    "binary_version": "2:1.5.4-1+b3",
+    "source": "libxrandr",
+    "source_version": "2:1.5.4-1"
+  },
+  {
+    "binary": "libxrender1:amd64",
+    "binary_version": "1:0.9.12-1",
+    "source": "libxrender",
+    "source_version": "1:0.9.12-1"
+  },
+  {
+    "binary": "libxshmfence1:amd64",
+    "binary_version": "1.3.3-1",
+    "source": "libxshmfence",
+    "source_version": "1.3.3-1"
+  },
+  {
+    "binary": "libxss1:amd64",
+    "binary_version": "1:1.2.3-1+b3",
+    "source": "libxss",
+    "source_version": "1:1.2.3-1"
+  },
+  {
+    "binary": "libxt6t64:amd64",
+    "binary_version": "1:1.2.1-1.2+b2",
+    "source": "libxt",
+    "source_version": "1:1.2.1-1.2"
+  },
+  {
+    "binary": "libxtables12:amd64",
+    "binary_version": "1.8.11-2",
+    "source": "iptables",
+    "source_version": "1.8.11-2"
+  },
+  {
+    "binary": "libxxf86vm1:amd64",
+    "binary_version": "1:1.1.4-1+b4",
+    "source": "libxxf86vm",
+    "source_version": "1:1.1.4-1"
+  },
+  {
+    "binary": "libxxhash0:amd64",
+    "binary_version": "0.8.3-2",
+    "source": "xxhash",
+    "source_version": "0.8.3-2"
+  },
+  {
+    "binary": "libz3-4:amd64",
+    "binary_version": "4.13.3-1",
+    "source": "z3",
+    "source_version": "4.13.3-1"
+  },
+  {
+    "binary": "libzix-0-0:amd64",
+    "binary_version": "0.6.2-1",
+    "source": "zix",
+    "source_version": "0.6.2-1"
+  },
+  {
+    "binary": "libzstd1:amd64",
+    "binary_version": "1.5.7+dfsg-1",
+    "source": "libzstd",
+    "source_version": "1.5.7+dfsg-1"
+  },
+  {
+    "binary": "linux-base",
+    "binary_version": "4.12.1",
+    "source": "linux-base",
+    "source_version": "4.12.1"
+  },
+  {
+    "binary": "linux-base-7.1.8+deb13-amd64",
+    "binary_version": "7.1.8-1~bpo13+1",
+    "source": "linux",
+    "source_version": "7.1.8-1~bpo13+1"
+  },
+  {
+    "binary": "linux-base-amd64",
+    "binary_version": "7.1.8-1~bpo13+1",
+    "source": "linux-signed-amd64",
+    "source_version": "7.1.8+1~bpo13+1"
+  },
+  {
+    "binary": "linux-binary-7.1.8+deb13-amd64",
+    "binary_version": "7.1.8-1~bpo13+1",
+    "source": "linux-signed-amd64",
+    "source_version": "7.1.8+1~bpo13+1"
+  },
+  {
+    "binary": "linux-image-6.12.107+deb13-amd64",
+    "binary_version": "6.12.107-1",
+    "source": "linux-signed-amd64",
+    "source_version": "6.12.107+1"
+  },
+  {
+    "binary": "linux-image-7.1.8+deb13-amd64",
+    "binary_version": "7.1.8-1~bpo13+1",
+    "source": "linux-signed-amd64",
+    "source_version": "7.1.8+1~bpo13+1"
+  },
+  {
+    "binary": "linux-image-amd64",
+    "binary_version": "7.1.8-1~bpo13+1",
+    "source": "linux-signed-amd64",
+    "source_version": "7.1.8+1~bpo13+1"
+  },
+  {
+    "binary": "linux-modules-7.1.8+deb13-amd64",
+    "binary_version": "7.1.8-1~bpo13+1",
+    "source": "linux",
+    "source_version": "7.1.8-1~bpo13+1"
+  },
+  {
+    "binary": "live-boot",
+    "binary_version": "1:20250815~deb13u1",
+    "source": "live-boot",
+    "source_version": "1:20250815~deb13u1"
+  },
+  {
+    "binary": "live-boot-initramfs-tools",
+    "binary_version": "1:20250815~deb13u1",
+    "source": "live-boot",
+    "source_version": "1:20250815~deb13u1"
+  },
+  {
+    "binary": "lm-sensors",
+    "binary_version": "1:3.6.2-2",
+    "source": "lm-sensors",
+    "source_version": "1:3.6.2-2"
+  },
+  {
+    "binary": "locales",
+    "binary_version": "2.41-12+deb13u3",
+    "source": "glibc",
+    "source_version": "2.41-12+deb13u3"
+  },
+  {
+    "binary": "login",
+    "binary_version": "1:4.16.0-2+really2.41.5-0+deb13u1",
+    "source": "util-linux",
+    "source_version": "2.41.5-0+deb13u1"
+  },
+  {
+    "binary": "login.defs",
+    "binary_version": "1:4.17.4-2",
+    "source": "shadow",
+    "source_version": "1:4.17.4-2"
+  },
+  {
+    "binary": "logsave",
+    "binary_version": "1.47.2-3+b11",
+    "source": "e2fsprogs",
+    "source_version": "1.47.2-3"
+  },
+  {
+    "binary": "lshw",
+    "binary_version": "02.19.git.2021.06.19.996aaad9c7-2.1",
+    "source": "lshw",
+    "source_version": "02.19.git.2021.06.19.996aaad9c7-2.1"
+  },
+  {
+    "binary": "lsscsi",
+    "binary_version": "0.32-2",
+    "source": "lsscsi",
+    "source_version": "0.32-2"
+  },
+  {
+    "binary": "mawk",
+    "binary_version": "1.3.4.20250131-1",
+    "source": "mawk",
+    "source_version": "1.3.4.20250131-1"
+  },
+  {
+    "binary": "media-types",
+    "binary_version": "13.0.0",
+    "source": "media-types",
+    "source_version": "13.0.0"
+  },
+  {
+    "binary": "memtester",
+    "binary_version": "4.7.1-1",
+    "source": "memtester",
+    "source_version": "4.7.1-1"
+  },
+  {
+    "binary": "mesa-libgallium:amd64",
+    "binary_version": "25.0.7-2+deb13u1",
+    "source": "mesa",
+    "source_version": "25.0.7-2+deb13u1"
+  },
+  {
+    "binary": "mokutil",
+    "binary_version": "0.7.2-1",
+    "source": "mokutil",
+    "source_version": "0.7.2-1"
+  },
+  {
+    "binary": "mount",
+    "binary_version": "2.41.5-0+deb13u1",
+    "source": "util-linux",
+    "source_version": "2.41.5-0+deb13u1"
+  },
+  {
+    "binary": "mtr-tiny",
+    "binary_version": "0.95-1.1+b1",
+    "source": "mtr",
+    "source_version": "0.95-1.1"
+  },
+  {
+    "binary": "ncurses-base",
+    "binary_version": "6.5+20250216-2",
+    "source": "ncurses",
+    "source_version": "6.5+20250216-2"
+  },
+  {
+    "binary": "ncurses-bin",
+    "binary_version": "6.5+20250216-2",
+    "source": "ncurses",
+    "source_version": "6.5+20250216-2"
+  },
+  {
+    "binary": "netbase",
+    "binary_version": "6.5",
+    "source": "netbase",
+    "source_version": "6.5"
+  },
+  {
+    "binary": "network-manager",
+    "binary_version": "1.52.1-1",
+    "source": "network-manager",
+    "source_version": "1.52.1-1"
+  },
+  {
+    "binary": "ntfs-3g",
+    "binary_version": "1:2022.10.3-5+deb13u2",
+    "source": "ntfs-3g",
+    "source_version": "1:2022.10.3-5+deb13u2"
+  },
+  {
+    "binary": "nvme-cli",
+    "binary_version": "2.13-2",
+    "source": "nvme-cli",
+    "source_version": "2.13-2"
+  },
+  {
+    "binary": "openssl",
+    "binary_version": "3.5.6-1~deb13u2",
+    "source": "openssl",
+    "source_version": "3.5.6-1~deb13u2"
+  },
+  {
+    "binary": "openssl-provider-legacy",
+    "binary_version": "3.5.6-1~deb13u2",
+    "source": "openssl",
+    "source_version": "3.5.6-1~deb13u2"
+  },
+  {
+    "binary": "partclone",
+    "binary_version": "0.3.36+repack-1",
+    "source": "partclone",
+    "source_version": "0.3.36+repack-1"
+  },
+  {
+    "binary": "parted",
+    "binary_version": "3.6-5",
+    "source": "parted",
+    "source_version": "3.6-5"
+  },
+  {
+    "binary": "passwd",
+    "binary_version": "1:4.17.4-2",
+    "source": "shadow",
+    "source_version": "1:4.17.4-2"
+  },
+  {
+    "binary": "pci.ids",
+    "binary_version": "0.0~2025.06.09-1",
+    "source": "pci.ids",
+    "source_version": "0.0~2025.06.09-1"
+  },
+  {
+    "binary": "pciutils",
+    "binary_version": "1:3.13.0-2",
+    "source": "pciutils",
+    "source_version": "1:3.13.0-2"
+  },
+  {
+    "binary": "perl-base",
+    "binary_version": "5.40.1-6",
+    "source": "perl",
+    "source_version": "5.40.1-6"
+  },
+  {
+    "binary": "pinentry-curses",
+    "binary_version": "1.3.1-2",
+    "source": "pinentry",
+    "source_version": "1.3.1-2"
+  },
+  {
+    "binary": "pipewire:amd64",
+    "binary_version": "1.4.9-1~bpo13+2",
+    "source": "pipewire",
+    "source_version": "1.4.9-1~bpo13+2"
+  },
+  {
+    "binary": "pipewire-bin",
+    "binary_version": "1.4.9-1~bpo13+2",
+    "source": "pipewire",
+    "source_version": "1.4.9-1~bpo13+2"
+  },
+  {
+    "binary": "pipewire-pulse",
+    "binary_version": "1.4.9-1~bpo13+2",
+    "source": "pipewire",
+    "source_version": "1.4.9-1~bpo13+2"
+  },
+  {
+    "binary": "pipewire-system-services",
+    "binary_version": "1.4.9-1~bpo13+2",
+    "source": "pipewire",
+    "source_version": "1.4.9-1~bpo13+2"
+  },
+  {
+    "binary": "procps",
+    "binary_version": "2:4.0.4-9",
+    "source": "procps",
+    "source_version": "2:4.0.4-9"
+  },
+  {
+    "binary": "python3",
+    "binary_version": "3.13.5-1",
+    "source": "python3-defaults",
+    "source_version": "3.13.5-1"
+  },
+  {
+    "binary": "python3-dbus",
+    "binary_version": "1.4.0-1",
+    "source": "dbus-python",
+    "source_version": "1.4.0-1"
+  },
+  {
+    "binary": "python3-minimal",
+    "binary_version": "3.13.5-1",
+    "source": "python3-defaults",
+    "source_version": "3.13.5-1"
+  },
+  {
+    "binary": "python3-tk:amd64",
+    "binary_version": "3.13.5-1",
+    "source": "python3-stdlib-extensions",
+    "source_version": "3.13.5-1"
+  },
+  {
+    "binary": "python3.13",
+    "binary_version": "3.13.5-2+deb13u4",
+    "source": "python3.13",
+    "source_version": "3.13.5-2+deb13u4"
+  },
+  {
+    "binary": "python3.13-minimal",
+    "binary_version": "3.13.5-2+deb13u4",
+    "source": "python3.13",
+    "source_version": "3.13.5-2+deb13u4"
+  },
+  {
+    "binary": "python3.13-tk",
+    "binary_version": "3.13.5-2+deb13u4",
+    "source": "python3.13",
+    "source_version": "3.13.5-2+deb13u4"
+  },
+  {
+    "binary": "readline-common",
+    "binary_version": "8.2-6",
+    "source": "readline",
+    "source_version": "8.2-6"
+  },
+  {
+    "binary": "rfkill",
+    "binary_version": "2.41.5-0+deb13u1",
+    "source": "util-linux",
+    "source_version": "2.41.5-0+deb13u1"
+  },
+  {
+    "binary": "rsync",
+    "binary_version": "3.4.1+ds1-5+deb13u4",
+    "source": "rsync",
+    "source_version": "3.4.1+ds1-5+deb13u4"
+  },
+  {
+    "binary": "sed",
+    "binary_version": "4.9-2+deb13u1",
+    "source": "sed",
+    "source_version": "4.9-2+deb13u1"
+  },
+  {
+    "binary": "sg3-utils",
+    "binary_version": "1.48-2",
+    "source": "sg3-utils",
+    "source_version": "1.48-2"
+  },
+  {
+    "binary": "shim-helpers-amd64-signed",
+    "binary_version": "1+16.1+2~deb13u1",
+    "source": "shim-helpers-amd64-signed",
+    "source_version": "1+16.1+2~deb13u1"
+  },
+  {
+    "binary": "shim-signed:amd64",
+    "binary_version": "1.51~1+deb13u1+16.1-2~deb13u1",
+    "source": "shim-signed",
+    "source_version": "1.51~1+deb13u1"
+  },
+  {
+    "binary": "shim-signed-common",
+    "binary_version": "1.51~1+deb13u1+16.1-2~deb13u1",
+    "source": "shim-signed",
+    "source_version": "1.51~1+deb13u1"
+  },
+  {
+    "binary": "shim-unsigned:amd64",
+    "binary_version": "16.1-2~deb13u1",
+    "source": "shim",
+    "source_version": "16.1-2~deb13u1"
+  },
+  {
+    "binary": "smartmontools",
+    "binary_version": "7.5-2~bpo13+1",
+    "source": "smartmontools",
+    "source_version": "7.5-2~bpo13+1"
+  },
+  {
+    "binary": "sqv",
+    "binary_version": "1.3.0-3+b2",
+    "source": "rust-sequoia-sqv",
+    "source_version": "1.3.0-3"
+  },
+  {
+    "binary": "stress-ng",
+    "binary_version": "0.19.02-1",
+    "source": "stress-ng",
+    "source_version": "0.19.02-1"
+  },
+  {
+    "binary": "systemd",
+    "binary_version": "257.13-1~deb13u1",
+    "source": "systemd",
+    "source_version": "257.13-1~deb13u1"
+  },
+  {
+    "binary": "systemd-sysv",
+    "binary_version": "257.13-1~deb13u1",
+    "source": "systemd",
+    "source_version": "257.13-1~deb13u1"
+  },
+  {
+    "binary": "sysvinit-utils",
+    "binary_version": "3.14-4",
+    "source": "sysvinit",
+    "source_version": "3.14-4"
+  },
+  {
+    "binary": "tar",
+    "binary_version": "1.35+dfsg-3.1",
+    "source": "tar",
+    "source_version": "1.35+dfsg-3.1"
+  },
+  {
+    "binary": "testdisk",
+    "binary_version": "7.2-0.1",
+    "source": "testdisk",
+    "source_version": "7.2-0.1"
+  },
+  {
+    "binary": "tk8.6-blt2.5",
+    "binary_version": "2.5.3+dfsg-8",
+    "source": "blt",
+    "source_version": "2.5.3+dfsg-8"
+  },
+  {
+    "binary": "traceroute",
+    "binary_version": "1:2.1.6-1",
+    "source": "traceroute",
+    "source_version": "1:2.1.6-1"
+  },
+  {
+    "binary": "tzdata",
+    "binary_version": "2026b-0+deb13u1",
+    "source": "tzdata",
+    "source_version": "2026b-0+deb13u1"
+  },
+  {
+    "binary": "udev",
+    "binary_version": "257.13-1~deb13u1",
+    "source": "systemd",
+    "source_version": "257.13-1~deb13u1"
+  },
+  {
+    "binary": "usbutils",
+    "binary_version": "1:018-2",
+    "source": "usbutils",
+    "source_version": "1:018-2"
+  },
+  {
+    "binary": "util-linux",
+    "binary_version": "2.41.5-0+deb13u1",
+    "source": "util-linux",
+    "source_version": "2.41.5-0+deb13u1"
+  },
+  {
+    "binary": "uuid-runtime",
+    "binary_version": "2.41.5-0+deb13u1",
+    "source": "util-linux",
+    "source_version": "2.41.5-0+deb13u1"
+  },
+  {
+    "binary": "wireless-regdb",
+    "binary_version": "2026.05.30-1~deb13u1",
+    "source": "wireless-regdb",
+    "source_version": "2026.05.30-1~deb13u1"
+  },
+  {
+    "binary": "wireplumber",
+    "binary_version": "0.5.12-1~bpo13+1",
+    "source": "wireplumber",
+    "source_version": "0.5.12-1~bpo13+1"
+  },
+  {
+    "binary": "wireplumber-system-services",
+    "binary_version": "0.5.12-1~bpo13+1",
+    "source": "wireplumber",
+    "source_version": "0.5.12-1~bpo13+1"
+  },
+  {
+    "binary": "wpasupplicant",
+    "binary_version": "2:2.10-24",
+    "source": "wpa",
+    "source_version": "2:2.10-24"
+  },
+  {
+    "binary": "x11-common",
+    "binary_version": "1:7.7+24+deb13u1",
+    "source": "xorg",
+    "source_version": "1:7.7+24+deb13u1"
+  },
+  {
+    "binary": "x11-xkb-utils",
+    "binary_version": "7.7+9",
+    "source": "x11-xkb-utils",
+    "source_version": "7.7+9"
+  },
+  {
+    "binary": "x11-xserver-utils",
+    "binary_version": "7.7+11",
+    "source": "x11-xserver-utils",
+    "source_version": "7.7+11"
+  },
+  {
+    "binary": "xauth",
+    "binary_version": "1:1.1.2-1.1",
+    "source": "xauth",
+    "source_version": "1:1.1.2-1.1"
+  },
+  {
+    "binary": "xfsprogs",
+    "binary_version": "6.13.0-2+b1",
+    "source": "xfsprogs",
+    "source_version": "6.13.0-2"
+  },
+  {
+    "binary": "xinit",
+    "binary_version": "1.4.2-1",
+    "source": "xinit",
+    "source_version": "1.4.2-1"
+  },
+  {
+    "binary": "xkb-data",
+    "binary_version": "2.42-1",
+    "source": "xkeyboard-config",
+    "source_version": "2.42-1"
+  },
+  {
+    "binary": "xserver-common",
+    "binary_version": "2:21.1.16-1.3+deb13u3",
+    "source": "xorg-server",
+    "source_version": "2:21.1.16-1.3+deb13u3"
+  },
+  {
+    "binary": "xserver-xorg-core",
+    "binary_version": "2:21.1.16-1.3+deb13u3",
+    "source": "xorg-server",
+    "source_version": "2:21.1.16-1.3+deb13u3"
+  },
+  {
+    "binary": "xserver-xorg-input-libinput",
+    "binary_version": "1.5.0-1",
+    "source": "xserver-xorg-input-libinput",
+    "source_version": "1.5.0-1"
+  },
+  {
+    "binary": "xserver-xorg-video-fbdev",
+    "binary_version": "1:0.5.0-2",
+    "source": "xserver-xorg-video-fbdev",
+    "source_version": "1:0.5.0-2"
+  },
+  {
+    "binary": "xserver-xorg-video-vesa",
+    "binary_version": "1:2.6.0-2",
+    "source": "xserver-xorg-video-vesa",
+    "source_version": "1:2.6.0-2"
+  },
+  {
+    "binary": "zlib1g:amd64",
+    "binary_version": "1:1.3.dfsg+really1.3.1-1+b1",
+    "source": "zlib",
+    "source_version": "1:1.3.dfsg+really1.3.1-1"
+  }
+]

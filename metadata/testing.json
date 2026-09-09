@@ -1,0 +1,65 @@
+{
+  "system_version": "2026.09.09.3",
+  "installer_version": "1.0.1",
+  "linux_unittest": {
+    "total": 139,
+    "skipped_windows_only": 2,
+    "failures": 0
+  },
+  "windows_installer_unittest": {
+    "total": 20,
+    "failures": 0
+  },
+  "qt_mock_devices": {
+    "passed": true,
+    "layouts": [
+      "640x480",
+      "800x600",
+      "1000x800",
+      "1280x900"
+    ]
+  },
+  "boot_checks": [
+    {
+      "mode": "BIOS",
+      "audio": "HDA",
+      "menu_visible": true,
+      "recording": {
+        "file": "vm-bios.wav",
+        "seconds": 9.553696145124716,
+        "peak": 10672,
+        "nonzero_samples": 261104
+      }
+    },
+    {
+      "mode": "UEFI Secure Boot",
+      "audio": "USB",
+      "keys": "previously enrolled in test OVMF",
+      "menu_visible": true,
+      "recording": {
+        "file": "vm-secure.wav",
+        "seconds": 9.675986394557823,
+        "peak": 5642,
+        "nonzero_samples": 267582
+      }
+    }
+  ],
+  "physical_usb": "Historical 1.0.0 writer test on one 64 GB Kingston; no physical write or laptop reboot for publication.",
+  "system_files": [
+    {
+      "file": "filesystem.squashfs",
+      "bytes": 1211187200,
+      "sha256": "87f17df0f59083d1e0d0fa9f4558579cb2043e9d6e8917de5e3a55cd84430ad4"
+    },
+    {
+      "file": "vmlinuz",
+      "bytes": 14182336,
+      "sha256": "f5f0ea7ca732fe560aecf250a92309f6bc36f63dbce98fe8e81a9385ecbe44f0"
+    },
+    {
+      "file": "initrd",
+      "bytes": 195828816,
+      "sha256": "ae15f46163d4e59a781f9a24784de329da702e970c028289499b90aa376fd9d0"
+    }
+  ]
+}

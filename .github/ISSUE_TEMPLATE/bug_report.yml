@@ -1,0 +1,29 @@
+name: Ошибка / Bug
+description: Сообщить об ошибке или проблеме доступности / Report a bug or accessibility issue
+body:
+  - type: markdown
+    attributes:
+      value: "Не публикуйте пароли, ключи, серийные номера и личные пути. / Do not post passwords, keys, serial numbers or private paths."
+  - type: input
+    id: version
+    attributes:
+      label: Версия / Version
+      description: "FlashOS, установщик / installer"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Оборудование и запуск / Hardware and boot
+      description: "Модель ПК/USB, Windows, BIOS/UEFI, Secure Boot, скринридер / PC/USB model, Windows, BIOS/UEFI, Secure Boot, screen reader"
+  - type: textarea
+    id: steps
+    attributes:
+      label: Что произошло / What happened
+      description: "Шаги, ожидание, результат; для озвучки — клавиши и услышанный текст / Steps, expected and actual result; for speech, keys and spoken text"
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Очищенный фрагмент журнала / Sanitized log excerpt

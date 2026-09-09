@@ -1,0 +1,16 @@
+name: Предложение / Feature request
+description: Предложить инструмент или улучшение доступности / Suggest a tool or accessibility improvement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Задача пользователя / User task
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Предложение / Proposal
+      description: "Управление без зрения, запись на диск, проверка результата, лицензия / Nonvisual controls, disk writes, verification, license"
+    validations:
+      required: true

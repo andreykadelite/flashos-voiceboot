@@ -1,0 +1,30 @@
+[Unit]
+Description=FlashOS speaking ISO selector
+After=systemd-udev-settle.service sound.target systemd-vconsole-setup.service
+After=wireplumber.service
+Wants=systemd-udev-settle.service wireplumber.service
+Conflicts=getty@tty1.service
+
+[Service]
+Type=simple
+LimitMEMLOCK=infinity
+ExecStartPre=-/usr/bin/setfont -C /dev/tty1 /usr/share/consolefonts/Uni2-Terminus16.psf.gz
+ExecStart=/usr/bin/python3 /opt/flashos/launch.py --root /run/live/medium
+Restart=always
+RestartSec=3
+KillMode=control-group
+TimeoutStopSec=20
+SendSIGKILL=yes
+StandardInput=tty
+StandardOutput=tty
+StandardError=journal
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+Environment=LANG=C.UTF-8
+Environment=TERM=linux
+Environment=XDG_RUNTIME_DIR=/run/pipewire
+Environment=PIPEWIRE_RUNTIME_DIR=/run/pipewire
+
+[Install]
+WantedBy=multi-user.target

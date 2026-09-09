@@ -1,0 +1,236 @@
+[
+  {
+    "file": "7z1900-src.7z",
+    "url": "https://www.7-zip.org/a/7z1900-src.7z",
+    "source_for": "Ventoy BLOB_List 7-Zip 19.00",
+    "bytes": 1071569,
+    "sha256": "9ba70a5e8485cf9061b30a2a84fe741de5aeb8dd271aab8889da0e9b3bf1868e",
+    "status": "downloaded"
+  },
+  {
+    "file": "busybox-1.27.1.tar.bz2",
+    "url": "https://busybox.net/downloads/busybox-1.27.1.tar.bz2",
+    "source_for": "Ventoy BLOB_List BusyBox 1.27.1",
+    "bytes": 2216948,
+    "sha256": "c890ac53fb218eb4c6ad9ed3207a896783b142e6d306f292b8d9bec82af5f936",
+    "status": "downloaded"
+  },
+  {
+    "file": "busybox-1.30.0.tar.bz2",
+    "url": "https://busybox.net/downloads/busybox-1.30.0.tar.bz2",
+    "source_for": "Ventoy BLOB_List BusyBox 1.30.0",
+    "bytes": 7586319,
+    "sha256": "9553da068c0a30b1b8b72479908c1ba58672e2be7b535363a88de5e0f7bc04ce",
+    "status": "downloaded"
+  },
+  {
+    "file": "busybox-1.31.0.tar.bz2",
+    "url": "https://busybox.net/downloads/busybox-1.31.0.tar.bz2",
+    "source_for": "Ventoy BLOB_List BusyBox 1.31.0",
+    "bytes": 2427873,
+    "sha256": "0e4925392fd9f3743cc517e031b68b012b24a63b0cf6c1ff03cce7bb3846cc99",
+    "status": "downloaded"
+  },
+  {
+    "file": "busybox-1.32.0.tar.bz2",
+    "url": "https://busybox.net/downloads/busybox-1.32.0.tar.bz2",
+    "source_for": "Ventoy BUSYBOX build input",
+    "bytes": 2439463,
+    "sha256": "c35d87f1d04b2b153d33c275c2632e40d388a88f19a9e71727e0bbbff51fe689",
+    "status": "downloaded"
+  },
+  {
+    "file": "cryptsetup-1.7.5.tar.xz",
+    "url": "https://mirrors.edge.kernel.org/pub/linux/utils/cryptsetup/v1.7/cryptsetup-1.7.5.tar.xz",
+    "source_for": "Ventoy veritysetup32 and veritysetup64 binaries; embedded version string is 1.7.5",
+    "bytes": 1232696,
+    "sha256": "2b30cd1d0dd606a53ac77b406e1d37798d4b0762fa89de6ea546201906a251bd",
+    "status": "downloaded"
+  },
+  {
+    "file": "device-mapper-1.02.28-2.el5.src.rpm",
+    "url": "https://vault.centos.org/5.3/os/SRPMS/device-mapper-1.02.28-2.el5.src.rpm",
+    "source_for": "Ventoy Linux dmsetup32 and dmsetup64 binaries; exact source RPM named by BuildVentoyFromSource and version string 1.02.28",
+    "bytes": 213701,
+    "sha256": "599a630fdf020282e27c66aa2b4f3d624d731bd150749a8d7b74f544be03b2bb",
+    "status": "downloaded"
+  },
+  {
+    "file": "dietlibc-0.34.tar.xz",
+    "url": "https://distfiles.gentoo.org/distfiles/a2/dietlibc-0.34.tar.xz",
+    "source_for": "Ventoy BuildVentoyFromSource section 3.1 dietlibc sysroot",
+    "status": "downloaded",
+    "upstream_url": "https://www.fefe.de/dietlibc/dietlibc-0.34.tar.xz",
+    "bytes": 662732,
+    "sha256": "7994ad5a63d00446da2e95da1f3f03355b272f096d7eb9830417ab14393b3ace",
+    "note": "Gentoo source archive mirror used after upstream TLS handshake failure."
+  },
+  {
+    "file": "DragonFlyBSD-v5.8.3-source.tar.gz",
+    "url": "https://codeload.github.com/DragonFlyBSD/DragonFlyBSD/tar.gz/refs/tags/v5.8.3",
+    "source_for": "Ventoy DragonFlyBSD dmsetup binary; embedded build path and BuildVentoyFromSource identify DragonFlyBSD 5.8.3 and LVM2 dmsetup 1.02.40",
+    "bytes": 126307125,
+    "sha256": "11a701ad9046e5bf8618326c2eea615af638d4f48044e4ed9efac1debc27b2a0",
+    "status": "downloaded"
+  },
+  {
+    "file": "edk2-edk2-stable201911.zip",
+    "url": "https://codeload.github.com/tianocore/edk2/zip/refs/tags/edk2-stable201911",
+    "source_for": "Ventoy EDK2 build input",
+    "bytes": 18841912,
+    "sha256": "c6f691aa91afbaab811a369fe729f61d8e5b58bb5ad79a45446c9ee849c1a60b",
+    "status": "downloaded"
+  },
+  {
+    "file": "efifs-gnu-efi-9b63de7d.tar.gz",
+    "url": "https://codeload.github.com/ncroxon/gnu-efi/tar.gz/9b63de7db6850b2415bb46fa28e0d62fa2f2f50e",
+    "source_for": "gnu-efi submodule commit pinned by efifs v1.4",
+    "bytes": 204812,
+    "sha256": "1b2619582bdb31d850271cf29848133bd4127f9bb9c8e014a575793cb1082e88",
+    "status": "downloaded"
+  },
+  {
+    "file": "efifs-grub-d5a32255.tar.gz",
+    "url": "https://codeload.github.com/rhboot/grub2/tar.gz/d5a32255de0e073881980fca0262000c865b30dd",
+    "source_for": "GRUB submodule commit pinned by efifs v1.4",
+    "bytes": 5433788,
+    "sha256": "4a8300116051b76838c4b93d239ff384dd8573938c406880fe4972bb00d5de87",
+    "status": "downloaded"
+  },
+  {
+    "file": "efifs-v1.4.tar.gz",
+    "url": "https://codeload.github.com/pbatard/efifs/tar.gz/refs/tags/v1.4",
+    "source_for": "efifs framework used by Ventoy's modified UEFI filesystem drivers",
+    "bytes": 90435,
+    "sha256": "8a689743998a0d412b4688ca4fd6051c72eeb2b64b15071287908f5153fb66f1",
+    "status": "downloaded"
+  },
+  {
+    "file": "exfat-1.3.0.zip",
+    "url": "https://codeload.github.com/relan/exfat/zip/refs/tags/v1.3.0",
+    "source_for": "Ventoy ExFAT build input",
+    "bytes": 90929,
+    "sha256": "4bc439d994c281ed4230c6d7fcaafa3e3f84c5c0f17d9d0c2d9647553155baba",
+    "status": "downloaded"
+  },
+  {
+    "file": "grub-2.04.tar.xz",
+    "url": "https://ftp.gnu.org/gnu/grub/grub-2.04.tar.xz",
+    "source_for": "Ventoy GRUB2 build input",
+    "bytes": 6393864,
+    "sha256": "e5292496995ad42dabe843a0192cf2a2c502e7ffcc7479398232b10a472df77d",
+    "status": "downloaded"
+  },
+  {
+    "file": "ImDisk-2.0.10-3c8a4d18.tar.gz",
+    "url": "https://codeload.github.com/LTRData/ImDisk/tar.gz/3c8a4d1850eb952d4acd3af23c3ef6500c26344e",
+    "source_for": "Ventoy BLOB_List ImDisk 2.0.10; commit sets IMDISK_VERSION to 2.0.10",
+    "bytes": 363751,
+    "sha256": "b31293f12e16ba38a13babe9b8c07d81a8a77abb8e3a6adc4718e6e6dd69f92e",
+    "status": "downloaded"
+  },
+  {
+    "file": "libfuse-fuse-2.9.9.zip",
+    "url": "https://codeload.github.com/libfuse/libfuse/zip/refs/tags/fuse-2.9.9",
+    "source_for": "Ventoy ExFAT/FUSE build input",
+    "bytes": 253183,
+    "sha256": "636cdf34bb5675ec67ea6a73cee826b913b235c4f11f17c3b3797a98721549e8",
+    "status": "downloaded"
+  },
+  {
+    "file": "musl-1.2.1.tar.gz",
+    "url": "https://musl.libc.org/releases/musl-1.2.1.tar.gz",
+    "source_for": "Ventoy BuildVentoyFromSource section 3.2 musl sysroot",
+    "bytes": 1047481,
+    "sha256": "68af6e18539f646f9c41a3a2bb25be4a5cfa5a8f65f0bb647fd2bbfdf877e84b",
+    "status": "downloaded"
+  },
+  {
+    "file": "Super-UEFIinSecureBoot-Disk_grub2-2.02-62.fc29_v3.src.rpm",
+    "url": "https://github.com/ValdikSS/Super-UEFIinSecureBoot-Disk/releases/download/3/Super-UEFIinSecureBoot-Disk_grub2-2.02-62.fc29_v3.src.rpm",
+    "source_for": "Super-UEFIinSecureBoot-Disk v3 GRUB source RPM used by Ventoy",
+    "bytes": 7692616,
+    "sha256": "7c2aafe0a1f377841d72fbaf1fcfa14afbc65a3c562a79cf1acb7ffe9f290608",
+    "status": "downloaded"
+  },
+  {
+    "file": "Super-UEFIinSecureBoot-Disk_modules-source_v3.zip",
+    "url": "https://github.com/ValdikSS/Super-UEFIinSecureBoot-Disk/releases/download/3/Super-UEFIinSecureBoot-Disk_modules-source_v3.zip",
+    "source_for": "Super-UEFIinSecureBoot-Disk v3 EFI modules used by Ventoy",
+    "bytes": 5232876,
+    "sha256": "afa2293f75d4185d6ac8d26f6aadf6f66dd26eab31fa0d149437a21e29320d45",
+    "status": "downloaded"
+  },
+  {
+    "file": "Super-UEFIinSecureBoot-Disk-v3-source.tar.gz",
+    "url": "https://codeload.github.com/ValdikSS/Super-UEFIinSecureBoot-Disk/tar.gz/refs/tags/3",
+    "source_for": "Super-UEFIinSecureBoot-Disk v3 repository source used by Ventoy",
+    "bytes": 8014,
+    "sha256": "5fd9ac3af57373f5835c70bcd982f8c871e95ca758bf43d8b52e66b688cf0636",
+    "status": "downloaded"
+  },
+  {
+    "file": "syslinux-6.03.tar.gz",
+    "url": "https://mirrors.edge.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.gz",
+    "source_for": "Ventoy BLOB_List Syslinux 6.03",
+    "bytes": 11671940,
+    "sha256": "250b9bd90945d361596a7a69943d0bdc5fc0c0917aa562609f8d3058a2c36b3a",
+    "status": "downloaded"
+  },
+  {
+    "file": "tinycore-config-5.4.3-tinycore64",
+    "url": "http://tinycorelinux.net/11.x/x86_64/release/src/kernel/config-5.4.3-tinycore64",
+    "source_for": "Exact TinyCore 11.0 x86_64 Linux 5.4.3 build configuration",
+    "bytes": 173659,
+    "sha256": "d8e1acfc520be72c07a75b3778338025f41422851a444f52e069810344c74d24",
+    "status": "downloaded"
+  },
+  {
+    "file": "tinycore-linux-5.4.3-patched.txz",
+    "url": "http://tinycorelinux.net/11.x/x86_64/release/src/kernel/linux-5.4.3-patched.txz",
+    "source_for": "Ventoy BLOB_List TinyCore 11.0 Linux kernel 5.4.3 patched source",
+    "bytes": 108336488,
+    "sha256": "8caf70f16ee16cf338a767ff11a578f5cb481de2cec53a54fa15690a0f31b2a9",
+    "status": "downloaded"
+  },
+  {
+    "file": "uClibc-0.9.30.1.tar.bz2",
+    "url": "https://www.uclibc.org/downloads/uClibc-0.9.30.1.tar.bz2",
+    "source_for": "uClibc runtime used by Ventoy's mini-native BusyBox toolchain",
+    "bytes": 2285137,
+    "sha256": "2d9769a02c46cff73f56a076268192da1ce91c913e2e4e31c120be098f704c8c",
+    "status": "downloaded"
+  },
+  {
+    "file": "zstd-1.0.0.zip",
+    "url": "https://codeload.github.com/facebook/zstd/zip/refs/tags/v1.0.0",
+    "source_for": "Ventoy BLOB_List zstd 1.0.0 binary",
+    "bytes": 688210,
+    "sha256": "8fe9294755bf853e7f879bfb4b12a4c39512c20ea8801227ef043117c3ee09a3",
+    "status": "downloaded"
+  },
+  {
+    "file": "busybox-1.27.1-i686.config",
+    "url": "https://busybox.net/downloads/binaries/1.27.1-i686/config",
+    "source_for": "Exact published configuration for Ventoy's BusyBox 1.27.1 i686 ash and xz binaries",
+    "bytes": 26768,
+    "sha256": "558e1937df73e22f3c28b070a4a3e8d62d7c920ee5e7bd07e6c2285f490fb835",
+    "status": "downloaded"
+  },
+  {
+    "file": "busybox-1.30.0-i686.config",
+    "url": "https://busybox.net/downloads/binaries/1.30.0-i686/config",
+    "source_for": "Exact published configuration for Ventoy's BusyBox 1.30.0 i686 ar, inotifyd, xzcat and hexdump binaries",
+    "bytes": 27935,
+    "sha256": "79161bdefe5199ddee8a624bd6bd128ac284066a64982f2121bd3532ff639a09",
+    "status": "downloaded"
+  },
+  {
+    "file": "busybox-1.31.0-i686-uclibc.config",
+    "url": "https://busybox.net/downloads/binaries/1.31.0-i686-uclibc/config",
+    "source_for": "Exact published configuration for Ventoy's BusyBox 1.31.0 i686-uClibc ash binary",
+    "bytes": 28089,
+    "sha256": "b93fff9ebeda215a8ad8bd9a2f2a5b5241e22d23229e970dc82d2587d1442977",
+    "status": "downloaded"
+  }
+]

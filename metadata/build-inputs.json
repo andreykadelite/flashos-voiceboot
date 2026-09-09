@@ -1,0 +1,32 @@
+[
+  {
+    "file": "ventoy-1.1.17-linux.tar.gz",
+    "url": "https://github.com/ventoy/Ventoy/releases/download/v1.1.17/ventoy-1.1.17-linux.tar.gz",
+    "sha256": "7fb4ed08cef6a6b4d39dd19260d8c80291a78dfdf9af7d461571e23cbbc43805",
+    "bytes": 20291141
+  },
+  {
+    "file": "ventoy-1.1.17-windows.zip",
+    "url": "https://github.com/ventoy/Ventoy/releases/download/v1.1.17/ventoy-1.1.17-windows.zip",
+    "sha256": "d250e97a7595fdac4f97debc630d7a8da942319274a76cb32384596b659dbaeb",
+    "bytes": 16650853
+  },
+  {
+    "file": "sof-bin-2025.12.2.tar.gz",
+    "url": "https://github.com/thesofproject/sof-bin/releases/download/v2025.12.2/sof-bin-2025.12.2.tar.gz",
+    "sha256": "533f63e3a6d94c09ce05a782657b675fa683ff20787c0979226cf563ec79f517",
+    "bytes": 13486442
+  },
+  {
+    "file": "qt-LGPL-3.0.txt",
+    "url": "https://raw.githubusercontent.com/qt/qtbase/v6.11.2/LICENSES/LGPL-3.0-only.txt",
+    "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768",
+    "bytes": 7651
+  },
+  {
+    "file": "qt-GPL-3.0.txt",
+    "url": "https://raw.githubusercontent.com/qt/qtbase/v6.11.2/LICENSES/GPL-3.0-only.txt",
+    "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+    "bytes": 35147
+  }
+]

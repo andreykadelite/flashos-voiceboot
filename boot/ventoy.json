@@ -1,0 +1,15 @@
+{
+  "control": [
+    { "VTOY_MENU_LANGUAGE": "ru_RU" },
+    { "VTOY_DEFAULT_IMAGE": "F6>FlashOS" },
+    { "VTOY_MENU_TIMEOUT": "1" },
+    { "VTOY_SECONDARY_BOOT_MENU": "0" },
+    { "VTOY_DEFAULT_SEARCH_ROOT": "/iso" },
+    { "VTOY_WIN11_BYPASS_CHECK": "0" },
+    { "VTOY_WIN11_BYPASS_NRO": "0" },
+    { "VTOY_SECURE_BOOT_POLICY": "1" }
+  ],
+  "theme": {
+    "display_mode": "CLI"
+  }
+}
