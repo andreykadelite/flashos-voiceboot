@@ -155,6 +155,17 @@ class FileTests(unittest.TestCase):
 
 
 class WifiTests(unittest.TestCase):
+    @contextlib.contextmanager
+    def private_files(self):
+        # The live service runs as root; unit tests must also run unprivileged.
+        create = tempfile.NamedTemporaryFile
+        with tempfile.TemporaryDirectory() as directory:
+            def temporary_file(*args, **kwargs):
+                self.assertEqual(kwargs.pop('dir'), '/run')
+                return create(*args, dir=directory, **kwargs)
+            with patch('wifi.tempfile.NamedTemporaryFile', side_effect=temporary_file):
+                yield
+
     def test_scan_ignores_unmanaged_radio_and_waits_for_first_results(self):
         job = Job('scan', None)
         job.cancel_event = Mock()
@@ -196,7 +207,7 @@ class WifiTests(unittest.TestCase):
                 return 0, json.dumps([{'ifname': 'wlan0', 'addr_info': [{'family': 'inet', 'scope': 'global', 'local': '192.168.1.2'}]}])
             return 0, ''
         job = Job('wifi', None)
-        with patch.object(job, 'command', side_effect=command):
+        with self.private_files(), patch.object(job, 'command', side_effect=command):
             connect_job(point, secret)(job)
         self.assertTrue(paths)
         self.assertFalse(paths[0].exists())
@@ -209,7 +220,7 @@ class WifiTests(unittest.TestCase):
         job = Job('wifi', None)
         def command(args, **kwargs):
             return (4, 'failed') if 'passwd-file' in args else (0, '')
-        with patch.object(job, 'command', side_effect=command) as run:
+        with self.private_files(), patch.object(job, 'command', side_effect=command) as run:
             job._run(connect_job(point, 'wrong-password'))
         self.assertTrue(job.failed)
         self.assertIn('delete', run.call_args.args[0])
