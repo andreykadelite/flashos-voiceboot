@@ -1,17 +1,18 @@
 {
   "system_version": "2026.09.09.3",
-  "installer_version": "1.0.1",
+  "installer_version": "1.0.2",
   "linux_unittest": {
-    "total": 139,
-    "skipped_windows_only": 2,
+    "total": 167,
+    "skipped_windows_or_qt": 14,
     "failures": 0
   },
   "windows_installer_unittest": {
-    "total": 20,
+    "total": 48,
     "failures": 0
   },
   "qt_mock_devices": {
     "passed": true,
+    "additional_scale_percent": 200,
     "layouts": [
       "640x480",
       "800x600",
@@ -44,7 +45,28 @@
       }
     }
   ],
-  "physical_usb": "Historical 1.0.0 writer test on one 64 GB Kingston; no physical write or laptop reboot for publication.",
+  "physical_usb": {
+    "installer_version": "1.0.2",
+    "device": "One 64 GB Kingston DataTraveler 3.0",
+    "method": "Local acceptance script using the writer embedded in the EXE; final EXE GUI tested separately",
+    "format_exfat_seconds": 20.56,
+    "install_and_verify_seconds": 238.56,
+    "separate_verify_seconds": 37.3,
+    "passed": true,
+    "host_partition_layout_unchanged": true,
+    "writer_and_payload_unchanged_after_test": true,
+    "other_pcs_tested": false,
+    "physical_usb_2_tested": false,
+    "physical_pc_rebooted": false
+  },
+  "final_exe_gui": {
+    "version": "1.0.2",
+    "sha256": "6d4d6d618de1a92c8e99fb01c1211e741059f37ff91d3cba2ef7a5c4e182fca2",
+    "log_and_help_textpattern_selection": true,
+    "keyboard_navigation": true,
+    "unicode_path_launch": true,
+    "nvda_speech_listened_to": false
+  },
   "system_files": [
     {
       "file": "filesystem.squashfs",

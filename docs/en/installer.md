@@ -2,7 +2,7 @@
 
 [Русский](../ru/installer.md) · [Home](../../README.en.md)
 
-Installer 1.0.1 packages FlashOS 2026.09.09.3. It runs on Windows 10 1809+ and Windows 11 x64. It contains its runtime and system files; no Python, Qt installation or network connection is required. Allow several gigabytes of free local space for extraction.
+Installer 1.0.2 packages FlashOS 2026.09.09.3. It runs on Windows 10 1809+ and Windows 11 x64. It contains its runtime and system files; no Python, Qt installation or network connection is required. Allow several gigabytes of free local space for extraction.
 
 ## Install a USB drive
 
@@ -23,7 +23,7 @@ Installer 1.0.1 packages FlashOS 2026.09.09.3. It runs on Windows 10 1809+ and W
 | Форматировать | Erase FlashOS and other data; create one ordinary exFAT, NTFS or supported FAT32 partition |
 | Открыть iso | Open the selected drive's ISO folder |
 | Сохранить журнал | Save the operation log |
-| Компоненты | View versions, Linux package list and license information |
+| Состав EXE | View the bundled Windows runtime, embedded Linux package list and licenses |
 | Справка | Open help |
 | Остановить | Request cancellation |
 
@@ -34,6 +34,16 @@ MBR is the default for BIOS/UEFI compatibility. Select GPT for drives of 2 TiB o
 ## Accessibility
 
 Tab / Shift+Tab move between controls; arrows select list items; Enter or Space activates buttons. F1 opens help, F5 refreshes devices, F6 focuses status, Ctrl+L focuses the log and Ctrl+S saves it.
+
+In the log, help and read-only fields, arrow keys move the actual text caret so screen readers can follow lines and characters. Home/End move within a line; Ctrl+Home/Ctrl+End move to the start/end of the document. Shift+arrows select text and Ctrl+C copies it. Incoming log entries preserve the reading position. Help has a section list: choose with arrows, then Tab into its text; Escape closes it.
+
+F6 refreshes a readable status snapshot containing the stage, current file, completed and remaining stage percentage, measured speed, elapsed time and any available stage ETA. The snapshot is held while focused; press F6 again to refresh and announce it. The adjacent visual indicators continue updating. Completion and errors leave focus in place. Removing a selected drive never selects a different USB automatically.
+
+## USB speed and waiting
+
+Local preparation, USB writing and USB verification have separate measured speeds. Percent and ETA refer to the current stage. Partitioning and cache flushes can take an unknown amount of time, so the installer does not invent an overall completion percentage or a USB generation from the drive's name. USB 2.0/3.x ports, hubs and device controllers affect actual speed. Slow transfers are allowed to finish; a waiting indicator shows how long there has been no new report. Cancellation waits for a pending system write to finish.
+
+Verify extracts only small reference files and boot images on the PC, then checks the installed USB; it no longer unpacks the entire system image. Installation still validates the full embedded payload before altering the USB and flushes the volume caches before readback.
 
 Native Qt widgets have accessible names. Progress stages are sent through Qt's accessibility interface; speech depends on the running screen reader. The log remains readable while work continues. The window follows Windows scaling, supports small windows with scrolling and uses system colours in high-contrast mode. The installer UI is Russian; it does not include its own speech synthesizer.
 

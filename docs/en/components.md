@@ -2,7 +2,7 @@
 
 [Русский](../ru/components.md) · [Home](../../README.en.md)
 
-FlashOS 2026.09.09.3; installer 1.0.1. Exact Linux binary versions are in [packages.tsv](../../metadata/packages.tsv); their source-package mapping is in [debian-packages.json](../../metadata/debian-packages.json).
+FlashOS 2026.09.09.3; installer 1.0.2. Exact Linux binary versions are in [packages.tsv](../../metadata/packages.tsv); their source-package mapping is in [debian-packages.json](../../metadata/debian-packages.json).
 
 | Component | Version | Purpose |
 | --- | --- | --- |

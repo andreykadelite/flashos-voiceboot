@@ -1,5 +1,22 @@
 # Изменения / Change log
 
+## Установщик / Installer 1.0.2 — 2026-09-10
+
+Исправлены чтение журнала и справки стрелками через настоящий текстовый курсор Qt,
+Enter/Space, сохранение фокуса при обновлении устройств и окончании записи.
+Добавлены оглавление справки, снимок состояния по F6, оставшийся процент этапа,
+отдельные скорости подготовки/записи/чтения и индикация ожидания сброса кеша.
+Список EXE разделяет его Windows-библиотеки и встроенный Linux-образ.
+Проверка USB использует выборочную распаковку эталонов; запись маленьких файлов
+не повторяет тяжёлый опрос Windows и аппаратный сброс кеша для каждого файла.
+Повторные операции блокируются до завершения потока и очистки.
+
+Fix keyboard text/caret accessibility, Enter/Space activation and focus stability.
+Add help contents, F6 status snapshots, remaining stage percentage and measured
+preparation/write/read speeds. Reduce repeated storage queries and per-file
+hardware flushes; keep a volume flush before verification. Verify only extracts
+the needed boot references. The embedded Linux system remains 2026.09.09.3.
+
 ## 2026.09.09.3 — первый публичный выпуск / first public release
 
 FlashOS 2026.09.09.3, установщик / installer 1.0.1.

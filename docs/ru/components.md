@@ -2,7 +2,7 @@
 
 [English](../en/components.md) · [Главная](../../README.md)
 
-FlashOS 2026.09.09.3; установщик 1.0.1. Точные версии всех Linux-пакетов находятся в [packages.tsv](../../metadata/packages.tsv), соответствие исходным пакетам — в [debian-packages.json](../../metadata/debian-packages.json).
+FlashOS 2026.09.09.3; установщик 1.0.2. Точные версии всех Linux-пакетов находятся в [packages.tsv](../../metadata/packages.tsv), соответствие исходным пакетам — в [debian-packages.json](../../metadata/debian-packages.json).
 
 | Компонент | Версия | Назначение |
 | --- | --- | --- |
