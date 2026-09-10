@@ -29,6 +29,8 @@ with patch.object(gui, 'inventory', return_value=disks):
     window.drives.setCurrentIndex(2)
     assert window.selected()['number'] == 10
     window.scanned([disks[0]])
+    assert window.selected() is None, 'Removed device must never select a different USB automatically'
+    window.drives.setCurrentIndex(1)
     assert window.selected()['number'] == 9
     for width, height in ((640, 480), (800, 600), (1000, 800), (1280, 900)):
         window.resize(width, height)
@@ -40,6 +42,9 @@ with patch.object(gui, 'inventory', return_value=disks):
         app.processEvents()
         viewport = window.centralWidget().viewport()
         point = window.log.mapTo(viewport, QPoint(0, 0))
+        if point.y() >= viewport.height():
+            window.grab().save(str(root / 'dist/installer-focus-failure.png'))
+            print('Focus details:', width, point.y(), viewport.height(), app.focusWidget())
         assert point.y() < viewport.height(), 'Keyboard focus must scroll the log into view'
         window.drives.setFocus()
         app.processEvents()
@@ -69,9 +74,9 @@ with patch.object(gui, 'inventory', return_value=disks):
     assert window.log.textCursor().selectedText() == selected
     window.on_event(dict(kind='phase', phase='copy', message='Тест сообщения о записи', percent=None))
     window.on_event(dict(kind='progress', phase='copy', message='Тест прогресса', percent=37.5, bytes=100_000_000))
-    assert window.progress.value() == 375 and 'МиБ/с' in window.metrics.text()
+    assert window.progress.value() == 38 and window.progress.maximum() == 100 and 'МиБ/с' in window.metrics.text()
     window.on_event(dict(kind='complete', message='Проверка завершена'))
-    assert window.progress.text() == '100%'
+    assert window.progress.text().startswith('100.0%')
     with patch.object(gui, 'is_admin', return_value=True), patch.object(gui, 'JobThread', side_effect=OSError('test denied')), patch.object(gui.QMessageBox, 'warning'):
         window.start_action('verify')
         assert not window.busy

@@ -49,7 +49,7 @@ with zipfile.ZipFile(OUT, 'w', compression=zipfile.ZIP_STORED, allowZip64=True) 
     include('info', 'AUTHORSHIP.md', ROOT / 'NOTICE.md')
     include('info', 'RECOVERY-RU.md', ROOT / 'docs/ru/guide.md')
     metadata = {
-        'schema': 1, 'system_version': '2026.09.09.3', 'installer_version': '1.0.1',
+        'schema': 1, 'system_version': '2026.09.09.3', 'installer_version': '1.0.2',
         'files': records, 'objects': objects,
         'components': [
             {'name': 'FlashOS', 'version': '2026.09.09.3', 'purpose': 'Говорящая загрузочная система'},
@@ -60,9 +60,8 @@ with zipfile.ZipFile(OUT, 'w', compression=zipfile.ZIP_STORED, allowZip64=True) 
             {'name': 'Голос Анна', 'version': '4.1', 'purpose': 'Русская озвучка RHVoice'},
             {'name': 'Голос Александр', 'version': '4.2', 'purpose': 'Русская озвучка RHVoice'},
             {'name': 'Голос Юрий', 'version': '4.0', 'purpose': 'RHVoice; некоммерческая лицензия'},
-            {'name': 'Python', 'version': '3.12.10', 'purpose': 'Встроенная среда установщика'},
-            {'name': 'Qt / PySide6', 'version': importlib.metadata.version('PySide6'), 'purpose': 'Доступный графический интерфейс'},
-            {'name': 'Nuitka', 'version': importlib.metadata.version('Nuitka'), 'purpose': 'Компиляция самостоятельного EXE'},
+            {'name': 'Python', 'version': '3.12.10', 'scope': 'Windows-установщик', 'purpose': 'Встроенная среда установщика'},
+            {'name': 'Qt / PySide6', 'version': importlib.metadata.version('PySide6'), 'scope': 'Windows-установщик', 'purpose': 'Графический интерфейс и доступность Windows UIA'},
         ],
     }
     raw = json.dumps(metadata, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')

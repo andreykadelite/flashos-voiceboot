@@ -1,10 +1,9 @@
 """Disk identity and operation rules, shared by the interface and tests."""
-from dataclasses import dataclass
 import hashlib
 import json
 
 TITLE = 'Установщик Flash OS'
-VERSION = '1.0.1'
+VERSION = '1.0.2'
 SYSTEM_VERSION = '2026.09.09.3'
 MINIMUM_BYTES = 4_000_000_000
 MBR_LIMIT = 2 * 1024**4

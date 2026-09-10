@@ -1,17 +1,17 @@
 """Qt Widgets interface: UIA names, native focus, responsive layout, live worker events."""
 import ctypes
 from datetime import datetime
-import json
 from pathlib import Path
-import time
 from PySide6.QtCore import Qt, QThread, Signal, QTimer, QUrl
 from PySide6.QtGui import (QAccessible, QAccessibleAnnouncementEvent, QDesktopServices,
-                           QKeySequence, QShortcut, QFont)
+                           QKeySequence, QShortcut)
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                               QGridLayout, QLabel, QComboBox, QPushButton, QGroupBox,
+                               QGridLayout, QLabel, QComboBox, QGroupBox,
                                QProgressBar, QPlainTextEdit, QScrollArea, QFileDialog,
                                QMessageBox, QDialog)
 from installer.backend import Operation
+from installer.accessibility import KeyboardButton, ReadOnlyText
+from installer.progress import ProgressState
 from installer.bundle import Bundle
 from installer.dialogs import ConfirmErase, InfoDialog, label
 from installer.model import TITLE, VERSION, SYSTEM_VERSION, identity, fingerprint, disk_label, unavailable_reason
@@ -62,7 +62,7 @@ QPushButton#install { background: #075e66; color: white; font-weight: 600; borde
 QPushButton#install:hover { background: #084b52; }
 QPushButton:disabled { background: #e7ebee; color: #596873; border-color: #a8b4bc; }
 QPushButton#install:disabled, QComboBox:disabled { background: #e7ebee; color: #596873; border-color: #a8b4bc; }
-QPushButton:focus, QComboBox:focus, QPlainTextEdit:focus, QLineEdit:focus, QCheckBox:focus { border: 3px solid #1766ae; }
+QPushButton:focus, QComboBox:focus, QPlainTextEdit:focus, QTextBrowser:focus, QTableWidget:focus, QLineEdit:focus, QCheckBox:focus, QProgressBar:focus { border: 3px solid #1766ae; }
 QProgressBar { border: 1px solid #8297a7; border-radius: 4px; background: white; color: #163448; text-align: center; min-height: 23px; }
 QProgressBar::chunk { background: #9cd4d5; }
 '''
@@ -85,9 +85,11 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(460, 400)
         self.disks, self.scan, self.job = [], None, None
         self.busy = False
+        self.closing = False
+        self.scanned_once = False
+        self.scan_error = ''
+        self.stats = ProgressState()
         self.terminal_event = None
-        self.started = self.phase_started = time.monotonic()
-        self.last_phase = ''
         self.bundle = Bundle()
         self._layout_columns = 0
         scroll = QScrollArea()
@@ -104,7 +106,6 @@ class MainWindow(QMainWindow):
         subtitle.setObjectName('subtitle')
         self.layout.addWidget(subtitle)
         self.summary = label('Поиск подключённых USB-накопителей…')
-        self.summary.setAccessibleName('Сводка подключённых устройств')
         self.layout.addWidget(self.summary)
 
         drive_box = QGroupBox('1. Выберите флешку')
@@ -118,8 +119,7 @@ class MainWindow(QMainWindow):
         row.addWidget(self.drives, 1)
         row.addWidget(self.refresh)
         drive_layout.addLayout(row)
-        self.details = QPlainTextEdit()
-        self.details.setReadOnly(True)
+        self.details = ReadOnlyText()
         self.details.setAccessibleName('Сведения о выбранном накопителе')
         self.details.setMaximumHeight(90)
         drive_layout.addWidget(self.details)
@@ -149,7 +149,7 @@ class MainWindow(QMainWindow):
         self.verify = self.button('Проверить', lambda: self.start_action('verify'), 'Проверить файлы установленной FlashOS')
         self.format = self.button('Форматировать', lambda: self.start_action('format'), 'Удалить все данные и создать обычную USB-флешку')
         self.iso = self.button('Открыть iso', self.open_iso, 'Открыть папку ISO выбранной флешки')
-        self.components = self.button('Компоненты', self.show_components, 'Программы, версии и лицензии')
+        self.components = self.button('Состав EXE', self.show_components, 'Программы, версии и лицензии')
         self.help = self.button('Справка', self.show_help, 'Справка, F1')
         self.action_buttons = [self.install, self.verify, self.format, self.iso, self.components, self.help]
         options_layout.addLayout(self.actions_grid)
@@ -158,13 +158,16 @@ class MainWindow(QMainWindow):
 
         progress_box = QGroupBox('3. Ход работы')
         progress_layout = QVBoxLayout(progress_box)
-        self.status = QPlainTextEdit('Готов к работе. Выберите USB-накопитель.')
-        self.status.setReadOnly(True)
+        self.stage_label = label('Готов к работе')
+        progress_layout.addWidget(self.stage_label)
+        self.status = ReadOnlyText('Готов к работе. Выберите USB-накопитель.')
         self.status.setAccessibleName('Состояние операции, F6')
-        self.status.setMaximumHeight(66)
+        self.status.setAccessibleDescription(self.status.accessibleDescription() + ' F6 обновляет снимок состояния, повторное F6 читает его вслух.')
+        self.status.setMaximumHeight(110)
         progress_layout.addWidget(self.status)
         self.progress = QProgressBar()
         self.progress.setAccessibleName('Прогресс текущего этапа')
+        self.progress.setFocusPolicy(Qt.StrongFocus)
         self.progress.setValue(0)
         progress_layout.addWidget(self.progress)
         self.metrics = label('Время: —    Скорость: —')
@@ -177,11 +180,11 @@ class MainWindow(QMainWindow):
         status_row.addStretch()
         status_row.addWidget(self.save)
         progress_layout.addLayout(status_row)
-        self.log = QPlainTextEdit()
-        self.log.setReadOnly(True)
+        self.log = ReadOnlyText()
         self.log.setAccessibleName('Журнал работы в реальном времени, Ctrl+L')
         self.log.setMinimumHeight(150)
         self.log.document().setMaximumBlockCount(10000)
+        progress_layout.addWidget(label('F6 — обновить снимок состояния · Ctrl+L — журнал · Ctrl+End — последняя запись. При чтении снимок сохраняется.'))
         progress_layout.addWidget(self.log, 1)
         self.layout.addWidget(progress_box, 1)
         self.layout.addWidget(label('Разработка: Зотов Андрей Анатольевич · Telegram @zotovsmol · andreykadelite@ya.ru'))
@@ -191,20 +194,29 @@ class MainWindow(QMainWindow):
         if not high_contrast():
             self.setStyleSheet(STYLE)
         self.reflow()
-        for keys, callback in [('F1', self.show_help), ('F5', self.start_scan), ('F6', self.status.setFocus), ('Ctrl+L', self.log.setFocus), ('Ctrl+S', self.save_log)]:
+        order = [self.drives, self.refresh, self.details, self.style, self.filesystem,
+                 *self.action_buttons, self.status, self.progress, self.stop_button, self.save, self.log]
+        for first, second in zip(order, order[1:]):
+            QWidget.setTabOrder(first, second)
+        self.drives.setFocus()
+        for keys, callback in [('F1', self.show_help), ('F5', self.start_scan), ('F6', self.read_status), ('Ctrl+L', self.log.setFocus), ('Ctrl+S', self.save_log)]:
             shortcut = QShortcut(QKeySequence(keys), self)
+            shortcut.setContext(Qt.WindowShortcut)
             shortcut.activated.connect(callback)
         self.scan_timer = QTimer(self)
         self.scan_timer.setInterval(10000)
         self.scan_timer.timeout.connect(self.start_scan)
         self.scan_timer.start()
+        self.progress_timer = QTimer(self)
+        self.progress_timer.setInterval(1000)
+        self.progress_timer.timeout.connect(self.render_progress)
         self.selected_changed()
         QTimer.singleShot(0, self.start_scan)
         self.append_log('Встроенный комплект найден. Интернет для установки не требуется.')
         self.append_log('Права администратора: ' + ('есть.' if is_admin() else 'Windows запросит их перед операцией.'))
 
     def button(self, text, callback, accessible):
-        button = QPushButton(text)
+        button = KeyboardButton(text)
         button.setAccessibleName(accessible)
         button.clicked.connect(callback)
         button.setAutoDefault(False)
@@ -214,6 +226,13 @@ class MainWindow(QMainWindow):
         scroll = self.centralWidget()
         if new is not None and scroll.isAncestorOf(new):
             scroll.ensureWidgetVisible(new, 12, 12)
+            # Reflow and wrapped labels may settle after focusChanged is emitted.
+            QTimer.singleShot(0, self.scroll_to_focus)
+
+    def scroll_to_focus(self):
+        widget = QApplication.focusWidget()
+        if widget is not None and self.centralWidget().isAncestorOf(widget):
+            self.centralWidget().ensureWidgetVisible(widget, 12, 12)
 
     def reflow(self):
         columns = 3 if self.width() >= 800 else 2
@@ -244,52 +263,60 @@ class MainWindow(QMainWindow):
     def selected_changed(self):
         disk = self.selected()
         if not disk:
-            self.details.setPlainText('Выберите флешку в списке. Внутренние диски не предлагаются.')
+            self.details.snapshot('Выберите флешку в списке. Внутренние диски не предлагаются.')
         else:
             volumes = ', '.join(v['letter'] + ': ' + (v['label'] or 'без метки') + ' ' + v['filesystem'] for v in disk['volumes'])
             free = sum(v['free'] for v in disk['volumes']) / 1024**3
-            self.details.setPlainText(disk_label(disk) + '\nСерийный номер: ' + (disk['serial'] or 'не сообщён') + f' · Свободно: {free:.1f} ГиБ' + '\nРазделы: ' + (volumes or 'нет') + '\n' + (unavailable_reason(disk, style='GPT') or 'USB-накопитель доступен.'))
+            self.details.snapshot(disk_label(disk) + '\nСерийный номер: ' + (disk['serial'] or 'не сообщён') + f' · Свободно: {free:.1f} ГиБ' + '\nРазделы: ' + (volumes or 'нет') + '\n' + (unavailable_reason(disk, style='GPT') or 'USB-накопитель доступен.'))
             if disk['size'] >= 2 * 1024**4:
                 self.style.setCurrentIndex(1)
         for button in (self.install, self.verify, self.format, self.iso):
             button.setEnabled(bool(disk) and not self.busy)
 
     def start_scan(self):
-        if self.busy or (self.scan and self.scan.isRunning()):
+        if self.closing or self.busy or QApplication.activeModalWidget() or self.drives.view().isVisible() or (self.scan and self.scan.isRunning()):
             return
-        self.refresh.setEnabled(False)
         self.scan = ScanThread(self)
         self.scan.result.connect(self.scanned)
         self.scan.failed.connect(self.scan_failed)
-        self.scan.finished.connect(lambda: self.refresh.setEnabled(not self.busy))
+        self.scan.finished.connect(self.scan_finished)
+        self.scan.finished.connect(self.scan.deleteLater)
         self.scan.start()
 
+    def scan_finished(self):
+        self.scan = None
+
     def scanned(self, disks):
-        if self.busy:
+        if self.busy or QApplication.activeModalWidget() or self.drives.view().isVisible():
             return
+        self.scan_error = ''
         selected = self.drives.currentData()
         usb = [d for d in disks if d['bus'] == 'USB']
-        old = [(fingerprint(d), d['volumes']) for d in self.disks]
+        old = [(fingerprint(d), disk_label(d)) for d in self.disks]
         self.disks = usb
         self.summary.setText(f'USB-накопителей: {len(usb)}. Внутренние диски скрыты. Система в комплекте: {SYSTEM_VERSION}.')
-        if old != [(fingerprint(d), d['volumes']) for d in usb]:
+        if not self.scanned_once or old != [(fingerprint(d), disk_label(d)) for d in usb]:
             self.drives.blockSignals(True)
             self.drives.clear()
             self.drives.addItem('Выберите USB-накопитель' if usb else 'USB-накопители не найдены', None)
             for disk in usb:
                 self.drives.addItem(disk_label(disk), fingerprint(disk))
             match = self.drives.findData(selected) if selected else -1
-            self.drives.setCurrentIndex(match if match > 0 else (1 if len(usb) == 1 else 0))
+            # Never silently replace a removed selected device with another USB.
+            self.drives.setCurrentIndex(match if match > 0 else (1 if not self.scanned_once and len(usb) == 1 else 0))
             self.drives.blockSignals(False)
-            self.selected_changed()
+        self.scanned_once = True
+        self.selected_changed()
 
     def scan_failed(self, message):
         self.summary.setText('Не удалось обновить список USB-накопителей. Нажмите F5 для повторной попытки.')
-        self.append_log(message)
+        if message != self.scan_error:
+            self.append_log(message)
+            self.scan_error = message
 
     def start_action(self, action):
         disk = self.selected()
-        if self.busy or not disk:
+        if self.closing or self.busy or not disk:
             return
         style = 'MBR' if self.style.currentIndex() == 0 else 'GPT'
         filesystem = self.filesystem.currentText()
@@ -314,8 +341,14 @@ class MainWindow(QMainWindow):
             return
         self.busy = True
         self.terminal_event = None
-        self.started = self.phase_started = time.monotonic()
-        self.last_phase = ''
+        self.stats.reset()
+        self._logged_checkpoint = -1
+        self.stats.message = 'Подготовка операции. Проверяем устройство и права доступа.'
+        self.progress.setRange(0, 0)
+        self.render_progress()
+        # Move only the control that is about to disappear from keyboard navigation.
+        if QApplication.focusWidget() in (self.drives, self.refresh, self.style, self.filesystem, self.install, self.verify, self.format, self.iso):
+            self.status.setFocus()
         for widget in (self.drives, self.refresh, self.style, self.filesystem, self.install, self.verify, self.format, self.iso):
             widget.setEnabled(False)
         self.stop_button.setEnabled(True)
@@ -323,79 +356,92 @@ class MainWindow(QMainWindow):
         self.append_log(('Проверка' if action == 'verify' else 'Установка' if action == 'install' else 'Форматирование') + ': ' + disk_label(disk))
         self.job.event.connect(self.on_event)
         self.job.finished.connect(self.job_finished)
+        self.progress_timer.start()
         self.job.start()
 
     def job_finished(self):
-        if self.busy:
+        if not self.terminal_event:
             self.on_event(dict(kind='error', message='Рабочий процесс завершился без полного отчёта. Проверьте журнал; при прерывании записи повторите установку.'))
-            self.on_event(dict(kind='finished', message='Рабочий поток завершён.'))
+        self.busy = False
+        self.progress_timer.stop()
+        if self.stop_button.hasFocus():
+            self.status.setFocus()
+        self.stop_button.setEnabled(False)
+        for widget in (self.drives, self.refresh, self.style, self.filesystem):
+            widget.setEnabled(True)
+        self.selected_changed()
+        self.start_scan()
+        job, self.job = self.job, None
+        if job:
+            job.deleteLater()
 
     def append_log(self, text):
-        bar = self.log.verticalScrollBar()
-        cursor = self.log.textCursor()
-        anchor, cursor_position = cursor.anchor(), cursor.position()
-        preserve = cursor.hasSelection() or self.log.hasFocus()
-        follow = bar.value() >= bar.maximum() - 2 and not self.log.hasFocus()
-        position = bar.value()
-        self.log.appendPlainText(datetime.now().strftime('%H:%M:%S') + '  ' + text)
-        if preserve:
-            from PySide6.QtGui import QTextCursor
-            maximum = self.log.document().characterCount() - 1
-            cursor.setPosition(min(anchor, maximum))
-            cursor.setPosition(min(cursor_position, maximum), QTextCursor.KeepAnchor)
-            self.log.setTextCursor(cursor)
-        bar.setValue(bar.maximum() if follow else position)
+        self.log.append_entry(datetime.now().strftime('%H:%M:%S') + '  ' + text)
 
-    def announce(self, text):
+    def announce(self, text, explicit=False):
+        if not explicit and (QApplication.activeModalWidget() or isinstance(QApplication.focusWidget(), (QPlainTextEdit,))):
+            return
         event = QAccessibleAnnouncementEvent(self.status, text)
         QAccessible.updateAccessibility(event)
 
     def on_event(self, event):
         kind, message = event['kind'], event.get('message', '')
         if kind == 'finished':
-            self.busy = False
-            self.stop_button.setEnabled(False)
-            for widget in (self.drives, self.refresh, self.style, self.filesystem):
-                widget.setEnabled(True)
-            self.selected_changed()
             self.append_log(message)
-            self.start_scan()
-            if self.terminal_event and self.terminal_event['kind'] == 'error':
-                QMessageBox.warning(self, 'Операция не завершена', self.terminal_event['message'] + '\n\n' + message)
             return
         if kind in ('phase', 'complete', 'error', 'cancelled'):
             self.append_log(message)
-            self.status.setPlainText(message)
-            self.announce(message)
+            self.announce(message, explicit=kind in ('complete', 'error', 'cancelled'))
         elif kind == 'log':
             self.append_log(message)
         if kind in ('complete', 'error', 'cancelled'):
             self.terminal_event = event
-            self.progress.setRange(0, 100)
-            self.progress.setFormat('%p%')
-            self.progress.setValue(100 if kind == 'complete' else 0)
-            return
-        phase = event.get('phase', '')
-        if kind in ('phase', 'progress'):
-            if self.last_phase != phase:
-                self.phase_started, self.last_phase = time.monotonic(), phase
-            percent = event.get('percent')
-            self.progress.setRange(0, 0 if percent is None else 1000)
-            if percent is not None:
-                self.progress.setValue(int(percent * 10))
-                self.progress.setFormat(f'{percent:.1f}%')
-            elapsed = int(time.monotonic() - self.started)
-            size = event.get('bytes', 0)
-            speed = f'{size / 1024**2 / max(1, time.monotonic() - self.phase_started):.1f} МиБ/с' if size else '—'
-            self.metrics.setText(f'Время: {elapsed // 60:02d}:{elapsed % 60:02d}    Скорость: {speed}')
+        self.stats.accept(event)
+        if kind == 'progress' and event.get('phase') == 'copy' and self.stats.percent is not None:
+            checkpoint = int(self.stats.percent) // 10
+            if checkpoint > getattr(self, '_logged_checkpoint', -1):
+                self._logged_checkpoint = checkpoint
+                self.append_log(f'Запись на USB: {self.stats.percent:.1f}%. {message}')
+        self.render_progress()
+
+    def render_progress(self):
+        percent = self.stats.percent
+        self.progress.setRange(0, 100 if percent is not None or self.stats.terminal else 0)
+        if percent is not None:
+            self.progress.setValue(round(percent))
+            self.progress.setFormat(f'{percent:.1f}% · осталось {100-percent:.1f}% этапа')
+        elif self.stats.terminal:
+            self.progress.setValue(0)
+            self.progress.setFormat('Операция не завершена')
+        self.progress.setAccessibleDescription(self.stats.summary())
+        self.metrics.setText(self.stats.metrics())
+        self.stage_label.setText(self.stats.message + ('\nСейчас: ' + self.stats.file if self.stats.file and not self.stats.terminal else ''))
+        self.status.snapshot(self.stats.summary())
+
+    def read_status(self):
+        self.status.snapshot(self.stats.summary(), force=True)
+        already_focused = self.status.hasFocus()
+        self.status.setFocus()
+        if already_focused:
+            self.announce(self.stats.summary(), explicit=True)
 
     def stop_job(self):
         if self.busy and self.job:
-            self.job.operation.cancel()
+            if self.stats.stopping or self.stats.terminal:
+                return
+            try:
+                self.job.operation.cancel()
+            except OSError as error:
+                self.append_log('Не удалось передать запрос остановки: ' + str(error))
+                return
+            self.stats.stopping = True
+            if self.stop_button.hasFocus():
+                self.status.setFocus()
             self.stop_button.setEnabled(False)
             self.stop_button.setText('Ожидание остановки…')
-            self.status.setPlainText('Запрос остановки принят. Ожидаем завершения текущей системной записи; не отключайте флешку.')
-            self.announce(self.status.toPlainText())
+            self.append_log('Запрос остановки принят. Не отключайте флешку до завершения операции.')
+            self.render_progress()
+            self.announce(self.stats.summary())
 
     def open_iso(self):
         disk = self.selected()
@@ -408,6 +454,8 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, TITLE, 'Папка iso на выбранном накопителе не найдена. Сначала установите FlashOS.')
 
     def save_log(self):
+        if QApplication.activeModalWidget():
+            return
         path, _ = QFileDialog.getSaveFileName(self, 'Сохранить журнал', 'FlashOS-Installer.log', 'Текстовый журнал (*.log *.txt)')
         if path:
             try:
@@ -416,10 +464,12 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, TITLE, str(error))
 
     def show_help(self):
-        InfoDialog('Справка', self, text=self.bundle.text('HELP-RU.md')).exec()
+        if not QApplication.activeModalWidget():
+            InfoDialog('Справка', self, text=self.bundle.text('HELP-RU.md')).exec()
 
     def show_components(self):
-        InfoDialog('Компоненты', self, bundle=self.bundle).exec()
+        if not QApplication.activeModalWidget():
+            InfoDialog('Компоненты', self, bundle=self.bundle).exec()
 
     def closeEvent(self, event):
         if self.busy:
@@ -427,6 +477,7 @@ class MainWindow(QMainWindow):
             event.ignore()
             return
         if self.scan and self.scan.isRunning():
+            self.closing = True
             self.scan_timer.stop()
             self.scan.finished.connect(self.close)
             event.ignore()
