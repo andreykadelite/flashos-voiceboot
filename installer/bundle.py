@@ -3,7 +3,6 @@ import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import shutil
-import sys
 import time
 import zipfile
 from installer._release import MANIFEST_SHA256
@@ -48,18 +47,20 @@ class Bundle:
             raise ValueError('Повреждён справочный файл.')
         return data.decode('utf-8-sig')
 
-    def extract(self, destination, emit, cancelled):
+    def extract(self, destination, emit, cancelled, required=None):
         destination = Path(destination)
-        total = sum(self.manifest['objects'].values())
+        records = [r for r in self.manifest['files'] if required is None or (r['section'], r['path']) in required]
+        selected = {r['sha256']: self.manifest['objects'][r['sha256']] for r in records}
+        total = sum(selected.values())
         if shutil.disk_usage(destination.parent).free < total + 512 * 1024**2:
             raise ValueError(f'Для подготовки системы нужно {total / 1024**3 + .5:.1f} ГиБ свободного места на компьютере.')
         destination.mkdir()
         objects = destination / 'objects'
         objects.mkdir()
         written, last = 0, 0
-        emit(dict(kind='phase', phase='prepare', message='Проверка и подготовка встроенной системы', percent=None))
+        emit(dict(kind='phase', phase='prepare', message='Проверка и подготовка встроенной системы' if required is None else 'Подготовка эталонов для проверки флешки', percent=0, bytes=0, total_bytes=total))
         with zipfile.ZipFile(self.path) as archive:
-            for digest, size in self.manifest['objects'].items():
+            for digest, size in selected.items():
                 if len(digest) != 64 or any(c not in '0123456789abcdef' for c in digest):
                     raise ValueError('Недопустимая контрольная сумма.')
                 info = archive.getinfo('objects/' + digest)
@@ -74,16 +75,17 @@ class Bundle:
                         hasher.update(block)
                         written += len(block)
                         if time.monotonic() - last > .4:
-                            emit(dict(kind='progress', phase='prepare', message='Проверка комплекта', percent=round(written * 100 / total, 1), bytes=written))
+                            emit(dict(kind='progress', phase='prepare', message='Проверка комплекта', percent=round(written * 100 / max(1, total), 1), bytes=written, total_bytes=total))
                             last = time.monotonic()
                 if hasher.hexdigest() != digest:
                     raise ValueError('Повреждён встроенный файл. Скачайте исправный EXE заново.')
         engine = destination / 'engine'
         engine.mkdir()
-        for record in self.manifest['files']:
+        for record in records:
             if record['section'] == 'engine':
                 target = engine / safe_relative(record['path'])
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(objects / record['sha256'], target)
         (destination / 'manifest.json').write_text(json.dumps(self.manifest, ensure_ascii=False), encoding='utf-8')
+        emit(dict(kind='progress', phase='prepare', message='Комплект проверен', percent=100, bytes=written, total_bytes=total))
         return destination

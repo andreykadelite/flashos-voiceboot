@@ -1,7 +1,6 @@
 """Keep the selected device object open, detect removal, and permit readback by handle."""
 import ctypes
 from ctypes import wintypes as W
-import threading
 
 
 class DiskLease:

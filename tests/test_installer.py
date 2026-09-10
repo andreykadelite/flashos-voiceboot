@@ -85,6 +85,24 @@ class BundleRules(unittest.TestCase):
             with self.assertRaises(ValueError):
                 Bundle(bundle.path, '0' * 64)
 
+    def test_selective_verification_does_not_unpack_system_image(self):
+        with tempfile.TemporaryDirectory() as directory:
+            bundle = self.make_bundle(directory)
+            work = Path(directory) / 'work'
+            events = []
+            bundle.extract(work, events.append, lambda: False, required=set())
+            self.assertEqual([], list((work / 'objects').iterdir()))
+            self.assertTrue((work / 'manifest.json').is_file())
+            self.assertEqual(0, events[-1]['total_bytes'])
+
+    def test_extraction_reports_complete_byte_total(self):
+        with tempfile.TemporaryDirectory() as directory:
+            bundle = self.make_bundle(directory)
+            events = []
+            bundle.extract(Path(directory) / 'work', events.append, lambda: False)
+            self.assertEqual(100, events[-1]['percent'])
+            self.assertEqual(events[-1]['bytes'], events[-1]['total_bytes'])
+
 
 if __name__ == '__main__':
     unittest.main()

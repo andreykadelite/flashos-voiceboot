@@ -1,13 +1,10 @@
 """Run one verified operation, retaining logs and waiting for disk writers."""
 from datetime import datetime, timezone
 import json
-import os
 from pathlib import Path
 import shutil
-import subprocess
 import sys
 import threading
-import uuid
 from installer.bundle import Bundle
 from installer.model import validate_request
 from installer.windows import inventory, is_admin, OperationMutex, powershell
@@ -53,6 +50,16 @@ class Operation:
         self.callback(event)
 
     def run(self):
+        # Hold the cross-process writer lock through readback AND final cleanup.
+        try:
+            with OperationMutex():
+                self._run_locked()
+        except Exception as error:
+            if not self.terminal:
+                self.emit(dict(kind='error', message=str(error), changed=self.changed))
+            self.secure.close()
+
+    def _run_locked(self):
         process = None
         group = None
         lease = None
@@ -63,70 +70,77 @@ class Operation:
         try:
             if not is_admin():
                 raise RuntimeError('Для операции нужны права администратора.')
-            with OperationMutex():
-                current = next((d for d in inventory() if d['number'] == self.request['target']['number']), None)
-                if current is None:
-                    raise ValueError('Выбранный накопитель отключён.')
-                validate_request(self.request, current)
-                bundle = Bundle()
-                if self.request['action'] == 'format':
-                    self.work.mkdir()
-                    (self.work / 'manifest.json').write_text(json.dumps(bundle.manifest, ensure_ascii=False), encoding='utf-8')
-                else:
-                    bundle.extract(self.work, self.emit, self.stop.is_set)
-                current = next((d for d in inventory() if d['number'] == self.request['target']['number']), None)
-                if current is None:
-                    raise ValueError('Накопитель отключён во время подготовки.')
-                validate_request(self.request, current)
-                if self.stop.is_set():
-                    raise InterruptedError('Подготовка отменена. Флешка не изменена.')
-                lease = DiskLease(self.request['target'])
-                request = dict(self.request, manifest=str(self.work / 'manifest.json'), objects=str(self.work / 'objects'),
-                               engine=str(self.work / 'engine'), protected_paths=[str(Path(sys.argv[0]).resolve()), sys.executable])
-                (self.root / 'request.json').write_text(json.dumps(request, ensure_ascii=False), encoding='utf-8')
-                script = self.root / 'engine.ps1'
-                # BOM is necessary for Russian strings in Windows PowerShell 5.1.
-                script.write_text(ENGINE_SCRIPT, encoding='utf-8-sig')
-                group = ProcessGroup()
-                lease.check()
-                process = group.start([powershell(), '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
-                                            '-File', str(script), '-RequestPath', str(self.root / 'request.json')],
-                                           )
-                def watch_device():
-                    while not watch_stop.wait(.1):
-                        try:
-                            lease.check()
-                        except OSError:
-                            device_lost.set()
-                            group.close()
-                            return
-                watchdog = threading.Thread(target=watch_device, daemon=True)
-                watchdog.start()
-                for raw in iter(process.stdout.readline, b''):
-                    line = raw.decode('utf-8-sig', errors='replace').strip()
-                    if not line:
-                        continue
+            self.emit(dict(kind='phase', phase='preflight', message='Проверка выбранного USB-накопителя и условий операции', percent=None))
+            current = next((d for d in inventory() if d['number'] == self.request['target']['number']), None)
+            if current is None:
+                raise ValueError('Выбранный накопитель отключён.')
+            validate_request(self.request, current)
+            bundle = Bundle()
+            if self.request['action'] == 'format':
+                self.work.mkdir()
+                (self.work / 'manifest.json').write_text(json.dumps(bundle.manifest, ensure_ascii=False), encoding='utf-8')
+            else:
+                required = None
+                if self.request['action'] == 'verify':
+                    required = {('engine', 'boot/boot.img'), ('engine', 'boot/core.img.xz'),
+                                ('engine', 'ventoy/ventoy.disk.img.xz'),
+                                ('boot', 'flashos/efi/grub.cfg'), ('boot', 'EFI/debian/grub.cfg')}
+                bundle.extract(self.work, self.emit, self.stop.is_set, required=required)
+            current = next((d for d in inventory() if d['number'] == self.request['target']['number']), None)
+            if current is None:
+                raise ValueError('Накопитель отключён во время подготовки.')
+            validate_request(self.request, current)
+            if self.stop.is_set():
+                raise InterruptedError('Подготовка отменена. Флешка не изменена.')
+            lease = DiskLease(self.request['target'])
+            request = dict(self.request, manifest=str(self.work / 'manifest.json'), objects=str(self.work / 'objects'),
+                           engine=str(self.work / 'engine'), protected_paths=[str(Path(sys.argv[0]).resolve()), sys.executable])
+            (self.root / 'request.json').write_text(json.dumps(request, ensure_ascii=False), encoding='utf-8')
+            script = self.root / 'engine.ps1'
+            # BOM is necessary for Russian strings in Windows PowerShell 5.1.
+            script.write_text(ENGINE_SCRIPT, encoding='utf-8-sig')
+            group = ProcessGroup()
+            lease.check()
+            process = group.start([powershell(), '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+                                        '-File', str(script), '-RequestPath', str(self.root / 'request.json')],
+                                       )
+            def watch_device():
+                while not watch_stop.wait(.1):
                     try:
-                        event = json.loads(line)
-                        if not isinstance(event, dict) or 'kind' not in event:
-                            raise ValueError()
-                    except (ValueError, TypeError):
-                        event = dict(kind='log', message=line, phase='system')
-                    if event['kind'] == 'complete':
-                        pending_complete = event
-                    else:
-                        self.emit(event)
-                code = process.wait()
-                if device_lost.is_set():
-                    self.terminal = False
-                    raise RuntimeError('Связь с USB-накопителем потеряна. Все процессы записи остановлены. Подключите флешку и повторите операцию.')
-                if pending_complete is not None and code == 0:
-                    if self.request['action'] != 'format':
-                        verify_boot(lease, self.work, bundle.manifest, self.emit, self.stop.is_set,
-                                    self.request['style'] if self.request['action'] == 'install' else None)
-                    self.emit(pending_complete)
-                if not self.terminal:
-                    raise RuntimeError(f'Системная команда завершилась без итогового отчёта (код {code}). Проверьте журнал.')
+                        lease.check()
+                    except OSError:
+                        device_lost.set()
+                        group.close()
+                        return
+            watchdog = threading.Thread(target=watch_device, daemon=True)
+            watchdog.start()
+            for raw in iter(process.stdout.readline, b''):
+                line = raw.decode('utf-8-sig', errors='replace').strip()
+                if not line:
+                    continue
+                try:
+                    event = json.loads(line)
+                    if not isinstance(event, dict) or 'kind' not in event:
+                        raise ValueError()
+                except (ValueError, TypeError):
+                    event = dict(kind='log', message=line, phase='system')
+                if event['kind'] == 'complete':
+                    pending_complete = event
+                else:
+                    self.emit(event)
+            code = process.wait()
+            if device_lost.is_set():
+                self.terminal = False
+                raise RuntimeError('Связь с USB-накопителем потеряна. Все процессы записи остановлены. Подключите флешку и повторите операцию.')
+            if pending_complete is not None and code == 0:
+                if self.request['action'] != 'format':
+                    verify_boot(lease, self.work, bundle.manifest, self.emit, self.stop.is_set,
+                                self.request['style'] if self.request['action'] == 'install' else None)
+                self.emit(pending_complete)
+            elif pending_complete is not None and not self.terminal:
+                raise RuntimeError(f'Системная команда сообщила завершение, но вернула ошибку (код {code}).')
+            if not self.terminal:
+                raise RuntimeError(f'Системная команда завершилась без итогового отчёта (код {code}). Проверьте журнал.')
         except Exception as error:
             # A Python/UI error must never leave an independent disk writer behind.
             if process is not None and process.poll() is None:

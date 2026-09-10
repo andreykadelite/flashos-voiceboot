@@ -9,16 +9,20 @@ $manifest=Get-Content -LiteralPath $request.manifest -Raw -Encoding UTF8 | Conve
 $cancel=Join-Path (Split-Path -Parent $RequestPath) 'cancel'
 $script:changed=$false
 $script:doneBytes=[long]0
-$script:totalBytes=[long]1
+$script:totalBytes=[long]0
+$script:identityTimer=[Diagnostics.Stopwatch]::StartNew()
 $script:lastProgress=[datetime]::MinValue
 $script:phase='preflight'
 function Event([string]$kind,[string]$message,$percent=$null) {
-  $data=@{kind=$kind;message=$message;phase=$script:phase;percent=$percent;changed=$script:changed;bytes=$script:doneBytes}
+  $data=@{kind=$kind;message=$message;phase=$script:phase;percent=$percent;changed=$script:changed;bytes=$script:doneBytes;total_bytes=$script:totalBytes}
   [Console]::WriteLine((ConvertTo-Json -InputObject $data -Compress))
   [Console]::Out.Flush()
 }
 function Phase([string]$name,[string]$message) {
   $script:phase=$name
+  $script:doneBytes=[long]0
+  $script:totalBytes=[long]0
+  $script:lastProgress=[datetime]::MinValue
   Event 'phase' $message
 }
 function Check-Cancel {
@@ -68,6 +72,16 @@ function Io-Root([string]$root,[int]$partition) {
   if($paths.Count -ne 1) { throw 'Windows не предоставила постоянный путь тома.' }
   return $paths[0]
 }
+function Check-IoTarget {
+  # All data I/O uses already validated volume GUID paths, never reused letters.
+  # The Python device lease also checks the open physical object every 100 ms.
+  # Avoid hundreds of identical CIM/storage queries for small documentation files.
+  if($script:identityTimer.ElapsedMilliseconds -ge 5000) {
+    $null=Assert-Target
+    $script:identityTimer.Restart()
+  }
+  Check-Cancel
+}
 function Safe-Join([string]$root,[string]$relative) {
   if($relative -notmatch '^[A-Za-z0-9_А-Яа-яЁё. /-]+$' -or $relative.Split('/') -contains '..' -or [IO.Path]::IsPathRooted($relative)) { throw 'Недопустимый путь в комплекте.' }
   $path=[IO.Path]::GetFullPath((Join-Path $root $relative))
@@ -84,8 +98,8 @@ function Safe-Join([string]$root,[string]$relative) {
 }
 function Progress-Bytes([int]$count,[string]$name) {
   $script:doneBytes+=$count
-  if(([datetime]::UtcNow-$script:lastProgress).TotalMilliseconds -ge 500) {
-    Event 'progress' $name ([math]::Min(100,[math]::Round(100*$script:doneBytes/$script:totalBytes,1)))
+  if(([datetime]::UtcNow-$script:lastProgress).TotalMilliseconds -ge 500 -or $script:doneBytes -eq $script:totalBytes) {
+    Event 'progress' $name ([math]::Min(100,[math]::Round(100*$script:doneBytes/[math]::Max(1,$script:totalBytes),1)))
     $script:lastProgress=[datetime]::UtcNow
   }
 }
@@ -94,9 +108,9 @@ function Copy-File([string]$source,[string]$destination,[string]$name) {
   # .NET drops the trailing separator for a volume-GUID root. Win32 requires it.
   if($parent -match '^\\\\\?\\Volume\{[A-Fa-f0-9-]+\}$') { $parent+='\' }
   $null=[IO.Directory]::CreateDirectory($parent)
-  $inputFile=[IO.File]::OpenRead($source)
+  $inputFile=[IO.FileStream]::new($source,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read,1MB,[IO.FileOptions]::SequentialScan)
   try {
-    $outputFile=[IO.File]::Open($destination,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::Read)
+    $outputFile=[IO.FileStream]::new($destination,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::Read,1MB,[IO.FileOptions]::SequentialScan)
     try {
       $buffer=New-Object byte[] (4MB)
       while(($count=$inputFile.Read($buffer,0,$buffer.Length)) -gt 0) {
@@ -104,12 +118,13 @@ function Copy-File([string]$source,[string]$destination,[string]$name) {
         $outputFile.Write($buffer,0,$count)
         Progress-Bytes $count $name
       }
-      $outputFile.Flush($true)
+      # Dispose flushes the stream; both volume caches are flushed in a distinct
+      # stage before verification. A hardware flush per tiny file is very slow.
     } finally { $outputFile.Dispose() }
   } finally { $inputFile.Dispose() }
 }
 function Hash-File([string]$path,[string]$name) {
-  $file=[IO.File]::OpenRead($path)
+  $file=[IO.FileStream]::new($path,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read,1MB,[IO.FileOptions]::SequentialScan)
   $sha=[Security.Cryptography.SHA256]::Create()
   try {
     $buffer=New-Object byte[] (4MB)
@@ -142,6 +157,7 @@ try {
     Phase 'format' 'Форматирование. Не отключайте флешку; остановка станет возможна после завершения этого этапа.'
     $null=Assert-Target
     $script:changed=$true
+    Event 'log' 'Начало изменения разметки выбранной флешки.'
     $disk | Clear-Disk -RemoveData -RemoveOEM -Confirm:$false
     $disk=Assert-Target
     if([string]$disk.PartitionStyle -eq 'RAW') {
@@ -159,6 +175,7 @@ try {
     $volume=Get-Volume -Partition $p
     $volume | Write-VolumeCache
     if($volume.FileSystem -ne $request.filesystem) { throw 'Файловая система после форматирования не совпала с выбранной.' }
+    if(Test-Path -LiteralPath $cancel) { Event 'log' 'Запрос остановки поступил во время форматирования. Windows уже завершила его; флешка отформатирована.' }
     Event 'complete' ('Флешка отформатирована в '+$volume.FileSystem+'. Раздел '+$root) 100
     exit 0
   }
@@ -168,6 +185,7 @@ try {
     $argsList=@('VTOYCLI','/I',('/PhyDrive:'+$disk.Number),'/R:512','/FS:EXFAT')
     if($request.style -eq 'GPT') { $argsList+='/GPT' }
     $script:changed=$true
+    Event 'log' 'Начало изменения разметки выбранной флешки.'
     $process=Start-Process -FilePath (Join-Path $request.engine 'Ventoy2Disk.exe') -ArgumentList $argsList -WorkingDirectory $request.engine -WindowStyle Hidden -PassThru
     $last='';$waitNotice=$false;$started=[datetime]::UtcNow
     while(-not $process.HasExited) {
@@ -207,8 +225,7 @@ try {
     $script:doneBytes=0
     $script:totalBytes=($manifest.files | Where-Object section -in @('usb','boot') | Measure-Object bytes -Sum).Sum
     foreach($entry in $manifest.files | Where-Object section -in @('usb','boot')) {
-      $part=if($entry.section -eq 'usb'){1}else{3}
-      Assert-Volume $letters[$entry.section] $part
+      Check-IoTarget
       $destination=Safe-Join $roots[$entry.section] $entry.path
       Copy-File (Join-Path $request.objects $entry.sha256) $destination $entry.path
     }
@@ -221,8 +238,11 @@ try {
       if([regex]::Matches($template,'@DATA_UUID@').Count -ne 1) { throw 'Ошибка шаблона загрузки.' }
       [IO.File]::WriteAllText($configPath,$template.Replace('@DATA_UUID@',$uuid),[Text.UTF8Encoding]::new($false))
     }
+    Phase 'flush' 'Завершение записи на USB: сброс кеша. Процент неизвестен; не отключайте флешку.'
+    $null=Assert-Target
     Write-VolumeCache -Path $roots.usb
     Write-VolumeCache -Path $roots.boot
+    Check-Cancel
   } else {
     $mainRoot=Root-For (Get-Partition -DiskNumber $disk.Number -PartitionNumber 1)
     $bootRoot=Root-For (Get-Partition -DiskNumber $disk.Number -PartitionNumber 3)
@@ -235,8 +255,7 @@ try {
   $script:doneBytes=0
   $script:totalBytes=($manifest.files | Where-Object section -in @('usb','boot') | Measure-Object bytes -Sum).Sum
   foreach($entry in $manifest.files | Where-Object section -in @('usb','boot')) {
-    $part=if($entry.section -eq 'usb'){1}else{3}
-    Assert-Volume $letters[$entry.section] $part
+    Check-IoTarget
     $path=Safe-Join $roots[$entry.section] $entry.path
     if($entry.section -eq 'boot' -and $entry.path -in @('flashos/efi/grub.cfg','EFI/debian/grub.cfg')) {
       $original=[IO.File]::ReadAllText((Join-Path $request.objects $entry.sha256))
