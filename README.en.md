@@ -8,6 +8,8 @@ Copy your `.iso` files into the USB drive's `iso` folder. At each boot, FlashOS 
 
 **[Download the Windows EXE](https://github.com/andreykadelite/flashos-voiceboot/releases/latest/download/FlashOS-Setup.exe)** · [All release files](https://github.com/andreykadelite/flashos-voiceboot/releases/latest) · [User guide](docs/en/guide.md)
 
+Current release: FlashOS 2026.09.12.1 and installer 1.0.4. This release preserves USB selection across administrator startup and restores missing or damaged ISO selection state. [Changes](CHANGELOG.md) · [Test coverage](docs/en/testing.md).
+
 The application interface and spoken help are currently in Russian. English documentation explains the controls and limitations; an English UI is not included in this release.
 
 ## Two parts, one project
@@ -32,7 +34,7 @@ The installer uses native Qt 6 widgets and Windows accessibility interfaces. It 
 
 1. Download `FlashOS-Setup.exe` and check it against `SHA256SUMS.txt` from the same release.
 2. Connect a USB drive of at least 4 GB; 16 GB or more leaves room for installation images. Save its existing files elsewhere.
-3. Run the EXE, select the drive by model, capacity and serial number, then choose **Установить** (Install). Allow the Windows administrator prompt if requested.
+3. Run the EXE and allow the Windows administrator prompt before the menu opens. Select the drive by model, capacity and serial number, then choose **Установить** (Install).
 4. Confirm the selected drive. **Installation deletes all its partitions and files.** Wait for the write and verification to finish.
 5. Copy your ISO files into `iso` on the **FLASHOS** partition. Subfolders are supported.
 6. Connect headphones or speakers, boot the PC from USB and wait for speech. Open **Запустить систему** (Start a system), choose an image with the arrow keys and press Enter.

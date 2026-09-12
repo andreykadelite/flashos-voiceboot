@@ -20,7 +20,9 @@ The fetcher verifies the pinned Ventoy, SOF and license inputs. Provisioning nee
 
 The output is `dist/usb`, `dist/boot`, `dist/ventoy.disk.img.xz` and `dist/packages.tsv`. Never place personal ISOs, backups, settings or reports in this packaging tree. `tools/package-public-docs.py` copies only public documentation. Test ISOs belong in separate VM fixtures.
 
-For the exact published system without provisioning Linux again, download `FlashOS-2026.09.09.3-system.zip`, verify its SHA256 and extract it at the checkout root. It supplies the prepared `dist` tree. **This ZIP is not an ISO or a raw disk image and must not be written with Rufus/dd.** Use the EXE to prepare USB media.
+To build the EXE with the prepared system, download `FlashOS-2026.09.12.1-system.zip` from [this release](https://github.com/andreykadelite/flashos-voiceboot/releases/tag/v2026.09.12.1-installer-1.0.4), verify SHA256 and extract it into a source checkout of the same tag. It supplies the `dist` tree. Use the EXE to prepare USB media: the ZIP contains build files and cannot be written with Rufus or dd.
+
+After changing FlashOS code, run `build/repack-system.sh` in the prepared Linux environment. `tools/verify-toolkit-build.py` compares the sources with files inside squashfs and records the image SHA256. Packaging stops if the system version, image or sources differ from that report. The prepared-system archive includes the report.
 
 The full Linux build uses current trixie/backports indexes. To reconstruct older Debian package binaries, use the exact `.dsc`, original tarballs and Debian patches in the release's Debian source archive with `dpkg-source -x` and `dpkg-buildpackage` in the matching Debian environment. See `metadata/debian-sources.json`; it records every source file and SHA256. Third-party source archives include upstream build instructions. Rebuilding signed upstream EFI binaries will not reproduce the upstream signing keys; use originals or your own trust setup.
 

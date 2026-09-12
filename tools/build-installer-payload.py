@@ -4,9 +4,11 @@ import hashlib
 import importlib.metadata
 import json
 import zipfile
-from public_payload import payload_files, pinned_zip, safe_path
+from public_payload import payload_files, pinned_zip, safe_path, verified_system
 
 ROOT = Path(__file__).resolve().parents[1]
+SYSTEM_VERSION = '2026.09.12.1'
+INSTALLER_VERSION = '1.0.4'
 OUT = ROOT / 'build/installer/payload.zip'
 OUT.parent.mkdir(parents=True, exist_ok=True)
 records, objects = [], {}
@@ -21,6 +23,7 @@ def include(section, path, source):
         objects[digest] = len(content)
 
 
+verified_system(ROOT, SYSTEM_VERSION)
 with zipfile.ZipFile(OUT, 'w', compression=zipfile.ZIP_STORED, allowZip64=True) as archive:
     for section in ('usb', 'boot'):
         for relative, path in payload_files(ROOT, section):
@@ -49,10 +52,10 @@ with zipfile.ZipFile(OUT, 'w', compression=zipfile.ZIP_STORED, allowZip64=True) 
     include('info', 'AUTHORSHIP.md', ROOT / 'NOTICE.md')
     include('info', 'RECOVERY-RU.md', ROOT / 'docs/ru/guide.md')
     metadata = {
-        'schema': 1, 'system_version': '2026.09.09.3', 'installer_version': '1.0.2',
+        'schema': 1, 'system_version': SYSTEM_VERSION, 'installer_version': INSTALLER_VERSION,
         'files': records, 'objects': objects,
         'components': [
-            {'name': 'FlashOS', 'version': '2026.09.09.3', 'purpose': 'Говорящая загрузочная система'},
+            {'name': 'FlashOS', 'version': SYSTEM_VERSION, 'purpose': 'Говорящая загрузочная система'},
             {'name': 'Ventoy', 'version': '1.1.17', 'purpose': 'BIOS, UEFI и запуск ISO'},
             {'name': 'RHVoice', 'version': '1.18.4', 'purpose': 'Речевой синтезатор загрузочной системы'},
             {'name': 'Голос Елена', 'version': '4.3', 'purpose': 'Русская озвучка RHVoice'},

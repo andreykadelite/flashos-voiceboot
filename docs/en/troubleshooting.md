@@ -18,6 +18,8 @@ Save the log. Once installation starts, cancellation cannot restore the old cont
 
 Some firmware requires Ventoy certificate enrollment through MOK. FlashOS cannot speak that screen because Linux and its speech system have not started. Sighted assistance may be needed. Independent enrollment on every PC is not guaranteed. Follow [Ventoy's official procedure](https://www.ventoy.net/en/doc_secure.html); no purchased FlashOS key is required. External boot and certificate trust are controlled by the computer owner and firmware.
 
+`Verification failed: (0x1A) Security Violation` occurs before the voice menu starts. Ventoy's procedure requires a new key for versions 1.1.13 and later because of the UEFI CA 2023 transition. In the FlashOS 2026.09.12.1 test, fresh OVMF Microsoft-key variables stopped at this error; Debian and Win11PE booted with previously enrolled keys. Follow the firmware vendor's and Ventoy's enrollment procedure; automatic enrollment on every PC has not been established. See [test details](testing.md).
+
 ## There is no sound
 
 Wait for boot, check speakers/headphones and volume, then try F6 with a pause between presses. Audio may initially use HDMI or another connector. USB headsets can be detected after boot, though connecting before boot is preferable. F8 saves an audio report. A driver being present does not guarantee support for a particular board; new hardware may need a newer kernel, firmware or UCM profile. Bluetooth audio is not a supported first-boot method.

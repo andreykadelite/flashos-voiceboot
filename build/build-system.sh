@@ -79,10 +79,11 @@ cp "$project/boot/debian-grub.cfg" "$project/dist/boot/EFI/debian/grub.cfg"
 cp "$project/boot/ventoy_grub.cfg" "$project/dist/usb/ventoy/ventoy_grub.cfg"
 cp "$project/boot/ventoy.json" "$project/dist/usb/ventoy/ventoy.json"
 python3 "$project/tools/package-public-docs.py"
-printf 'FlashOS 2026.09.09.3\n' > "$project/dist/usb/flashos/flashos.marker"
+printf 'FlashOS 2026.09.12.1\n' > "$project/dist/usb/flashos/flashos.marker"
 cp "$project/dist/usb/flashos/flashos.marker" "$project/dist/boot/flashos/"
 chroot "$root" dpkg-query -W > "$project/dist/packages.tsv"
 mksquashfs "$root" "$project/dist/usb/flashos/filesystem.squashfs" -noappend -comp xz -b 1M -processors 4 -wildcards -e 'proc/*' 'sys/*' 'dev/*' 'run/*' 'tmp/*' 'var/cache/apt/archives/*' 'var/lib/apt/lists/*'
 python3 "$project/tools/prepare-boot.py"
+python3 "$project/tools/verify-toolkit-build.py"
 cd "$project/dist"
 find usb boot -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS

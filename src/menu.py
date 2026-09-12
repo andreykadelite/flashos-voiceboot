@@ -14,7 +14,7 @@ from catalog import discover
 from interface import UI, OpenPower
 from help_content import help_menu
 from power import installed_entries, reboot_once
-from selection import arm, cancel
+from selection import arm, cancel, initialize
 from settings import Settings, VOICES, DEFAULTS
 from speech import Speech
 import toolkit
@@ -66,7 +66,7 @@ def prepare_medium(root):
         subprocess.run(['mount', '-t', 'vfat', '-o', 'rw,nosuid,nodev,noexec', candidates[0], str(state_root)], check=True, timeout=15)
     if not (state_root / 'flashos/flashos.marker').is_file():
         raise RuntimeError('Служебный раздел не принадлежит FlashOS')
-    cancel(state_root)
+    initialize(state_root)
     return state_root
 
 

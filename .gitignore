@@ -52,6 +52,7 @@
 !/tools/export-system.py
 !/tools/check-publication.py
 !/tools/check-installer-qt.py
+!/tools/check-installer-manifest.py
 !/tools/prepare-boot.py
 !/tools/make-test-disk.py
 !/tools/make-toolkit-fixture.py

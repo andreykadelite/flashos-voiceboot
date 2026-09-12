@@ -3,8 +3,8 @@ import hashlib
 import json
 
 TITLE = 'Установщик Flash OS'
-VERSION = '1.0.2'
-SYSTEM_VERSION = '2026.09.09.3'
+VERSION = '1.0.4'
+SYSTEM_VERSION = '2026.09.12.1'
 MINIMUM_BYTES = 4_000_000_000
 MBR_LIMIT = 2 * 1024**4
 IDENTITY_KEYS = ('number', 'model', 'serial', 'size', 'sector', 'path', 'pnp')

@@ -94,9 +94,11 @@ with patch.object(gui, 'inventory', return_value=disks):
     QTest.qWait(20)
     closed = []
     app.lastWindowClosed.connect(lambda: closed.append(True))
-    with patch.object(gui, 'is_admin', return_value=False), patch.object(gui, 'elevate') as elevated:
+    with patch.object(gui, 'is_admin', return_value=False), patch.object(gui.QMessageBox, 'warning') as warning:
         window.start_action('verify')
-        assert elevated.called
+        warning.assert_called_once()
+    assert window.isVisible() and not window.closing, 'An action must not restart or close the menu'
+    window.close()
     assert window.isVisible(), 'Closing must wait for discovery without hiding the last window'
     QTimer.singleShot(2000, lambda: app.exit(99))
     result = app.exec()

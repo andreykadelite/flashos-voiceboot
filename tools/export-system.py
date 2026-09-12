@@ -3,18 +3,20 @@
 import hashlib
 from pathlib import Path
 import zipfile
-from public_payload import payload_files, safe_path
+from public_payload import payload_files, safe_path, verified_system
 
 ROOT = Path(__file__).resolve().parents[1]
+SYSTEM_VERSION = '2026.09.12.1'
 
 
 def main():
+    verified_system(ROOT, SYSTEM_VERSION)
     files = []
     for section in ('usb', 'boot'):
         files.extend(path for _, path in payload_files(ROOT, section))
     files += [safe_path(ROOT, ROOT / 'dist' / name) for name in
-              ('ventoy.disk.img.xz', 'ventoy-efi.img', 'packages.tsv')]
-    out = ROOT / 'release/FlashOS-2026.09.09.3-system.zip'
+              ('ventoy.disk.img.xz', 'ventoy-efi.img', 'packages.tsv', 'toolkit-build-verification.json')]
+    out = ROOT / 'release' / ('FlashOS-' + SYSTEM_VERSION + '-system.zip')
     out.parent.mkdir(exist_ok=True)
     sums = []
     with zipfile.ZipFile(out, 'w', compression=zipfile.ZIP_STORED, allowZip64=True) as archive:

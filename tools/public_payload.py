@@ -89,6 +89,24 @@ def payload_files(root, section):
     return sorted(found.items())
 
 
+def verified_system(root, version):
+    """Require evidence for this exact live image and the current application sources."""
+    report = json.loads(safe_path(root, root / 'dist/toolkit-build-verification.json').read_text(encoding='utf-8'))
+    sources = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+               for path in regular_tree(root, root / 'src') if path.suffix == '.py'}
+    image = safe_path(root, root / 'dist/usb/flashos/filesystem.squashfs')
+    with image.open('rb') as stream:
+        image_hash = hashlib.file_digest(stream, 'sha256').hexdigest()
+    if (not sources or report.get('sources_match') is not True or report.get('no_test_fixture') is not True
+            or report.get('sources_sha256') != sources or report.get('squashfs_sha256') != image_hash
+            or report.get('system_version') != version):
+        raise ValueError('Live system is stale or unverified. Repack it and run tools/verify-toolkit-build.py before packaging.')
+    for section in ('usb', 'boot'):
+        marker = safe_path(root, root / 'dist' / section / 'flashos/flashos.marker')
+        if marker.read_text(encoding='utf-8').strip() != 'FlashOS ' + version:
+            raise ValueError('Live system version does not match the installer: ' + section)
+
+
 def pinned_zip(root, filename):
     pins = json.loads((root / 'metadata/build-inputs.json').read_text(encoding='utf-8'))
     matches = [item for item in pins if item['file'] == filename]

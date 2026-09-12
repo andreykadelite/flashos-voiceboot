@@ -1,5 +1,34 @@
 # Изменения / Change log
 
+## FlashOS 2026.09.12.1 · Установщик / Installer 1.0.4 — 2026-09-12
+
+Если служебный файл выбора ISO потерян или повреждён, FlashOS восстанавливает
+его и открывает меню. Перед этим система проверяет, что раздел принадлежит
+загрузочной флешке. Исправный файл очищается без замены; сами ISO не меняются.
+При сборке EXE проверяются версия и SHA256 системы, а исходники сравниваются
+с содержимым squashfs. Это не позволяет упаковать старую систему после
+исправления кода. Проверены Debian и Win11PE с Secure Boot и без него;
+для проверки Secure Boot использовались заранее зарегистрированные ключи.
+
+Recover missing or damaged one-shot ISO selection state after validating the USB
+boot partition. Preserve the healthy file allocation and strict action-time
+checks. User ISO files remain untouched. Packaging verifies the live image hash,
+version and source hashes against the squashfs verification report.
+
+## Установщик / Installer 1.0.3 — 2026-09-12
+
+Запрос прав администратора Windows перенесён к запуску EXE, до открытия меню.
+Нажатие «Установить» сразу открывает подтверждение для выбранной флешки;
+окно не перезапускается и сохраняет параметры. Запуск из исходников также
+получает права до создания интерфейса. Добавлены регрессионные тесты запуска,
+отмены, первого нажатия и проверка манифестов обоих EXE при сборке.
+
+Request administrator rights before opening the menu. Install opens the erase
+confirmation in the same window and preserves the selected drive and options.
+Source launches follow the same startup order. Add startup and action regression
+tests and verify the manifests of the launcher and embedded executable at build time.
+The disk writer and embedded FlashOS system remain unchanged.
+
 ## Установщик / Installer 1.0.2 — 2026-09-10
 
 Исправлены чтение журнала и справки стрелками через настоящий текстовый курсор Qt,

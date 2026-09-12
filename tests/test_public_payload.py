@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 
 TOOLS = Path(__file__).resolve().parents[1] / 'tools'
@@ -52,6 +53,51 @@ class PublicPayload(unittest.TestCase):
         self.put('dist/usb/docs/ru/guide.md', 'old private report')
         with self.assertRaises(ValueError):
             payload.payload_files(self.root, 'usb')
+
+    def system_proof(self):
+        source = self.put('src/menu.py', 'current source')
+        image = self.root / 'dist/usb/flashos/filesystem.squashfs'
+        for section in ('usb', 'boot'):
+            self.put('dist/' + section + '/flashos/flashos.marker', 'FlashOS test-version\n')
+        report = {'sources_match': True, 'no_test_fixture': True, 'system_version': 'test-version',
+                  'sources_sha256': {'menu.py': hashlib.sha256(source.read_bytes()).hexdigest()},
+                  'squashfs_sha256': hashlib.sha256(image.read_bytes()).hexdigest()}
+        self.put('dist/toolkit-build-verification.json', json.dumps(report))
+        return source, image
+
+    def test_packaging_requires_the_verified_image_and_matching_sources(self):
+        source, image = self.system_proof()
+        payload.verified_system(self.root, 'test-version')
+        for target in (source, image):
+            original = target.read_bytes()
+            target.write_bytes(b'changed after verification')
+            with self.subTest(target=target), self.assertRaises(ValueError):
+                payload.verified_system(self.root, 'test-version')
+            target.write_bytes(original)
+
+    def test_packaging_rejects_an_old_system_version(self):
+        self.system_proof()
+        with self.assertRaises(ValueError):
+            payload.verified_system(self.root, 'new-version')
+
+    def test_marker_edits_do_not_relabel_the_verified_image(self):
+        self.system_proof()
+        for section in ('usb', 'boot'):
+            self.put('dist/' + section + '/flashos/flashos.marker', 'FlashOS new-version\n')
+        with self.assertRaises(ValueError):
+            payload.verified_system(self.root, 'new-version')
+
+    def test_stale_export_does_not_replace_an_existing_archive(self):
+        source, _ = self.system_proof()
+        source.write_text('source changed after verification')
+        archive = self.put('release/FlashOS-test-version-system.zip', 'existing archive')
+        export_spec = importlib.util.spec_from_file_location('export_system', TOOLS / 'export-system.py')
+        export = importlib.util.module_from_spec(export_spec)
+        export_spec.loader.exec_module(export)
+        with mock.patch.object(export, 'ROOT', self.root), mock.patch.object(export, 'SYSTEM_VERSION', 'test-version'):
+            with self.assertRaises(ValueError):
+                export.main()
+        self.assertEqual(archive.read_text(), 'existing archive')
 
     def test_managed_directories_are_replaced_without_residue(self):
         for directory in ('docs', 'licenses', 'metadata'):

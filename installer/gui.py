@@ -15,7 +15,7 @@ from installer.progress import ProgressState
 from installer.bundle import Bundle
 from installer.dialogs import ConfirmErase, InfoDialog, label
 from installer.model import TITLE, VERSION, SYSTEM_VERSION, identity, fingerprint, disk_label, unavailable_reason
-from installer.windows import inventory, is_admin, elevate
+from installer.windows import inventory, is_admin
 
 
 class ScanThread(QThread):
@@ -213,7 +213,7 @@ class MainWindow(QMainWindow):
         self.selected_changed()
         QTimer.singleShot(0, self.start_scan)
         self.append_log('Встроенный комплект найден. Интернет для установки не требуется.')
-        self.append_log('Права администратора: ' + ('есть.' if is_admin() else 'Windows запросит их перед операцией.'))
+        self.append_log('Права администратора: ' + ('есть.' if is_admin() else 'отсутствуют. Для операций запустите установщик с правами администратора.'))
 
     def button(self, text, callback, accessible):
         button = KeyboardButton(text)
@@ -325,11 +325,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, TITLE, reason)
             return
         if not is_admin():
-            try:
-                elevate()
-                self.close()
-            except Exception as error:
-                QMessageBox.information(self, TITLE, str(error))
+            QMessageBox.warning(self, TITLE, 'Для операции нужны права администратора. Закройте установщик и запустите его от имени администратора.')
             return
         if action != 'verify' and ConfirmErase(disk, action, style, filesystem, self).exec() != QDialog.Accepted:
             return

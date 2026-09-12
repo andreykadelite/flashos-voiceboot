@@ -196,6 +196,64 @@ class WindowStateTests(unittest.TestCase):
 
     def test_closing_window_cannot_relaunch_elevation(self):
         self.window.closing = True
-        with patch.object(self.gui, 'elevate') as elevate:
+        with patch.object(self.gui, 'elevate', create=True) as elevate:
             self.window.start_action('verify')
             elevate.assert_not_called()
+
+    def test_action_cannot_replace_the_open_menu_with_another_process(self):
+        self.window.drives.setCurrentIndex(2)
+        self.window.style.setCurrentIndex(1)
+        self.window.filesystem.setCurrentText('NTFS')
+        selected = self.window.selected()
+        with patch.object(self.gui, 'is_admin', return_value=False), \
+             patch.object(self.gui, 'elevate', create=True) as elevate, \
+             patch.object(self.gui.QMessageBox, 'warning') as warning, \
+             patch.object(self.gui.QMessageBox, 'information'), \
+             patch.object(self.window, 'close') as close, \
+             patch.object(self.gui, 'JobThread') as job:
+            self.window.start_action('install')
+            elevate.assert_not_called()
+            close.assert_not_called()
+            job.assert_not_called()
+            warning.assert_called_once()
+            self.assertIn('администратора', warning.call_args.args[2])
+        self.assertIs(selected, self.window.selected())
+        self.assertEqual(1, self.window.style.currentIndex())
+        self.assertEqual('NTFS', self.window.filesystem.currentText())
+        self.assertFalse(self.window.busy)
+
+    def test_first_enter_uses_selected_usb_and_options_and_starts_only_one_job(self):
+        from installer.model import identity
+        self.window.drives.setCurrentIndex(2)
+        self.window.style.setCurrentIndex(1)
+        self.window.filesystem.setCurrentText('NTFS')
+        self.window.install.setFocus()
+        self.app.processEvents()
+        with patch.object(self.gui, 'is_admin', return_value=True), \
+             patch.object(self.gui.ConfirmErase, 'exec', return_value=QDialog.Accepted) as confirm, \
+             patch.object(self.gui, 'JobThread') as job:
+            QTest.keyClick(self.window.install, Qt.Key_Return)
+            self.assertTrue(self.window.busy)
+            self.assertTrue(self.window.status.hasFocus())
+            self.assertFalse(self.window.install.isEnabled())
+            job.assert_called_once_with(dict(action='install', target=identity(self.disks[1]),
+                                            style='GPT', filesystem='NTFS', erase_confirmed=True), self.window)
+            job.return_value.start.assert_called_once_with()
+            confirm.assert_called_once_with()
+            self.window.start_action('install')
+            job.assert_called_once()
+
+    def test_cancelled_erase_keeps_selection_options_and_install_focus(self):
+        self.window.drives.setCurrentIndex(2)
+        self.window.style.setCurrentIndex(1)
+        self.window.install.setFocus()
+        self.app.processEvents()
+        with patch.object(self.gui, 'is_admin', return_value=True), \
+             patch.object(self.gui.ConfirmErase, 'exec', return_value=QDialog.Rejected), \
+             patch.object(self.gui, 'JobThread') as job:
+            QTest.keyClick(self.window.install, Qt.Key_Space)
+            job.assert_not_called()
+        self.assertIs(self.disks[1], self.window.selected())
+        self.assertEqual(1, self.window.style.currentIndex())
+        self.assertTrue(self.window.install.hasFocus())
+        self.assertFalse(self.window.busy)

@@ -1,5 +1,5 @@
 """One source for the speaking help and the USB manual."""
-VERSION = '2026.09.09.3'
+VERSION = '2026.09.12.1'
 TOPICS = [
     ('Начало работы и образы ISO', [
         'FlashOS запускает установочные образы и помогает проверить компьютер с озвучкой.',

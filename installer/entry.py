@@ -7,6 +7,17 @@ if '__compiled__' not in globals():
 
 
 def main():
+    from installer.windows import is_admin, elevate
+    startup_error = None
+    # The packaged EXE requests UAC in its manifest. Source launches must also
+    # obtain rights before there is a menu, a selected USB, or a scan thread.
+    if not is_admin():
+        try:
+            elevate()
+        except Exception as error:
+            startup_error = error
+        else:
+            return 0
     import traceback
     from PySide6.QtWidgets import QApplication, QMessageBox
     from PySide6.QtGui import QFont
@@ -15,6 +26,9 @@ def main():
     app.setApplicationName(TITLE)
     app.setOrganizationName('Andrey Zotov')
     app.setFont(QFont('Segoe UI', 10))
+    if startup_error is not None:
+        QMessageBox.critical(None, TITLE, 'Для запуска установщика нужны права администратора.\n\n' + str(startup_error))
+        return 1
     window = None
     reporting = False
     def report_exception(kind, value, trace):

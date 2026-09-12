@@ -16,6 +16,30 @@ def environment(path=''):
     return data.ljust(SIZE, b'#')
 
 
+def initialize(root):
+    """Reset the request after the caller has verified the USB state partition.
+
+    This file is disposable state, so a lost or interrupted write must not
+    prevent the live menu from starting. Keep healthy allocations in place.
+    """
+    directory = Path(root) / 'ventoy'
+    if directory.is_symlink():
+        raise ValueError('Недопустимая папка одноразовой загрузки')
+    directory.mkdir(exist_ok=True)
+    target = directory / 'flashos.env'
+    if target.is_symlink() or (target.exists() and not target.is_file()):
+        raise ValueError('Недопустимый файл одноразовой загрузки')
+    try:
+        stream = target.open('r+b', buffering=0)
+    except FileNotFoundError:
+        stream = target.open('xb', buffering=0)
+    with stream:
+        if stream.write(environment()) != SIZE:
+            raise OSError('Не удалось сбросить одноразовую загрузку')
+        stream.truncate(SIZE)
+        os.fsync(stream.fileno())
+
+
 def arm(root, image, state_root=None):
     root = Path(root).resolve()
     target = Path(state_root or root) / 'ventoy' / 'flashos.env'

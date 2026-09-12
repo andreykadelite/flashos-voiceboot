@@ -22,7 +22,7 @@ chroot "$root" apt-get clean
 chroot "$root" dpkg-query -W > dist/packages.tsv
 python3 tools/sanitize-live-root.py "$root"
 python3 tools/package-public-docs.py
-printf 'FlashOS 2026.09.09.3\n' > dist/usb/flashos/flashos.marker
+printf 'FlashOS 2026.09.12.1\n' > dist/usb/flashos/flashos.marker
 cp dist/usb/flashos/flashos.marker dist/boot/flashos/flashos.marker
 mksquashfs "$root" dist/usb/flashos/filesystem.squashfs -noappend -comp xz -b 1M -processors 4 -wildcards -e 'proc/*' 'sys/*' 'dev/*' 'run/*' 'tmp/*' 'var/cache/apt/archives/*' 'var/lib/apt/lists/*'
 python3 tools/verify-toolkit-build.py

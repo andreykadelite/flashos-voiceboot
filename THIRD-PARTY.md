@@ -4,7 +4,7 @@
 
 MIT в корне репозитория относится к собственному коду и документации FlashOS. Она не заменяет условия программ, голосов и прошивок внутри EXE и загрузочной среды. Исходные уведомления сохранены в `licenses/`, архивах исходников и `/usr/share/doc` live-системы.
 
-В [релизе](https://github.com/andreykadelite/flashos-voiceboot/releases/tag/v2026.09.09.3) отдельно доступны:
+В [релизе](https://github.com/andreykadelite/flashos-voiceboot/releases/tag/v2026.09.12.1-installer-1.0.4) отдельно доступны:
 
 - `FlashOS-2026.09.09.3-debian-sources.zip`: точные исходные пакеты Debian с `.dsc`, исходными архивами и патчами; список и SHA256 — [debian-sources.json](metadata/debian-sources.json).
 - `FlashOS-2026.09.09.3-upstream-sources.zip`: RHVoice с использованными подмодулями, Ventoy, Qt base, PySide/Shiboken, CPython, Nuitka и дополнительные источники/уведомления.
@@ -51,7 +51,7 @@ RHVoice создан Ольгой Яковлевой и участниками �
 
 The root MIT license covers FlashOS's original code and documentation. Bundled operating-system packages, bootloaders, libraries, voices and firmware retain their own terms. Notices are preserved in `licenses/`, source archives and the live system's `/usr/share/doc`.
 
-The [release](https://github.com/andreykadelite/flashos-voiceboot/releases/tag/v2026.09.09.3) provides exact Debian source packages in `FlashOS-2026.09.09.3-debian-sources.zip`, additional upstream source trees in `FlashOS-2026.09.09.3-upstream-sources.zip`, and the project's own source at the release tag. These are downloads, not a promise of future source delivery. Keep matching source, licenses and notices available when redistributing. See [build instructions](docs/en/build.md) for building and replacing Qt/PySide6.
+The [release](https://github.com/andreykadelite/flashos-voiceboot/releases/tag/v2026.09.12.1-installer-1.0.4) provides exact Debian source packages in `FlashOS-2026.09.09.3-debian-sources.zip`, additional upstream source trees in `FlashOS-2026.09.09.3-upstream-sources.zip`, and the project's own source at the release tag. These are downloads, not a promise of future source delivery. Keep matching source, licenses and notices available when redistributing. See [build instructions](docs/en/build.md) for building and replacing Qt/PySide6.
 
 Debian package licenses and copyrights are available in `/usr/share/doc/*/copyright`; [metadata](metadata/debian-packages.json) maps binaries to exact sources. Linux uses GPL-2.0-only with applicable exceptions. Ventoy 1.1.17 is longpanda's GPL v3 project with separately licensed embedded components. FlashOS modifies configuration while preserving signed EFI files. Qt/PySide6/Shiboken 6.11.2 use LGPL v3 for the included libraries; they are dynamically linked and may be replaced or rebuilt. Reverse engineering for debugging such library changes is permitted. Python uses PSF and its included component terms. Nuitka 4.2.1 uses AGPL v3 with the Runtime Library Exception for independent compiled applications. SOF and other firmware retain their original `LICENCE.*` terms. Unmodified Microsoft runtime DLLs retain Microsoft's terms; they are not relicensed under MIT/GPL.
 

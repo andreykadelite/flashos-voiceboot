@@ -2,14 +2,14 @@
 
 [Русский](../ru/installer.md) · [Home](../../README.en.md)
 
-Installer 1.0.2 packages FlashOS 2026.09.09.3. It runs on Windows 10 1809+ and Windows 11 x64. It contains its runtime and system files; no Python, Qt installation or network connection is required. Allow several gigabytes of free local space for extraction.
+Installer 1.0.4 packages FlashOS 2026.09.12.1. It runs on Windows 10 1809+ and Windows 11 x64. It contains its runtime and system files; no Python, Qt installation or network connection is required. Allow several gigabytes of free local space for extraction.
 
 ## Install a USB drive
 
 1. Download `FlashOS-Setup.exe` from the [release](https://github.com/andreykadelite/flashos-voiceboot/releases/latest). In PowerShell, run `Get-FileHash .\FlashOS-Setup.exe -Algorithm SHA256` and compare the result with `SHA256SUMS.txt` from that release.
 2. Back up the USB drive. Connect a drive of at least 4 GB, preferably 16 GB or more for your ISOs.
-3. Run the EXE. Select the drive by its model, size, disk number, volume letters and serial. If several drives are connected, choose one yourself.
-4. Choose **Установить** (Install). If administrator rights are requested, allow the Windows prompt, then select the action in the elevated window.
+3. Run the EXE and allow the Windows administrator prompt before the menu opens. Select the drive by its model, size, disk number, volume letters and serial. If several drives are connected, choose one yourself.
+4. Choose **Установить** (Install). The erase confirmation opens immediately for the selected drive. The drive selection and options stay in the same window.
 5. Read the confirmation. **Installation deletes every partition and file on that USB drive, including old ISO images and voice settings.** Confirm only after checking its identity.
 6. Wait for a successful verification message. The progress area and log show stages and errors. Keep the USB connected.
 7. Copy your own `.iso` files into `iso` on FLASHOS. OS installation images are not included.
