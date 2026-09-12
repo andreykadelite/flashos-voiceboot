@@ -1,0 +1,102 @@
+name: Prepare matching release assets
+on:
+  workflow_dispatch:
+    inputs:
+      source_tag:
+        description: Published release containing the matching dependency archives
+        required: true
+        type: string
+      destination_tag:
+        description: Existing draft release tag for the unchanged dependency sources
+        required: true
+        type: string
+      restore_20260912_binaries:
+        description: Restore the pinned 2026.09.12.1 binaries from uploaded VCDIFF files
+        required: false
+        default: false
+        type: boolean
+permissions:
+  contents: read
+concurrency:
+  group: release-sources-${{ inputs.destination_tag }}
+  cancel-in-progress: false
+jobs:
+  copy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_TAG: ${{ inputs.source_tag }}
+      DESTINATION_TAG: ${{ inputs.destination_tag }}
+    steps:
+      - name: Copy verified archives to an existing draft
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh release view "$DESTINATION_TAG" --json isDraft --jq .isDraft)" = true
+          destination_api="$(gh release view "$DESTINATION_TAG" --json apiUrl --jq .apiUrl)"
+          test "$(gh release view "$SOURCE_TAG" --json isDraft --jq .isDraft)" = false
+          mkdir sources
+          cd sources
+          gh release download "$SOURCE_TAG" \
+            --pattern FlashOS-2026.09.09.3-debian-sources.zip \
+            --pattern FlashOS-2026.09.09.3-upstream-sources.zip
+          cat > expected.sha256 <<'SUMS'
+          82e8a6c02b7741c0c4952db8923da63df20a6a233052d2195d88304f2d7f1f45  FlashOS-2026.09.09.3-debian-sources.zip
+          ae179f4869084d0fbbc2b820a59f6e414939ebd681f6625d60bb89708ac5d5a5  FlashOS-2026.09.09.3-upstream-sources.zip
+          SUMS
+          sha256sum --check --strict expected.sha256
+          while read -r expected name; do
+            existing="$(gh api "$destination_api" --jq ".assets[] | select(.name == \"$name\") | .digest")"
+            if test -n "$existing"; then
+              test "$existing" = "sha256:$expected"
+            else
+              gh release upload "$DESTINATION_TAG" "$name"
+            fi
+            uploaded="$(gh api "$destination_api" --jq ".assets[] | select(.name == \"$name\") | .digest")"
+            test "$uploaded" = "sha256:$expected"
+          done < expected.sha256
+      - name: Install binary transfer tool
+        if: inputs.restore_20260912_binaries
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends xdelta3
+      - name: Restore and verify the pinned release binaries
+        if: inputs.restore_20260912_binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$DESTINATION_TAG" = v2026.09.12.1-installer-1.0.4
+          test "$(gh release view "$DESTINATION_TAG" --json isDraft --jq .isDraft)" = true
+          destination_api="$(gh release view "$DESTINATION_TAG" --json apiUrl --jq .apiUrl)"
+          mkdir binaries
+          cd binaries
+          gh release download "$SOURCE_TAG" --pattern FlashOS-Setup.exe --pattern FlashOS-2026.09.09.3-system.zip
+          cat > base.sha256 <<'SUMS'
+          6d4d6d618de1a92c8e99fb01c1211e741059f37ff91d3cba2ef7a5c4e182fca2  FlashOS-Setup.exe
+          f9e2592da7588499836df051d30de2eda1dd05e3330d5cc61d43514bc3451dc1  FlashOS-2026.09.09.3-system.zip
+          SUMS
+          sha256sum --check --strict base.sha256
+          gh release download "$DESTINATION_TAG" --pattern FlashOS-Setup.exe.vcdiff --pattern FlashOS-2026.09.12.1-system.zip.vcdiff
+          mv FlashOS-Setup.exe base-setup.exe
+          xdelta3 -d -s base-setup.exe FlashOS-Setup.exe.vcdiff FlashOS-Setup.exe
+          xdelta3 -d -s FlashOS-2026.09.09.3-system.zip FlashOS-2026.09.12.1-system.zip.vcdiff FlashOS-2026.09.12.1-system.zip
+          cat > final.sha256 <<'SUMS'
+          e9853fbe2826714b9d82af37d4e1581895e35e7b082ff51fd966004f601434d5  FlashOS-Setup.exe
+          fc382a0220a8aac66d3426f0cec49c19cd3f1a2f2eaf8b9b53451fbbb0345724  FlashOS-2026.09.12.1-system.zip
+          SUMS
+          sha256sum --check --strict final.sha256
+          while read -r expected name; do
+            existing="$(gh api "$destination_api" --jq ".assets[] | select(.name == \"$name\") | .digest")"
+            if test -n "$existing"; then
+              test "$existing" = "sha256:$expected"
+            else
+              gh release upload "$DESTINATION_TAG" "$name"
+            fi
+            uploaded="$(gh api "$destination_api" --jq ".assets[] | select(.name == \"$name\") | .digest")"
+            test "$uploaded" = "sha256:$expected"
+          done < final.sha256
