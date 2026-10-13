@@ -7,6 +7,9 @@ if '__compiled__' not in globals():
 
 
 def main():
+    if '--self-test' in sys.argv[1:]:
+        from installer.selftest import main as self_test
+        return self_test(sys.argv[1:], compiled='__compiled__' in globals())
     from installer.windows import is_admin, elevate
     startup_error = None
     # The packaged EXE requests UAC in its manifest. Source launches must also

@@ -8,6 +8,7 @@ import sys
 import uuid
 
 from inventory import size
+from medium import medium_info, writable
 from toolkit import check_device, devices
 
 
@@ -78,24 +79,13 @@ class Volume:
         job.result = 'Раздел закрыт.'
 
 
-def medium_info(job, medium, live_disk):
-    _, raw = job.command(['findmnt', '-J', '-M', str(medium), '-o', 'SOURCE,FSTYPE'], timeout=5, log_output=False)
-    entry = json.loads(raw)['filesystems'][0]
-    source = str(Path(entry['source']).resolve())
-    _, parent = job.command(['lsblk', '-ndo', 'PKNAME', source], timeout=5, log_output=False)
-    if '/dev/' + parent.strip() != live_disk or not (medium / 'flashos/flashos.marker').is_file():
-        raise ValueError('Не подтверждена загрузочная флешка для сохранения файлов.')
-    return source, entry['fstype']
-
-
 @contextmanager
 def destination(job, medium, live_disk, category):
     medium = Path(medium)
     source, _ = medium_info(job, medium, live_disk)
     if category not in ('recovery', 'reports-export', 'backups'):
         raise ValueError('Недопустимая папка назначения.')
-    try:
-        job.command(['mount', '-o', 'remount,rw', str(medium)], timeout=15)
+    with writable(job, medium, live_disk):
         folder = medium / category
         if folder.is_symlink():
             raise ValueError('Папка назначения является ссылкой.')
@@ -107,8 +97,6 @@ def destination(job, medium, live_disk, category):
         output.mkdir()
         job.log('Папка копии: ' + str(output.relative_to(medium)))
         yield output
-    finally:
-        job.command(['mount', '-o', 'remount,ro', str(medium)], timeout=20, cleanup=True)
 
 
 def copy_job(volume, relative, medium):

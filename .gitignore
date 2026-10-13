@@ -40,6 +40,8 @@
 !/build/install-recovery.sh
 !/build/install-rhvoice.py
 !/build/install-sof.py
+!/build/install-hardware.sh
+!/build/install-app-store.sh
 !/build/repack-system.sh
 !/tools/
 /tools/*
@@ -50,9 +52,13 @@
 !/tools/sanitize-live-root.py
 !/tools/package-public-docs.py
 !/tools/export-system.py
+!/tools/join-system-archive.py
 !/tools/check-publication.py
 !/tools/check-installer-qt.py
 !/tools/check-installer-manifest.py
+!/tools/check-installer-image.py
+!/tools/append-installer-payload.py
+!/tools/check-installer-startup.py
 !/tools/prepare-boot.py
 !/tools/make-test-disk.py
 !/tools/make-toolkit-fixture.py
@@ -60,6 +66,10 @@
 !/tools/test-media.py
 !/tools/verify-runtime.py
 !/tools/verify-toolkit-build.py
+!/tools/verify-hardware-build.py
+!/tools/verify-app-store-build.py
+!/tools/provision-shared-speech.py
+!/tools/repack-app-runtime.py
 !/tools/verify-product.py
 !/tools/verify-recovery.py
 !/tools/check-graphical.py

@@ -23,6 +23,7 @@ class Speech:
         self.fallback_voice = False
         self.index = 0
         self.last = ''
+        self._stopped = False
         self.error = ''
         self.outputs = []
         self.manual = None
@@ -67,8 +68,9 @@ class Speech:
             if not current:
                 self.error = 'Звук пока не найден. Подключите USB наушники; поиск продолжается автоматически.'
                 if changed:
-                    self.stop()
-            elif announce and self.last and available and (
+                    self._stop_processes()
+                    self.completion.set()
+            elif announce and self.last and not self._stopped and available and (
                     changed or (self.retry_at and now >= self.retry_at)):
                 self.retry_at = 0
                 self._schedule('Звуковое устройство: ' + current.title + '. ' + self.last)
@@ -77,16 +79,27 @@ class Speech:
         while not self.closed.wait(2):
             self.refresh()
 
-    def stop(self):
+    def _stop_processes(self):
+        """Cancel a worker without releasing a waiter that is being rerouted."""
         with self.lock:
             self.generation += 1
             for process in self.processes:
                 try:
                     if process.poll() is None:
                         process.terminate()
+                        if process.poll() is None:
+                            process.kill()
                 except OSError:
                     pass
             self.processes = []
+
+    def stop(self):
+        """Stop the current utterance, including its waiter and hotplug retry."""
+        with self.lock:
+            self._stop_processes()
+            self._stopped = True
+            self.retry_at = 0
+            self.completion.set()
 
     def close(self):
         with self.lock:
@@ -100,6 +113,7 @@ class Speech:
             self.completion = threading.Event()
             self.deadline = time.monotonic() + 90
             self.last = str(text)[:2000]
+            self._stopped = False
             done = self._schedule(self.last)
         if wait:
             if not done.wait(timeout=100):
@@ -108,6 +122,7 @@ class Speech:
                         self.stop()
                         self.error = 'Время ожидания озвучки истекло.'
                     done.set()
+        return done
 
     def say_if_idle(self, text):
         """Background status must never interrupt selection or launch speech."""
@@ -163,7 +178,7 @@ class Speech:
 
     def _schedule(self, text):
         """Called under the lock. Only this generation may change speech state."""
-        self.stop()
+        self._stop_processes()
         generation = self.generation
         # Hotplug reroutes the same request: its waiter must follow the new worker.
         if self.completion.is_set():
@@ -236,10 +251,10 @@ class Speech:
                             self.retry_at = 0
                     return
                 except (OSError, subprocess.SubprocessError) as error:
-                    logging.warning('Speech output %s: %s', output.name, error)
                     with self.lock:
                         if generation != self.generation:
                             return
+                        logging.warning('Speech output %s: %s', output.name, error)
                         self.failed[output.name] = time.monotonic() + 20
                         choices = [i for i, item in enumerate(self.outputs)
                                    if item.name not in attempted
@@ -276,4 +291,5 @@ class Speech:
                 current = self._current()
                 self.manual = current.name
                 self.failed.pop(current.name, None)
+                self._stopped = False
                 self._schedule(f'Звуковое устройство {self.index + 1}. {current.title}. ' + self.last)

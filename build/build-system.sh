@@ -24,17 +24,18 @@ mount --make-rslave "$root/sys"
 mount --make-rslave "$root/dev"
 trap 'umount -R "$root/proc" "$root/sys" "$root/dev" 2>/dev/null || true' EXIT
 chroot "$root" apt-get update
-chroot "$root" apt-get install -y --no-install-recommends live-boot systemd-sysv udev python3 espeak-ng firmware-sof-signed firmware-linux-free alsa-firmware-loaders dbus pciutils usbutils console-setup-linux kbd locales ca-certificates shim-signed grub-efi-amd64-signed grub-common efibootmgr
-chroot "$root" apt-get install -y --no-install-recommends -t trixie-backports linux-image-amd64 alsa-utils alsa-ucm-conf libasound2t64 pipewire pipewire-bin wireplumber pipewire-system-services wireplumber-system-services firmware-intel-sound firmware-cirrus firmware-realtek firmware-misc-nonfree firmware-amd-graphics firmware-intel-graphics firmware-nvidia-graphics
-python3 "$project/build/install-sof.py"
+chroot "$root" apt-get install -y --no-install-recommends live-boot systemd-sysv udev python3 espeak-ng dbus pciutils usbutils console-setup-linux kbd locales ca-certificates shim-signed grub-efi-amd64-signed grub-common efibootmgr
+chroot "$root" apt-get install -y --no-install-recommends -t trixie-backports alsa-utils alsa-ucm-conf libasound2t64 pipewire pipewire-bin wireplumber pipewire-system-services wireplumber-system-services
 chroot "$root" apt-get install -y --no-install-recommends memtester stress-ng smartmontools nvme-cli lshw dmidecode ethtool hdparm lm-sensors iproute2 iputils-ping traceroute dnsutils dhcpcd-base gddrescue parted gdisk fdisk dosfstools e2fsprogs ntfs-3g xfsprogs btrfs-progs libao4
-chroot "$root" apt-get install -y --no-install-recommends -t trixie-backports smartmontools firmware-iwlwifi firmware-atheros firmware-mediatek firmware-brcm80211 firmware-bnx2 firmware-bnx2x firmware-qlogic
+chroot "$root" apt-get install -y --no-install-recommends -t trixie-backports smartmontools
 chroot "$root" apt-get install -y --no-install-recommends curl gpg exfatprogs lsscsi sg3-utils iw rfkill
 bash "$project/build/install-admin.sh"
 bash "$project/build/install-recovery.sh"
+bash "$project/build/install-hardware.sh"
+python3 "$project/build/install-rhvoice.py"
+bash "$project/build/install-app-store.sh"
 chroot "$root" update-smart-drivedb -u github
 chroot "$root" systemctl mask smartmontools.service
-python3 "$project/build/install-rhvoice.py"
 cp "$project/tools/verify-runtime.py" "$root/tmp/verify-runtime.py"
 chroot "$root" python3 /tmp/verify-runtime.py
 mkdir -p "$root/opt/flashos" "$root/etc/systemd/system/multi-user.target.wants"
@@ -44,6 +45,9 @@ for service in flashos-pipewire flashos-wireplumber; do
     rm -f "$root/etc/systemd/system/$service.service" "$root/etc/systemd/system/multi-user.target.wants/$service.service"
 done
 cp "$project/boot/flashos.service" "$root/etc/systemd/system/"
+cp "$project/boot/flashos-apps.service" "$root/etc/systemd/system/"
+chmod 644 "$root/etc/systemd/system/flashos-apps.service"
+chroot "$root" systemctl enable flashos-apps.service
 chmod 644 "$root/etc/systemd/system/flashos.service"
 chroot "$root" usermod -aG audio pipewire
 mkdir -p "$root/etc/pipewire/pipewire.conf.d" "$root/etc/wireplumber/wireplumber.conf.d"
@@ -79,11 +83,13 @@ cp "$project/boot/debian-grub.cfg" "$project/dist/boot/EFI/debian/grub.cfg"
 cp "$project/boot/ventoy_grub.cfg" "$project/dist/usb/ventoy/ventoy_grub.cfg"
 cp "$project/boot/ventoy.json" "$project/dist/usb/ventoy/ventoy.json"
 python3 "$project/tools/package-public-docs.py"
-printf 'FlashOS 2026.09.12.1\n' > "$project/dist/usb/flashos/flashos.marker"
+printf 'FlashOS 2026.10.13.2\n' > "$project/dist/usb/flashos/flashos.marker"
 cp "$project/dist/usb/flashos/flashos.marker" "$project/dist/boot/flashos/"
 chroot "$root" dpkg-query -W > "$project/dist/packages.tsv"
 mksquashfs "$root" "$project/dist/usb/flashos/filesystem.squashfs" -noappend -comp xz -b 1M -processors 4 -wildcards -e 'proc/*' 'sys/*' 'dev/*' 'run/*' 'tmp/*' 'var/cache/apt/archives/*' 'var/lib/apt/lists/*'
 python3 "$project/tools/prepare-boot.py"
+python3 "$project/tools/verify-hardware-build.py" --kernel-version "$(basename "$initrd" | sed 's/^initrd.img-//')"
+python3 "$project/tools/verify-app-store-build.py"
 python3 "$project/tools/verify-toolkit-build.py"
 cd "$project/dist"
 find usb boot -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS

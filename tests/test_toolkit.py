@@ -165,12 +165,18 @@ class JobTests(unittest.TestCase):
             (medium / 'flashos').mkdir()
             (medium / 'flashos/flashos.marker').touch()
             job = Job('rescue', lambda _: None)
+            def command_result(args, **kwargs):
+                if 'remount,rw' in args:
+                    raise Cancelled()
+                return 0, 'ro' if args[0] == 'findmnt' else ''
             with patch('toolkit.check_device'), patch('toolkit.subprocess.check_output', side_effect=[
-                    '{"filesystems":[{"source":"/dev/usb1"}]}', 'usb\n']), patch.object(job, 'command', side_effect=[Cancelled(), (0, '')]) as command:
+                    '{"filesystems":[{"source":"/dev/usb1","fstype":"exfat"}]}', 'usb\n']), patch('medium.medium_info', return_value=('/dev/usb1', 'exfat')), patch.object(job, 'command', side_effect=command_result) as command:
                 with self.assertRaises(Cancelled):
                     rescue_job(device, '/dev/usb', medium)(job)
-            self.assertEqual(command.call_count, 2)
-            self.assertEqual(command.call_args.args[0][2], 'remount,ro')
+            mounts = [call for call in command.call_args_list if call.args[0][0] == 'mount']
+            self.assertEqual(len(mounts), 2)
+            self.assertEqual(mounts[-1].args[0][2], 'remount,ro')
+            self.assertTrue(mounts[-1].kwargs['cleanup'])
 
     def test_recovery_cannot_write_to_nested_mount(self):
         device = Device('/dev/fake', 'disk', 1024, '', '', '', False, '8:0', '/dev/fake')
@@ -180,12 +186,13 @@ class JobTests(unittest.TestCase):
             (medium / 'flashos/flashos.marker').touch()
             job = Job('rescue', lambda _: None)
             with patch('toolkit.check_device'), patch('toolkit.subprocess.check_output', side_effect=[
-                    '{"filesystems":[{"source":"/dev/usb1"}]}', 'usb\n', '/dev/another1\n']), patch.object(job, 'command', return_value=(0, '')) as command:
+                    '{"filesystems":[{"source":"/dev/usb1","fstype":"exfat"}]}', 'usb\n', '/dev/another1\n']), patch('medium.medium_info', return_value=('/dev/usb1', 'exfat')), patch.object(job, 'command', return_value=(0, 'ro')) as command:
                 with self.assertRaisesRegex(ValueError, 'другому разделу'):
                     rescue_job(device, '/dev/usb', medium)(job)
-            self.assertEqual(command.call_count, 2)
-            self.assertEqual(command.call_args.args[0][2], 'remount,ro')
-            self.assertTrue(command.call_args.kwargs['cleanup'])
+            mounts = [call for call in command.call_args_list if call.args[0][0] == 'mount']
+            self.assertEqual(len(mounts), 2)
+            self.assertEqual(mounts[-1].args[0][2], 'remount,ro')
+            self.assertTrue(mounts[-1].kwargs['cleanup'])
             self.assertEqual(list((medium / 'recovery').iterdir()), [])
 
     def test_cancel_kills_descendant_after_parent_exit(self):

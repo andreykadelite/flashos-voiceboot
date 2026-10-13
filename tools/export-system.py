@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """Export the prepared system tree; this is not a bootable disk-image writer."""
+import argparse
 import hashlib
 from pathlib import Path
 import zipfile
 from public_payload import payload_files, safe_path, verified_system
 
 ROOT = Path(__file__).resolve().parents[1]
-SYSTEM_VERSION = '2026.09.12.1'
+SYSTEM_VERSION = '2026.10.13.2'
 
 
-def main():
+def main(argv=()):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--allow-large-local', action='store_true',
+                        help='Allow a local ZIP64 archive larger than GitHub release limit')
+    args = parser.parse_args(argv)
     verified_system(ROOT, SYSTEM_VERSION)
     files = []
     for section in ('usb', 'boot'):
@@ -27,10 +32,10 @@ def main():
             sums.append(digest + '  ' + path.relative_to(ROOT).as_posix())
         archive.writestr('SYSTEM-SHA256SUMS.txt', '\n'.join(sums) + '\n')
         archive.writestr('READ-ME.txt', 'FlashOS system build tree. Extract at the source checkout root to populate dist/.\nThis ZIP is not an ISO/raw disk image. Use FlashOS-Setup.exe to prepare USB media.\nRead dist/usb/README files and licenses before redistributing. ISO files are not included.\n')
-    if out.stat().st_size >= 2 * 1024**3:
+    if out.stat().st_size >= 2 * 1024**3 and not args.allow_large_local:
         raise ValueError('Release asset exceeds GitHub size limit')
     print(out.name, out.stat().st_size)
 
 
 if __name__ == '__main__':
-    main()
+    main(None)

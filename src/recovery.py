@@ -8,6 +8,7 @@ import sys
 import time
 
 from files import destination, medium_info
+from medium import readonly
 from toolkit import check_device, devices
 
 ENGINES = {'ext2': 'extfs', 'ext3': 'extfs', 'ext4': 'extfs', 'vfat': 'fat',
@@ -185,33 +186,32 @@ def restore_job(relative, device, live, medium):
             raise ValueError('Восстановление разрешено только на отдельный раздел.')
         check_device(device, live, unmounted=True)
         # Keep the image filesystem read-only throughout verification and restoration.
-        medium_info(job, Path(medium), live)
-        job.command(['mount', '-o', 'remount,ro', str(medium)], timeout=20)
-        image, data = verify_image(job, medium, relative, live)
-        if device.size < data['source_bytes']:
-            raise ValueError('Целевой раздел меньше исходного. Запись не начата.')
-        check_device(device, live, unmounted=True)
-        job.check()
-        job.log('Целевой раздел: ' + device.title + '. ' + device.details)
-        job.log('После начала записи отмена оставляет раздел частично восстановленным.')
-        job.cancel_result = 'Восстановление остановлено. Целевой раздел может быть записан частично. Не загружайте его; повторите восстановление из проверенного образа.'
-        job.command(['partclone.restore', '-s', str(image), '-O', device.path, '-L', '/dev/null', '-f', '2', '-B'],
-            timeout=7*24*3600, on_line=progress(job, 'Восстановление'), log_output=False, resource='storage', capture_output=False)
-        job.command(['blockdev', '--flushbufs', device.path], timeout=120, resource='storage')
-        # Re-read the written used blocks, checking them against the source image's checksums.
-        job.update('Повторное чтение восстановленных данных.')
-        if used_digest(job, image.with_name('blocks.map'), device.path, data['filesystem_bytes']) != data['used_sha256']:
-            raise RuntimeError('Запись завершилась, но данные на целевом разделе отличаются от исходных. Восстановление не подтверждено.')
-        job.result = 'Раздел восстановлен. Записанные блоки повторно прочитаны и совпадают с образом. UUID файловой системы скопирован из образа.'
-        try:
-            code, detail = job.command(['udevadm', 'trigger', '--action=change', '--settle',
-                '/sys/class/block/' + Path(device.path).name], timeout=30, accepted=None, log_output=False)
-        except (OSError, RuntimeError) as error:
-            code, detail = 1, str(error)
-        if code:
-            job.warning = True
-            job.result += ' Сведения об устройстве не обновились. Перезапустите флешку перед следующей работой с разделом.'
-            job.log(detail)
+        with readonly(job, medium, live):
+            image, data = verify_image(job, medium, relative, live)
+            if device.size < data['source_bytes']:
+                raise ValueError('Целевой раздел меньше исходного. Запись не начата.')
+            check_device(device, live, unmounted=True)
+            job.check()
+            job.log('Целевой раздел: ' + device.title + '. ' + device.details)
+            job.log('После начала записи отмена оставляет раздел частично восстановленным.')
+            job.cancel_result = 'Восстановление остановлено. Целевой раздел может быть записан частично. Не загружайте его; повторите восстановление из проверенного образа.'
+            job.command(['partclone.restore', '-s', str(image), '-O', device.path, '-L', '/dev/null', '-f', '2', '-B'],
+                timeout=7*24*3600, on_line=progress(job, 'Восстановление'), log_output=False, resource='storage', capture_output=False)
+            job.command(['blockdev', '--flushbufs', device.path], timeout=120, resource='storage')
+            # Re-read the written used blocks, checking them against the source image's checksums.
+            job.update('Повторное чтение восстановленных данных.')
+            if used_digest(job, image.with_name('blocks.map'), device.path, data['filesystem_bytes']) != data['used_sha256']:
+                raise RuntimeError('Запись завершилась, но данные на целевом разделе отличаются от исходных. Восстановление не подтверждено.')
+            job.result = 'Раздел восстановлен. Записанные блоки повторно прочитаны и совпадают с образом. UUID файловой системы скопирован из образа.'
+            try:
+                code, detail = job.command(['udevadm', 'trigger', '--action=change', '--settle',
+                    '/sys/class/block/' + Path(device.path).name], timeout=30, accepted=None, log_output=False)
+            except (OSError, RuntimeError) as error:
+                code, detail = 1, str(error)
+            if code:
+                job.warning = True
+                job.result += ' Сведения об устройстве не обновились. Перезапустите флешку перед следующей работой с разделом.'
+                job.log(detail)
     return run
 
 

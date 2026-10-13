@@ -1,5 +1,6 @@
 """Keyboard-first console menus: every focused row and job state has speech."""
 import curses
+from collections import deque
 import os
 from pathlib import Path
 import time
@@ -23,21 +24,29 @@ class UI:
         self.screen, self.speech, self.settings = screen, speech, settings
         self.state_root, self.demo = Path(state_root), demo
         self.focus = {}
+        self.pending_keys = deque()
         if not getattr(screen, 'graphical', False):
             curses.curs_set(0)
         screen.keypad(True)
         screen.timeout(150)
 
-    def draw(self, title, rows, selected=0, footer=''):
+    def draw(self, title, rows, selected=0, footer='', tabs=None, tab_index=0, detail=''):
         if getattr(self.screen, 'graphical', False):
-            self.screen.render(title, rows, selected, footer or self.speech.error or f'Громкость {self.speech.volume}%.')
+            status = footer or self.speech.error or f'Громкость {self.speech.volume}%.'
+            options = {'detail': clean(detail)} if detail else {}
+            if tabs:
+                options.update(tabs=tabs, tab_index=tab_index)
+            self.screen.render(title, rows, selected, status, **options)
             return
         self.screen.erase()
         height, width = self.screen.getmaxyx()
         capacity = max(1, height - 6)
         start = max(0, min(selected - capacity // 2, len(rows) - capacity))
         lines = [(title, False), ('Стрелки Выбор  Enter Открыть  Escape Назад  Пробел Повтор', False),
-                 ('F1 Помощь  F3 Где я  F6 Звук  F8 Отчёт звука  F10 Питание  +/- Громкость', False), ('', False)]
+                 ('F1 Помощь  F3 Где я  F6 Звук  F7 Стоп речи  F8 Отчёт звука  F10 Питание  +/- Громкость', False), ('', False)]
+        if tabs:
+            lines[1] = ('  '.join(('[' + tab + ']') if i == tab_index else tab for i, tab in enumerate(tabs)), False)
+            lines[2] = ('Left/Right и Tab — вкладки; F2 — поиск; F4 — источник; F1 — помощь.', False)
         lines += [(row, start + i == selected) for i, row in enumerate(rows[start:start + capacity])]
         lines += [(footer or self.speech.error or f'Громкость {self.speech.volume}%.', False)]
         for row, (line, selected_line) in enumerate(lines[:height]):
@@ -51,24 +60,86 @@ class UI:
     def announce(self, title, items, index):
         self.speech.say(clean(items[index][0]))
 
+    def read_key(self, wide=False):
+        """Keys that interrupted an explanation still reach the next menu."""
+        if self.pending_keys:
+            value = self.pending_keys.popleft()
+            return chr(value) if wide and isinstance(value, int) and value < 256 else value
+        return self.screen.get_wch() if wide else self.screen.getch()
+
+    def discard_skip_repeats(self, skipped):
+        """Discard already queued repeats, without delaying the next key press."""
+        self.screen.timeout(0)
+        try:
+            for _ in range(64):
+                key = self.screen.getch()
+                if key == -1:
+                    break
+                if key != skipped:
+                    if key == curses.KEY_F10:
+                        raise OpenPower()
+                    self.pending_keys.append(key)
+                    break
+        finally:
+            self.screen.timeout(150)
+
+    def speak_wait(self, text, title='Сообщение'):
+        """Read an optional explanation while keeping Tk and curses responsive.
+
+        Enter, Space and F7 skip speech only; they never consent to an action.
+        Navigation is returned to the next menu, and F10 keeps its normal meaning.
+        """
+        import textwrap
+        rows = textwrap.wrap(clean(text), width=350) or ['Нет данных.']
+        done = self.speech.say(text)
+        deadline = time.monotonic() + 100
+        try:
+            while not done.is_set():
+                if time.monotonic() >= deadline:
+                    return False
+                self.draw(title, rows, footer='Enter, Пробел или F7 — пропустить озвучку. F10 — питание.')
+                key = self.screen.getch()
+                if key in (10, 13, curses.KEY_ENTER, ord(' '), curses.KEY_F7):
+                    self.discard_skip_repeats(key)
+                    return False
+                if key in (27, curses.KEY_BACKSPACE, 8, 127, 9, curses.KEY_BTAB,
+                           curses.KEY_UP, curses.KEY_DOWN, curses.KEY_LEFT, curses.KEY_RIGHT,
+                           curses.KEY_HOME, curses.KEY_END, curses.KEY_NPAGE, curses.KEY_PPAGE,
+                           curses.KEY_F2, curses.KEY_F4, curses.KEY_F5) or isinstance(key, tuple):
+                    self.pending_keys.append(key)
+                    return False
+                if key == curses.KEY_F3:
+                    done = self.speech.say(text)
+                elif key == curses.KEY_F1:
+                    done = self.speech.say('Enter, Пробел или F7 останавливают только озвучку. '
+                                           'Подтверждение действия выполняется отдельно. ' + text)
+                else:
+                    self.global_key(key)
+            return True
+        finally:
+            if not done.is_set():
+                self.speech.stop()
+
     def change_settings(self, changes, message, announce=True):
         temporary = validate({**self.settings.data, **changes})
         try:
             self.settings.save(changes)
         except DurabilityError as error:
             self.speech.configure(self.settings.data)
-            self.speech.say(message + '. ' + str(error), wait=True)
+            self.speak_wait(message + '. ' + str(error), 'Сохранение настроек')
         except OSError:
             self.settings.data = temporary
             self.speech.configure(temporary)
-            self.speech.say(message + '. Настройки действуют до перезагрузки: запись на флешку не удалась.', wait=True)
+            self.speak_wait(message + '. Настройки действуют до перезагрузки: запись на флешку не удалась.', 'Сохранение настроек')
         else:
             self.speech.configure(self.settings.data)
             if announce:
                 self.speech.say(message)
 
     def global_key(self, key):
-        if key == curses.KEY_F6:
+        if key == curses.KEY_F7:
+            self.speech.stop()
+        elif key == curses.KEY_F6:
             self.speech.next_output()
         elif key == curses.KEY_F8 and not self.demo:
             self.speech.say('Сохраняю сведения о звуке.')
@@ -82,7 +153,7 @@ class UI:
             return False
         return True
 
-    def choose(self, title, items, help_text='Стрелки — выбор. Enter — открыть. Escape — назад. F3 — положение в меню.', refresh=False, prompt=False):
+    def choose(self, title, items, help_text='Стрелки — выбор. Enter — открыть. Escape — назад. F3 — положение в меню.', refresh=False, prompt=False, tabs=None, tab_index=0, shortcuts=None):
         if not items:
             self.message(title, 'Доступные пункты не найдены.')
             return None
@@ -92,8 +163,17 @@ class UI:
         else:
             self.announce(title, items, index)
         while True:
-            self.draw(title, [f'{i + 1}. {clean(item[0])}' for i, item in enumerate(items)], index)
-            key = self.screen.getch()
+            self.draw(title, [f'{i + 1}. {clean(item[0])}' for i, item in enumerate(items)], index,
+                      tabs=tabs, tab_index=tab_index, detail=items[index][2] if len(items[index]) > 2 else '')
+            key = self.read_key()
+            if tabs:
+                if isinstance(key, tuple) and len(key) == 2 and key[0] == 'tab':
+                    return ('__tab__', max(0, min(len(tabs) - 1, key[1])))
+                if key in (curses.KEY_LEFT, curses.KEY_RIGHT, 9, curses.KEY_BTAB):
+                    next_tab = (tab_index + (-1 if key in (curses.KEY_LEFT, curses.KEY_BTAB) else 1)) % len(tabs)
+                    return ('__tab__', next_tab)
+            if shortcuts and key in shortcuts:
+                return shortcuts[key]
             if key in (27, curses.KEY_BACKSPACE, 8, 127):
                 return None
             if key in (10, 13, curses.KEY_ENTER):
@@ -141,6 +221,36 @@ class UI:
         self.focus[text] = 0
         return self.choose(text, [('Отмена', False), ('Продолжить', True)], prompt=True) is True
 
+    def confirm_timed(self, text, seconds=60):
+        """A pending NetworkManager checkpoint must not outlive its consent screen."""
+        deadline = time.monotonic() + max(0, seconds)
+        selected = 0
+        items = ['Отменить и вернуть прежнее подключение', 'Принять параметры подключения']
+        self.speech.say(text + '. ' + items[0] + '. На подтверждение ' + str(int(seconds)) + ' секунд.')
+        while True:
+            remaining = max(0, int(deadline - time.monotonic()))
+            if remaining <= 0:
+                self.speech.say('Время подтверждения истекло. Возвращаю прежнее подключение.')
+                return False
+            self.draw(text, items, selected, f'Осталось {remaining} секунд. Escape — откат.')
+            key = self.read_key()
+            if key in (27, curses.KEY_BACKSPACE, 8, 127):
+                return False
+            if key in (10, 13, curses.KEY_ENTER):
+                return selected == 1
+            if key in (curses.KEY_UP, curses.KEY_DOWN, curses.KEY_HOME, curses.KEY_END):
+                selected = 0 if key == curses.KEY_HOME else 1 if key == curses.KEY_END else 1 - selected
+                self.speech.say(items[selected])
+            elif key == ord(' '):
+                self.speech.say(items[selected] + f'. Осталось {remaining} секунд.')
+            elif key == curses.KEY_F3:
+                self.speech.say(text + f'. {selected + 1} из 2. ' + items[selected] + f'. Осталось {remaining} секунд.')
+            elif key == curses.KEY_F1:
+                self.speech.say('Проверьте подключение. Enter принимает выбранное действие. '
+                                'Escape или истечение времени возвращает прежние параметры.')
+            else:
+                self.global_key(key)
+
     def text_input(self, title, secret=False, limit=255):
         value = ''
         self.speech.say(title + '. Enter — принять. Escape — отменить. Backspace — удалить. '
@@ -149,7 +259,7 @@ class UI:
             self.draw(title, [('•' * len(value)) if secret else value,
                              'F3 — число символов' if secret else 'F3 — прочитать введённое'])
             try:
-                key = self.screen.get_wch()
+                key = self.read_key(wide=True)
             except curses.error:
                 continue
             if key == '\x1b':
@@ -212,6 +322,17 @@ class UI:
         errors = 0
         stopping = False
         power_requested = False
+        def request_stop(power=False):
+            nonlocal stopping, power_requested
+            power_requested = power_requested or power
+            if stopping:
+                return
+            job.cancel()
+            stopping = True
+            if getattr(job, 'cancellation_deferred', False):
+                self.speech.say('Дождусь безопасного завершения записи пакетов. Затем откроется питание.' if power_requested else 'Дождусь безопасного завершения записи пакетов.')
+            else:
+                self.speech.say('Останавливаю. Затем откроется питание.' if power_requested else 'Останавливаю.')
         while not job.done.is_set():
             now = time.monotonic()
             elapsed = int(now - job.started)
@@ -230,19 +351,20 @@ class UI:
                 self.speech.signal()
                 last_signal = now
             key = self.screen.getch()
-            if key == curses.KEY_F10:
-                power_requested = True
-            if key in (27, curses.KEY_F10) and not stopping:
-                job.cancel()
-                stopping = True
-                self.speech.say('Останавливаю. Затем откроется питание.' if power_requested else 'Останавливаю.')
+            if key in (27, curses.KEY_F10):
+                request_stop(key == curses.KEY_F10)
             elif key == ord(' '):
                 self.speech.say(state)
             elif key == curses.KEY_F1:
                 self.speech.say('Короткий сигнал означает, что проверка продолжается. '
                                 'Результат будет произнесён. Пробел — текущее состояние, Escape — остановить.')
             elif key != curses.KEY_F10:
-                self.global_key(key)
+                try:
+                    self.global_key(key)
+                except OpenPower:
+                    # A settings error can open speak_wait inside this job loop.
+                    # Its F10 must wait for the same safe completion as direct F10.
+                    request_stop(power=True)
         lines = list(job.lines)
         saved = ''
         if save:
@@ -284,6 +406,10 @@ class UI:
                 continue
             if key == '\x1b':
                 return
+            if key == curses.KEY_F7:
+                self.speech.stop()
+                last = 'F7 — речь остановлена'
+                continue
             if isinstance(key, str):
                 last = names.get(ord(key), key if key.isprintable() else 'Код ' + str(ord(key)))
             else:

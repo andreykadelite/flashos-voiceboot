@@ -5,6 +5,67 @@ from pathlib import Path
 import re
 
 
+def network_tool(ui, action):
+    """Use the same explicit connection actions from Tools and the store."""
+    if ui.demo:
+        ui.message('Демонстрация', 'Этот инструмент доступен после загрузки с флешки.')
+        return
+    if action == 'wifi':
+        from wifi import wifi_menu
+        wifi_menu(ui)
+    elif action == 'dhcp':
+        interfaces = wired_interfaces()
+        if not interfaces:
+            ui.message('Проводная сеть', 'Проводной сетевой адаптер не найден. '
+                       'Подключите сетевой кабель и проверьте адаптер в сведениях о компьютере.')
+            return
+        name = ui.choose('Проводное сетевое устройство', [(name, name) for name in interfaces],
+                         'Выберите адаптер для получения адреса по DHCP. Escape — отменить.', prompt=True)
+        if name:
+            ui.run_job('Подключение сети', dhcp_job(name))
+    elif action == 'network':
+        ui.run_job('Проверка сети', network_job)
+    elif action == 'target':
+        target = ui.text_input('Имя компьютера, сайта или IP-адрес')
+        if target:
+            ui.run_job('Проверка узла', target_job(target))
+    elif action == 'profiles':
+        from network_settings import manager
+        manager(ui).main()
+    else:
+        raise ValueError('Неизвестный сетевой инструмент.')
+
+
+def network_menu(ui):
+    """Return to the caller after connecting; it decides which operation to retry."""
+    title = 'Инструменты — подключение к сети'
+    items = [
+        ('Подключить Wi-Fi', 'wifi',
+         'Выберите сеть и введите пароль. Поддерживаются открытые сети и WPA2/WPA3 Personal.'),
+        ('Подключить проводную сеть по DHCP', 'dhcp',
+         'Подключите сетевой кабель, затем выберите адаптер. Адрес выдаёт ваша сеть.'),
+        ('Настройки IP, DNS, прокси и сохранённые профили', 'profiles',
+         'IPv4 и IPv6, DHCP и статика, маршруты, Wi-Fi, зашифрованные пароли и привязка к компьютеру.'),
+        ('Проверить соединение, DNS и доступ в интернет', 'network',
+         'Проверка адресов, маршрутов, DNS и HTTPS. Получение адреса ещё не подтверждает доступ в интернет.'),
+        ('Проверить адрес, DNS и маршрут к узлу', 'target',
+         'Введите имя сайта или IP-адрес для подробной проверки.'),
+        ('Вернуться к предыдущему экрану', 'back',
+         'Также можно нажать Escape. В магазине после возвращения можно повторить загрузку.'),
+    ]
+    while True:
+        action = ui.choose(title, items,
+            'Быстрое подключение действует до перезагрузки. Сохранённые параметры доступны в сетевых профилях. '
+            'При необходимости проверьте DNS и доступ в интернет. '
+            'Escape — вернуться к предыдущему экрану.', prompt=True)
+        if action is None or action == 'back':
+            return
+        try:
+            network_tool(ui, action)
+        except (OSError, ValueError, RuntimeError) as error:
+            ui.message('Подключение к сети', str(error))
+
+
 def request(job, command, timeout=15):
     try:
         return job.command(command, timeout=timeout, accepted=None, log_output=False)
@@ -24,16 +85,8 @@ def wired_interfaces():
 
 
 def dhcp_job(name):
-    def run(job):
-        if name not in wired_interfaces() or not re.fullmatch(r'[a-zA-Z0-9_.:-]{1,15}', name):
-            raise ValueError('Сетевое устройство изменилось. Выберите его заново.')
-        job.update('Получение адреса DHCP.')
-        job.command(['nmcli', '--wait', '35', 'device', 'connect', name], timeout=40)
-        _, raw = job.command(['ip', '-j', 'address', 'show', 'dev', name], log_output=False)
-        found = [address for interface, address, family in addresses(json.loads(raw)) if family == 'inet']
-        job.failed = not bool(found)
-        job.result = 'Получен адрес: ' + ', '.join(found) if found else 'Адрес IPv4 не получен.'
-    return run
+    from network_runtime import temporary_dhcp_job
+    return temporary_dhcp_job(name)
 
 
 def target_job(target):

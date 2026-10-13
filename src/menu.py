@@ -19,7 +19,7 @@ from settings import Settings, VOICES, DEFAULTS
 from speech import Speech
 import toolkit
 import smart
-from network import wired_interfaces, dhcp_job
+from network import network_menu, network_tool
 
 def return_to_usb():
     """Request the current UEFI boot entry once; never change BootOrder."""
@@ -108,7 +108,7 @@ def iso_menu(ui, root, checksums=False):
                 arm(root, selected, ui.state_root)
                 next_boot = return_to_usb()
                 tip = 'Дождитесь установщика.' if next_boot else 'Если потребуется, снова выберите USB в меню компьютера.'
-                ui.speech.say('Запускаю ' + selected.title + '. Компьютер перезагрузится. ' + tip, wait=True)
+                ui.speech.say('Запускаю ' + selected.title + '. Компьютер перезагрузится. ' + tip)
                 subprocess.run(['systemctl', 'reboot'], check=True, timeout=15)
                 return
             except (OSError, ValueError, subprocess.SubprocessError):
@@ -137,6 +137,7 @@ def tools_menu(ui, root, disk):
             ('Скопировать накопитель в файл образа', 'rescue'),
             ('Резервные копии, восстановление и ремонт', 'recovery'),
             ('Проверить драйверы и прошивки устройств', 'drivers'),
+            ('Подключение к сети и проверка интернета', 'connection'),
             ('Подключить проводную сеть по DHCP', 'dhcp'),
             ('Подключить Wi-Fi', 'wifi'),
             ('Проверить адрес, DNS и маршрут', 'target'),
@@ -154,21 +155,17 @@ def tools_menu(ui, root, disk):
             from drivers import report_job
             if not ui.demo:
                 ui.run_job('Драйверы и прошивки устройств', report_job)
-        elif key in ('files', 'wifi', 'target', 'export'):
+        elif key == 'connection':
+            network_menu(ui)
+        elif key in ('dhcp', 'wifi', 'target'):
+            network_tool(ui, key)
+        elif key in ('files', 'export'):
             if ui.demo:
                 ui.message('Демонстрация', 'Этот инструмент доступен после загрузки с флешки.')
                 continue
             if key == 'files':
                 from files import browser_menu
                 browser_menu(ui, root, disk)
-            elif key == 'wifi':
-                from wifi import wifi_menu
-                wifi_menu(ui)
-            elif key == 'target':
-                from network import target_job
-                target = ui.text_input('Имя компьютера, сайта или IP-адрес')
-                if target:
-                    ui.run_job('Проверка узла', target_job(target))
             else:
                 from files import export_job
                 ui.run_job('Выгрузка отчётов', export_job(ui.state_root, root, disk))
@@ -192,11 +189,6 @@ def tools_menu(ui, root, disk):
                 if selected.is_symlink() or selected.stat().st_size > 2 * 1024**2:
                     raise ValueError('Недопустимый файл отчёта')
                 ui.view(selected.name, selected.read_text(encoding='utf-8', errors='replace').splitlines())
-        elif key == 'dhcp':
-            interfaces = wired_interfaces()
-            name = ui.choose('Проводное сетевое устройство', [(name, name) for name in interfaces])
-            if name and not ui.demo:
-                ui.run_job('Подключение сети', dhcp_job(name))
         else:
             if ui.demo:
                 ui.message('Демонстрация', 'Действия с устройствами доступны после загрузки с флешки.')
@@ -231,9 +223,9 @@ def diagnostics_menu(ui, disk):
             ui.keyboard_test()
             continue
         if key == 'sound':
-            ui.speech.say('Сейчас сигнал в левом канале.', wait=True)
+            ui.speak_wait('Сейчас сигнал в левом канале.', 'Проверка звука')
             left = ui.speech.signal('success', 'left', force=True, wait=True)
-            ui.speech.say('Теперь в правом канале.', wait=True)
+            ui.speak_wait('Теперь в правом канале.', 'Проверка звука')
             right = ui.speech.signal('success', 'right', force=True, wait=True)
             ui.message('Проверка звука', 'Сигналы воспроизведены. F6 меняет выход.' if left and right else
                        'Не удалось воспроизвести один или оба сигнала. F6 меняет выход.')
@@ -312,8 +304,8 @@ def voice_menu(ui):
             value = not data['signals']
             ui.change_settings({'signals': value}, 'Сигналы ' + ('включены' if value else 'выключены'), announce=False)
         elif key == 'sample':
-            ui.speech.say('Здравствуйте. Это Флэш ОС. Стрелки выбирают пункт, Enter открывает его. '
-                          'Настройки голоса сохраняются на вашей флешке.', wait=True)
+            ui.speak_wait('Здравствуйте. Это Флэш ОС. Стрелки выбирают пункт, Enter открывает его. '
+                          'Настройки голоса сохраняются на вашей флешке.', 'Пример голоса')
         elif key == 'output':
             ui.speech.next_output()
         elif key == 'reset' and ui.confirm('Вернуть стандартные настройки голоса?'):
@@ -363,16 +355,16 @@ def power_menu(ui, root, disk):
     except OSError:
         if key != 'off':
             raise
-        ui.speech.say('Не удалось записать служебный раздел. Компьютер будет выключен.', wait=True)
+        ui.speak_wait('Не удалось записать служебный раздел. Компьютер будет выключен.', 'Питание')
     message = 'Выключение компьютера.' if key == 'off' else 'Перезапуск. ' + (
         'Запускается ' + entry.title if entry else 'Настройки UEFI.' if key == 'firmware' else 'Загрузка с флешки.')
-    ui.speech.say(message, wait=True)
+    ui.speech.say(message)
     if entry:
         reboot_once(entry, disk)
         return
     if key == 'reboot':
         if not return_to_usb():
-            ui.speech.say('Если потребуется, снова выберите USB в меню загрузки компьютера.', wait=True)
+            ui.speech.say('Если потребуется, снова выберите USB в меню загрузки компьютера.')
     command = ['systemctl', 'poweroff' if key == 'off' else 'reboot']
     if key == 'firmware':
         command.append('--firmware-setup')
@@ -381,6 +373,10 @@ def power_menu(ui, root, disk):
 
 def run_menu(screen, root, speech, demo, state_root, settings):
     ui = UI(screen, speech, settings, state_root, demo)
+    from store import ApplicationStore
+    applications = ApplicationStore(ui, root, live_disk(root) if not demo else '/dev/flashos-demo')
+    from utilities import Utilities
+    utilities = Utilities(ui, applications)
     disk = live_disk(root) if not demo else '/dev/flashos-demo'
     images = discover(root, 'uefi' if Path('/sys/firmware/efi').exists() else 'bios')
     try:
@@ -390,25 +386,50 @@ def run_menu(screen, root, speech, demo, state_root, settings):
             serial.write(f'FLASHOS_READY images={len(images)} audio={len(speech.outputs)} secure_boot={secure} menu=main\n')
     except OSError:
         pass
-    speech.say('Флэш ОС. F1 — помощь.' +
-               (' ' + settings.error if settings.error else ''), wait=True)
     def show_error(error):
         try:
             ui.message('Действие не выполнено', str(error))
         except OpenPower:
             pass
+    network_startup = not demo
+    welcome = True
     while True:
         try:
-            choice = ui.choose('Главное меню', [('Запустить систему', 'iso'), ('Инструменты', 'tools'),
-                ('Диагностика', 'diagnostics'), ('Питание', 'power'), ('Настройки голоса', 'voice'), ('Справка', 'help')])
+            if welcome:
+                welcome = False
+                fallback = ('Графическое меню остановилось. Работаю в текстовом режиме. '
+                            'Если выполнялось восстановление или исправление раздела, '
+                            'оно могло остаться незавершённым. '
+                            if os.environ.get('FLASHOS_GRAPHICS_FAILED') else '')
+                ui.speak_wait(fallback + 'Флэш ОС. F1 — помощь. F7 — остановить речь.' +
+                              (' ' + settings.error if settings.error else ''), 'FlashOS')
+            if network_startup:
+                network_startup = False
+                try:
+                    from network_settings import manager
+                    manager(ui).startup()
+                except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+                    ui.speech.say('Сохранённая сеть не подключена. Откройте Инструменты и настройки сети. ' + str(error))
+            choice = ui.choose('Главное меню', [
+                ('Запустить систему', 'iso', 'Выберите загрузочный образ на флешке и способ запуска.'),
+                ('Инструменты', 'tools', 'Работа с файлами, накопителями и восстановлением данных.'),
+                ('Диагностика', 'diagnostics', 'Сведения о компьютере, проверка оборудования и отчёты.'),
+                ('Приложения', 'apps', 'Магазин Debian, установленные программы и место на флешке.'),
+                ('Утилиты', 'utilities', 'Размер текста, контрастность и доступность приложений.'),
+                ('Питание', 'power', 'Сохранение данных, безопасное выключение и перезапуск.'),
+                ('Настройки голоса', 'voice', 'Голос, громкость, скорость речи и звуковое устройство.'),
+                ('Справка', 'help', 'Управление с клавиатуры и инструкции по работе с FlashOS.')])
             if choice is None:
                 continue
-            {'iso': lambda: iso_menu(ui, root), 'tools': lambda: tools_menu(ui, root, disk),
+            if choice in ('iso', 'tools', 'power'):
+                applications.close()
+            {'apps': applications.main, 'utilities': utilities.main, 'iso': lambda: iso_menu(ui, root), 'tools': lambda: tools_menu(ui, root, disk),
              'diagnostics': lambda: diagnostics_menu(ui, disk),
              'power': lambda: power_menu(ui, root, disk), 'voice': lambda: voice_menu(ui),
              'help': lambda: help_menu(ui)}[choice]()
         except OpenPower:
             try:
+                applications.close()
                 power_menu(ui, root, disk)
             except OpenPower:
                 continue
@@ -429,9 +450,6 @@ def main():
         state_root = prepare_medium(args.root) if not args.demo else args.root
         settings = Settings(state_root)
         speech.configure(settings.data)
-        if os.environ.get('FLASHOS_GRAPHICS_FAILED'):
-            speech.say('Графическое меню остановилось. Работаю в текстовом режиме. '
-                       'Если выполнялось восстановление или исправление раздела, оно могло остаться незавершённым.', wait=True)
         if not args.demo:
             save_async(state_root, delay=8)
         if args.graphical:
@@ -447,7 +465,7 @@ def main():
             curses.wrapper(run_menu, args.root, speech, args.demo, state_root, settings)
     except Exception as error:
         print('FlashOS: ' + str(error), flush=True)
-        speech.say('Ошибка Флэш ОС. ' + str(error), wait=True)
+        speech.say('Ошибка Флэш ОС. ' + str(error))
         time.sleep(5)
         raise
     finally:

@@ -1,0 +1,15 @@
+[Unit]
+Description=FlashOS persistent application storage cleanup
+After=local-fs.target
+Before=flashos.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/true
+RemainAfterExit=yes
+ExecStop=/usr/bin/python3 /opt/flashos/store_storage.py --shutdown --medium /run/live/medium
+# Allow slow USB flushing plus application shutdown and unmounting.
+TimeoutStopSec=1800
+
+[Install]
+WantedBy=multi-user.target

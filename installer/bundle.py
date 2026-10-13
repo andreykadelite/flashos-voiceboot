@@ -3,16 +3,26 @@ import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import shutil
+import sys
 import time
 import zipfile
 from installer._release import MANIFEST_SHA256
 
 
 def payload_path():
-    embedded = Path(__file__).resolve().parent / 'payload.zip'
+    module_path = Path(__file__).resolve()
+    embedded = module_path.parent / 'payload.zip'
+    if '__compiled__' in globals():
+        executable = Path(sys.argv[0]).resolve()
+        if executable.parent != module_path.parents[1]:
+            # Onefile modules run in an extraction directory. The large system
+            # ZIP follows the outer EXE's PE sections and is read in place.
+            # A damaged ZIP must fail rather than select an unrelated sidecar.
+            return executable
+        return embedded
     if embedded.exists():
         return embedded
-    return Path(__file__).resolve().parents[1] / 'build/installer/payload.zip'
+    return module_path.parents[1] / 'build/installer/payload.zip'
 
 
 def safe_relative(value):

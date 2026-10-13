@@ -10,6 +10,7 @@ import subprocess
 import sys
 import uuid
 
+from medium import writable
 from smart import summary as smart_summary, report_job as smart_job
 from hardware import temperature_job, readable_lines, firmware_state
 from network import network_job
@@ -315,8 +316,7 @@ def rescue_job(device, live_disk, medium):
         if shutil.disk_usage(medium).free < device.size + 256 * 1024**2:
             raise ValueError('На флешке недостаточно места для полного образа выбранного устройства')
         job.check()
-        try:
-            job.command(['mount', '-o', 'remount,rw', str(medium)], timeout=10)
+        with writable(job, medium, live_disk):
             folder = medium / 'recovery'
             if folder.is_symlink():
                 raise ValueError('Недопустимая папка назначения')
@@ -339,7 +339,4 @@ def rescue_job(device, live_disk, medium):
             job.incomplete = status != 0
             job.result = ('Копирование завершено: по карте прочитаны все области.' if status == 0 else
                           'Образ неполный: остались непрочитанные области. Файл и карта сохранены.')
-        finally:
-            # Remount flushes this filesystem; avoid a global, unbounded sync.
-            job.command(['mount', '-o', 'remount,ro', str(medium)], timeout=15, cleanup=True)
     return run

@@ -8,9 +8,13 @@ Copy your `.iso` files into the USB drive's `iso` folder. At each boot, FlashOS 
 
 **[Download the Windows EXE](https://github.com/andreykadelite/flashos-voiceboot/releases/latest/download/FlashOS-Setup.exe)** · [All release files](https://github.com/andreykadelite/flashos-voiceboot/releases/latest) · [User guide](docs/en/guide.md)
 
-Current release: FlashOS 2026.09.12.1 and installer 1.0.4. This release preserves USB selection across administrator startup and restores missing or damaged ISO selection state. [Changes](CHANGELOG.md) · [Test coverage](docs/en/testing.md).
+New release: FlashOS 2026.10.13.2 and installer 1.0.8. The new Debian store installs applications, dependencies and updates in persistent storage on USB. Other additions include saved network profiles, Orca speech settings and interruptible announcements, along with updated drivers and firmware. [Release overview and downloads](docs/en/release-2026.10.13.md) · [Verification](docs/en/testing.md).
+
+Ethernet and Wi-Fi settings include DHCP/static IPv4 and IPv6, DNS, routes and proxies, saved profiles matched to the PC and adapter, an encrypted password vault with a shared master password, and connection confirmation with rollback. A store connection failure offers networking tools and an explicit download retry. [Network settings and limits](docs/en/guide.md#ethernet-wi-fi-and-saved-profiles).
 
 The application interface and spoken help are currently in Russian. English documentation explains the controls and limitations; an English UI is not included in this release.
+
+**Приложения** (Applications) opens the store and installed programs. Package downloads need internet; applications and settings remain on the USB drive. Orca reads external windows through AT-SPI when the application supports accessibility. Its default mode follows FlashOS speech: Elena RHVoice, four other RHVoice voices and eSpeak NG fallback. **Утилиты** (Utilities) offers independent Orca voice and speech settings alongside text size, contrast, animations and cursor size. Ctrl+Alt+Escape closes the external session and returns to FlashOS. [Store instructions](docs/en/guide.md#applications-and-debian-store) · [Application and Orca settings](docs/en/guide.md#utilities-and-application-settings).
 
 ## Two parts, one project
 
@@ -43,7 +47,7 @@ FlashOS restarts to hand the choice to Ventoy. On a BIOS machine you may need to
 
 ## What is included
 
-The main menu contains Start a system, Tools, Diagnostics, Power, Voice settings and Help. Navigation reads the selected item without repeating the section name. Space repeats the item; F3 reads its context.
+The main menu contains Start a system, Tools, Diagnostics, Applications, Utilities, Power, Voice settings and Help. Navigation reads the selected item without repeating the section name. Space repeats the item; F3 reads its context. F7 stops current FlashOS speech. Enter or Space also skips a long introductory announcement without confirming an action in the next menu. ISO and application launch no longer wait for their name to finish speaking.
 
 - Hardware inventory: CPU, RAM modules, disks, partitions, graphics, network and connected drivers.
 - Disk health: detailed SMART and NVMe information, supported self-tests and read checks.

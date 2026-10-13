@@ -11,6 +11,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import tempfile
 import urllib.request
@@ -20,15 +21,34 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path('/opt/flashos-rootfs'))
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--additional-root', type=Path, action='append', default=[],
+                        help='Include another prepared Debian root in source coverage')
+    parser.add_argument('--existing-sources', type=Path,
+                        help='Skip exact source versions already archived in this JSON index')
+    parser.add_argument('--reuse-directory', type=Path, action='append', default=[],
+                        help='Reuse matching SHA256-verified source files before downloading')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
-    raw = subprocess.check_output(['dpkg-query', '--admindir=' + str(args.root / 'var/lib/dpkg'),
-        '-W', '-f=${binary:Package}\t${Version}\t${source:Package}\t${source:Version}\n'], text=True)
-    packages = [dict(zip(('binary', 'binary_version', 'source', 'source_version'), line.split('\t')))
+    def package_snapshot(build_root):
+        raw = subprocess.check_output(['dpkg-query', '--admindir=' + str(build_root / 'var/lib/dpkg'),
+            '-W', '-f=${binary:Package}\t${Version}\t${source:Package}\t${source:Version}\n'], text=True)
+        return [dict(zip(('binary', 'binary_version', 'source', 'source_version'), line.split('\t')))
                 for line in raw.splitlines()]
+
+    snapshots = [dict(root=str(build_root), packages=package_snapshot(build_root))
+                 for build_root in [args.root, *args.additional_root]]
+    packages = snapshots[0]['packages']
+    if args.additional_root:
+        (args.output / 'package-roots.json').write_text(json.dumps(snapshots, indent=2) + '\n')
     (args.output / 'packages.json').write_text(json.dumps(packages, indent=2) + '\n')
-    sources = sorted({(p['source'], p['source_version']) for p in packages})
+    sources = {(p['source'], p['source_version']) for snapshot in snapshots for p in snapshot['packages']}
+    if args.existing_sources:
+        archived = json.loads(args.existing_sources.read_text(encoding='utf-8-sig'))
+        sources -= {(r['package'], r['version']) for r in archived}
+    sources = sorted(sources)
     records, errors = [], []
+    (args.output / 'sources.json').write_text('[]\n')
+    (args.output / 'errors.json').write_text('[]\n')
 
     def fetch(pair):
         name, version = pair
@@ -52,6 +72,14 @@ def main():
                     return False
                 with target.open('rb') as stream:
                     return hashlib.file_digest(stream, 'sha256').hexdigest() == digest
+            for directory in args.reuse_directory:
+                if valid():
+                    break
+                cached = directory / filename
+                if cached.is_file() and cached.stat().st_size == int(size):
+                    with cached.open('rb') as stream:
+                        if hashlib.file_digest(stream, 'sha256').hexdigest() == digest:
+                            shutil.copyfile(cached, target)
             if not valid():
                 temporary = target.with_name(target.name + '.part')
                 for attempt in range(3):

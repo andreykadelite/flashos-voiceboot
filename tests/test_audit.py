@@ -196,9 +196,9 @@ class DiagnosticTests(unittest.TestCase):
             (medium / 'flashos/flashos.marker').touch()
             job = Job('rescue', None)
             def command(args, **kwargs):
-                return (1, '') if '--done-status' in args else (0, '')
+                return (1, '') if '--done-status' in args else (0, 'ro' if args[0] == 'findmnt' else '')
             with patch('toolkit.check_device') as check, patch('toolkit.subprocess.check_output', side_effect=[
-                '{"filesystems":[{"source":"/dev/usb1","fstype":"exfat"}]}', 'usb\n', '/dev/usb1\n']), patch.object(job, 'command', side_effect=command):
+                '{"filesystems":[{"source":"/dev/usb1","fstype":"exfat"}]}', 'usb\n', '/dev/usb1\n']), patch('medium.medium_info', return_value=('/dev/usb1', 'exfat')), patch.object(job, 'command', side_effect=command):
                 toolkit.rescue_job(device, '/dev/usb', medium)(job)
             self.assertTrue(job.incomplete)
             self.assertTrue(check.call_args.kwargs['unmounted'])

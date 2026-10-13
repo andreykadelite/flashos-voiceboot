@@ -225,6 +225,22 @@ class WifiTests(unittest.TestCase):
         self.assertTrue(job.failed)
         self.assertIn('delete', run.call_args.args[0])
 
+    def test_quick_wpa2_and_wpa3_keep_psk_only_in_ram_for_later_rollback(self):
+        address = json.dumps([{'ifname': 'wlan0', 'addr_info': [
+            {'family': 'inet', 'scope': 'global', 'local': '192.168.1.2'}]}])
+        for security, key_management in (('WPA2', 'wpa-psk'), ('WPA3', 'sae')):
+            point = {'ssid': 'Test', 'device': 'wlan0', 'security': security}
+            job = Job('wifi', None)
+            with self.subTest(security=security), self.private_files(), patch.object(
+                    job, 'command', side_effect=[(0, ''), (0, ''), (0, address)]) as run:
+                connect_job(point, 'private-wifi-password')(job)
+            created = run.call_args_list[0].args[0]
+            self.assertEqual(created[created.index('save') + 1], 'no')
+            self.assertEqual(created[created.index('connection.autoconnect') + 1], 'no')
+            self.assertEqual(created[created.index('wifi-sec.psk-flags') + 1], '0')
+            self.assertEqual(created[created.index('wifi-sec.key-mgmt') + 1], key_management)
+            self.assertNotIn('private-wifi-password', str(run.call_args_list) + str(job.lines))
+
 
 class AccessTests(unittest.TestCase):
     def test_f10_waits_for_job_stop_before_opening_power(self):

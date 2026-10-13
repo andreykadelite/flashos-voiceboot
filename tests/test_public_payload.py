@@ -59,9 +59,14 @@ class PublicPayload(unittest.TestCase):
         image = self.root / 'dist/usb/flashos/filesystem.squashfs'
         for section in ('usb', 'boot'):
             self.put('dist/' + section + '/flashos/flashos.marker', 'FlashOS test-version\n')
-        report = {'sources_match': True, 'no_test_fixture': True, 'system_version': 'test-version',
+        for name in ('vmlinuz', 'initrd'):
+            (self.root / 'dist/boot/flashos' / name).write_bytes((self.root / 'dist/usb/flashos' / name).read_bytes())
+        report = {'app_store': {'verified': True, 'filesystem_sha256': hashlib.sha256((self.root / 'dist/usb/flashos/filesystem.squashfs').read_bytes()).hexdigest()}, 'sources_match': True, 'no_test_fixture': True, 'system_version': 'test-version',
                   'sources_sha256': {'menu.py': hashlib.sha256(source.read_bytes()).hexdigest()},
-                  'squashfs_sha256': hashlib.sha256(image.read_bytes()).hexdigest()}
+                  'squashfs_sha256': hashlib.sha256(image.read_bytes()).hexdigest(),
+                  'hardware': {'verified': True, 'artifact_sha256': {
+                      name: hashlib.sha256((self.root / 'dist/usb/flashos' / name).read_bytes()).hexdigest()
+                      for name in ('filesystem.squashfs', 'vmlinuz', 'initrd')}}}
         self.put('dist/toolkit-build-verification.json', json.dumps(report))
         return source, image
 
@@ -74,6 +79,36 @@ class PublicPayload(unittest.TestCase):
             with self.subTest(target=target), self.assertRaises(ValueError):
                 payload.verified_system(self.root, 'test-version')
             target.write_bytes(original)
+
+    def test_hardware_proof_is_required_and_boot_files_cannot_be_swapped(self):
+        self.system_proof()
+        report_path = self.root / 'dist/toolkit-build-verification.json'
+        report = json.loads(report_path.read_text())
+        report.pop('hardware')
+        report_path.write_text(json.dumps(report))
+        with self.assertRaisesRegex(ValueError, 'Hardware'):
+            payload.verified_system(self.root, 'test-version')
+        self.system_proof()
+        for name in ('usb/flashos/vmlinuz', 'usb/flashos/initrd', 'boot/flashos/vmlinuz', 'boot/flashos/initrd'):
+            path = self.root / 'dist' / name
+            original = path.read_bytes()
+            path.write_bytes(b'different boot file')
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                payload.verified_system(self.root, 'test-version')
+            path.write_bytes(original)
+
+    def test_app_runtime_proof_is_required_and_cannot_certify_another_image(self):
+        for change in ('missing', 'stale'):
+            self.system_proof()
+            report_path = self.root / 'dist/toolkit-build-verification.json'
+            report = json.loads(report_path.read_text())
+            if change == 'missing':
+                report.pop('app_store')
+            else:
+                report['app_store']['filesystem_sha256'] = '0' * 64
+            report_path.write_text(json.dumps(report))
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, 'Application runtime'):
+                payload.verified_system(self.root, 'test-version')
 
     def test_packaging_rejects_an_old_system_version(self):
         self.system_proof()

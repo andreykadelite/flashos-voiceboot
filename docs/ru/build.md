@@ -16,15 +16,54 @@ sudo bash build/setup-builder.sh
 sudo bash build/build-system.sh
 ```
 
-Загрузчик файлов сверяет SHA256 закреплённых Ventoy, SOF и текстов лицензий. Подготовке нужен интернет и root внутри сборочной среды. Списки пакетов находятся в `build/build-system.sh`, `install-admin.sh` и `install-recovery.sh`. Сборщик получает указанную ревизию RHVoice с подмодулями, устанавливает SOF, копирует `src` и `boot`, убирает идентификаторы и журналы сборочного ПК, создаёт initrd/squashfs и правит конфигурацию GRUB Ventoy. Подписанные EFI-файлы сохраняются исходными.
+Загрузчик файлов сверяет SHA256 закреплённых Ventoy, SOF и текстов лицензий. Подготовке нужен интернет и root внутри сборочной среды. Списки пакетов находятся в `build/build-system.sh`, `build/install-hardware.sh`, `install-admin.sh` и `install-recovery.sh`. Сборщик получает указанную ревизию RHVoice с подмодулями, устанавливает SOF, копирует `src` и `boot`, убирает идентификаторы и журналы сборочного ПК, создаёт initrd/squashfs и правит конфигурацию GRUB Ventoy. Подписанные EFI-файлы сохраняются исходными.
+
+Аппаратная поддержка сосредоточена в `build/install-hardware.sh`, который вызывается полной сборкой. `build/repack-system.sh` проверяет уже подготовленный аппаратный набор; изменения Debian-пакетов применяйте полной сборкой перед пересборкой образа. Ядро, несвободные firmware и Mesa устанавливаются из trixie-backports отдельным запросом; микрокод Intel/AMD, ALSA topology и дополнительные прошивки — из стабильной ветки. SOF 2026.09.2 накладывается из официального архива с закреплённой SHA256 через `build/install-sof.py`; лицензии и происхождение остаются в `/usr/share/doc/flashos`. Debian-пакет `firmware-sof-signed` служит базой и сохраняет собственную версию 2025.01-1.
+
+Для переносимого live-образа явно задаётся `MODULES=most`. В initrd включается ранний микрокод обоих производителей: `IUCODE_TOOL_INITRAMFS=early`, `IUCODE_TOOL_SCANCPUS=no` и `AMD64UCODE_INITRAMFS=early`. Состав образа не ограничивается процессором сборочного компьютера. Аппаратные модули загружает udev; дополнительных DKMS-модулей и принудительных запретов драйверов нет.
 
 Результат: `dist/usb`, `dist/boot`, `dist/ventoy.disk.img.xz`, `dist/packages.tsv`. Не кладите в дерево упаковки свои ISO, настройки, резервные копии и отчёты. `tools/package-public-docs.py` копирует только публичную документацию. Тестовые ISO храните отдельно.
 
-Для сборки EXE с готовой системой скачайте `FlashOS-2026.09.12.1-system.zip` из [этого релиза](https://github.com/andreykadelite/flashos-voiceboot/releases/tag/v2026.09.12.1-installer-1.0.4), сверьте SHA256 и распакуйте архив в корень исходников того же тега. Он заполнит дерево `dist`. Флешку подготавливает EXE: ZIP содержит файлы для сборки, поэтому записывать его через Rufus или dd нельзя.
+Для сборки EXE с готовой системой используйте архив `FlashOS-<версия>-system.zip` из соответствующего [выпуска](https://github.com/andreykadelite/flashos-voiceboot/releases), сверьте SHA256 и распакуйте архив в корень исходников того же тега. Он заполнит дерево `dist`. Флешку подготавливает EXE: ZIP содержит файлы для сборки, поэтому записывать его через Rufus или dd нельзя.
+
+В выпуске 2026.10.13.2 ZIP опубликован двумя частями. Скачайте обе части,
+`system-archive-parts.json` и `join-system-archive.py` в одну папку, затем
+выполните `python join-system-archive.py system-archive-parts.json`.
+Сценарий проверит части и готовый ZIP по SHA256. [Подробности](release-2026.10.13.md#системный-архив-для-сборки).
 
 Если вы изменили код FlashOS, выполните `build/repack-system.sh` в подготовленной Linux-среде. Сценарий `tools/verify-toolkit-build.py` сравнит исходники с файлами внутри squashfs и сохранит SHA256 образа. Упаковка остановится, если версия системы, образ или исходники не совпадут с отчётом. В архив готовой системы этот отчёт уже включён.
 
-Полная сборка Linux обращается к текущим индексам trixie/backports. Для пересборки старых Debian-пакетов используйте точные `.dsc`, исходные архивы и патчи Debian из архива исходников релиза, команды `dpkg-source -x` и `dpkg-buildpackage` в соответствующей Debian-среде. В `metadata/debian-sources.json` перечислены исходные файлы и SHA256. У сторонних проектов в архивах есть собственные инструкции. Пересборка EFI не воспроизводит подпись Debian или Ventoy: для изменённых загрузчиков нужна своя цепочка доверия.
+Полная сборка Linux обращается к текущим индексам trixie/backports. Для пересборки старых Debian-пакетов используйте точные `.dsc`, исходные архивы и патчи Debian из архива исходников релиза, команды `dpkg-source -x` и `dpkg-buildpackage` в соответствующей Debian-среде. В `metadata/debian-sources.json` перечислены исходные файлы и SHA256; `metadata/source-archives.json` показывает, в каких архивах они находятся. Для выпуска 2026.10.12.1 сохранены исходные архивы 2026.09.09.3, а новые и изменённые Debian-пакеты вместе с оригинальным SOF 2026.09.2 добавлены в `FlashOS-2026.10.12.1-hardware-sources.zip`. Debian SHA256 сверяются с подписанными индексами deb-src, SOF — с закреплённой записью `metadata/build-inputs.json`. У сторонних проектов в архивах есть собственные инструкции. Пересборка EFI не воспроизводит подпись Debian или Ventoy: для изменённых загрузчиков нужна своя цепочка доверия.
+
+## Среда приложений и соответствующие исходники
+
+`build/install-app-store.sh` создаёт отдельный amd64 Debian root `/opt/flashos-app-runtime`, устанавливает Python/APT, Openbox, Orca, GNOME Terminal, eSpeak NG и звуковую сессию. До него должен завершиться `build/install-rhvoice.py`: среда приложений использует уже проверенный RHVoice из live-root. Полная сборка вызывает оба этапа в этом порядке. Реальная пользовательская `store.ext4` в сборку не входит.
+
+`tools/provision-shared-speech.py` копирует из live-root те же двоичные файлы RHVoice 1.18.4, библиотеки, модуль `sd_rhvoice`, пять неизменённых наборов голосов и уведомления о лицензиях. Он сверяет копии по SHA256, проверяет зависимости обоих синтезаторов через `ldd` и получение списка голосов через протокол Speech Dispatcher. Манифест находится внутри среды в `var/lib/flashos-store/speech-runtime.json`. Отдельный пакет Debian RHVoice и другие версии моделей для среды приложений не устанавливаются.
+
+`tools/repack-app-runtime.py` сохраняет очищенный seed в `/opt/flashos-rootfs/opt/flashos/app-runtime.tar.xz`; `app-runtime.json` содержит размер, SHA256 и UID 1000. Упаковщик проверяет версии пакетов и покрытие исходниками, исключает идентификаторы, DNS сборочного компьютера, журналы и временные каталоги. В сборке 2026.10.13.2 среда содержит 455 Debian-пакетов: относительно предыдущего seed добавлен только `espeak-ng` версии `1.52.0+dfsg-5`, без обновления или удаления прежних пакетов. Его исходники уже входят в существующий комплект исходных архивов. RHVoice копируется из live-root и не увеличивает число пакетов dpkg.
+
+После подготовки пакетов для обновления голосов и seed без повторного обращения к APT выполните:
+
+```sh
+sudo python3 tools/provision-shared-speech.py --live /opt/flashos-rootfs \
+  --runtime /opt/flashos-app-runtime
+sudo python3 tools/repack-app-runtime.py --runtime /opt/flashos-app-runtime \
+  --live /opt/flashos-rootfs
+sudo bash build/repack-system.sh
+```
+
+При изменении версий других пакетов сначала обновите и проверьте соответствующие списки и архивы исходников. Пересборка seed не обновляет пользовательские хранилища: при их открытии `store_storage.py` подключает общие голоса только для чтения и библиотеки через RAM, сохраняя приложения, профили Orca и пользовательские библиотеки на флешке.
+
+Списки пакетов среды приложений находятся в `metadata/app-runtime-packages.tsv` и `metadata/app-runtime-packages.json`. Соответствующие исходники всего host/runtime собираются по объединению точных source pairs:
+
+```sh
+sudo python3 tools/collect-debian-sources.py --root /opt/flashos-rootfs \
+  --additional-root /opt/flashos-app-runtime --existing-sources metadata/debian-sources.json \
+  --output build/publication/applications-sources
+```
+
+В builder должны быть включены совпадающие подписанные deb-src для trixie, updates, security и backports. `--reuse-directory` позволяет повторно использовать уже скачанные файлы после проверки SHA256. Архив `FlashOS-2026.10.12.2-applications-sources.zip` дополняет прежние исходники; сохраняйте весь соответствующий комплект. Лицензии пакетов остаются в `/usr/share/doc/*/copyright` внутри каждой среды.
 
 ## EXE Windows
 

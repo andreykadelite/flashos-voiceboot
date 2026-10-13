@@ -94,7 +94,9 @@ def connect_job(point, password):
             command += ['802-11-wireless.bssid', point['bssid']]
         if protected:
             command += ['wifi-sec.key-mgmt', 'sae' if 'WPA3' in security and 'WPA2' not in security else 'wpa-psk',
-                        'wifi-sec.psk-flags', '2']
+                        # save no keeps the PSK in RAM so a later checkpoint can
+                        # reconnect this connection after its nmcli agent exits.
+                        'wifi-sec.psk-flags', '0']
         success = False
         try:
             job.command(command, timeout=15, log_output=False)

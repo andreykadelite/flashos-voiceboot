@@ -4,11 +4,13 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from installer.model import identity, unavailable_reason, validate_request
-from installer.bundle import Bundle, safe_relative
+import installer.bundle as bundle_module
+from installer.bundle import Bundle, payload_path, safe_relative
 
 
 def usb(**overrides):
@@ -56,16 +58,96 @@ class BundleRules(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 safe_relative(value)
 
-    def make_bundle(self, directory, corrupt=False):
+    def make_bundle(self, directory, corrupt=False, *, prefix=False, section='usb'):
         data = b'verified file'
         digest = hashlib.sha256(data).hexdigest()
-        meta = dict(schema=1, objects={digest: len(data)}, files=[dict(section='usb', path='flashos/test', sha256=digest, bytes=len(data))])
+        meta = dict(schema=1, objects={digest: len(data)}, files=[dict(section=section, path='flashos/test', sha256=digest, bytes=len(data))])
         raw = json.dumps(meta).encode()
         path = Path(directory) / 'bundle.zip'
         with zipfile.ZipFile(path, 'w') as archive:
             archive.writestr('manifest.json', raw)
             archive.writestr('objects/' + digest, b'corrupt! file' if corrupt else data)
+        if prefix:
+            executable = Path(directory) / 'FlashOS-Setup.exe'
+            executable.write_bytes(b'MZ' + bytes(510) + path.read_bytes())
+            path = executable
         return Bundle(path, hashlib.sha256(raw).hexdigest())
+
+    def test_pe_overlay_payload_is_read_and_extracted(self):
+        with tempfile.TemporaryDirectory() as directory:
+            bundle = self.make_bundle(directory, prefix=True, section='info')
+            self.assertEqual('verified file', bundle.text('flashos/test'))
+            events = []
+            destination = Path(directory) / 'work'
+            bundle.extract(destination, events.append, lambda: False)
+            digest = bundle.manifest['files'][0]['sha256']
+            self.assertEqual(b'verified file', (destination / 'objects' / digest).read_bytes())
+            self.assertEqual(100, events[-1]['percent'])
+
+    def test_pe_overlay_supports_zip64_offsets(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(zipfile, 'ZIP64_LIMIT', 1):
+                bundle = self.make_bundle(directory, prefix=True, section='info')
+            self.assertEqual('verified file', bundle.text('flashos/test'))
+            bundle.extract(Path(directory) / 'work', lambda e: None, lambda: False)
+
+    def test_truncated_pe_overlay_fails_before_extraction(self):
+        with tempfile.TemporaryDirectory() as directory:
+            bundle = self.make_bundle(directory, prefix=True)
+            bundle.path.write_bytes(bundle.path.read_bytes()[:-22])
+            with self.assertRaises(zipfile.BadZipFile):
+                Bundle(bundle.path, hashlib.sha256(b'').hexdigest())
+            self.assertFalse((Path(directory) / 'work').exists())
+
+    def test_modified_pe_overlay_manifest_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            bundle = self.make_bundle(directory, prefix=True)
+            with self.assertRaises(ValueError):
+                Bundle(bundle.path, '0' * 64)
+
+    def test_modified_pe_overlay_object_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            bundle = self.make_bundle(directory, corrupt=True, prefix=True)
+            with self.assertRaises(ValueError):
+                bundle.extract(Path(directory) / 'work', lambda e: None, lambda: False)
+
+    def test_onefile_uses_outer_executable_even_with_a_valid_sidecar(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            runtime = root / 'unpacked'
+            embedded = runtime / 'installer' / 'payload.zip'
+            embedded.parent.mkdir(parents=True)
+            sidecar = self.make_bundle(root)
+            embedded.write_bytes(sidecar.path.read_bytes())
+            outer = root / 'FlashOS-Setup.exe'
+            outer.write_bytes(b'MZ damaged overlay')
+            with patch.object(bundle_module, '__compiled__', object(), create=True), \
+                 patch.object(bundle_module, '__file__', str(embedded.with_name('bundle.py'))), \
+                 patch.object(sys, 'argv', [str(outer)]):
+                self.assertEqual(outer, payload_path())
+                with self.assertRaises(zipfile.BadZipFile):
+                    Bundle(expected_hash=hashlib.sha256(b'').hexdigest())
+
+    def test_compiled_standalone_uses_adjacent_payload(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            module = root / 'installer' / 'bundle.py'
+            embedded = module.with_name('payload.zip')
+            with patch.object(bundle_module, '__compiled__', object(), create=True), \
+                 patch.object(bundle_module, '__file__', str(module)), \
+                 patch.object(sys, 'argv', [str(root / 'FlashOS-Setup.exe')]):
+                self.assertEqual(embedded, payload_path())
+
+    def test_source_payload_fallback_is_unchanged(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            module = root / 'installer' / 'bundle.py'
+            with patch.object(bundle_module, '__file__', str(module)), \
+                 patch.object(sys, 'argv', [str(root / 'entry.py')]):
+                self.assertEqual(root / 'build/installer/payload.zip', payload_path())
+                module.parent.mkdir()
+                module.with_name('payload.zip').touch()
+                self.assertEqual(module.with_name('payload.zip'), payload_path())
 
     def test_modified_payload_fails_before_disk_writer(self):
         with tempfile.TemporaryDirectory() as directory:

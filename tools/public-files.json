@@ -1,5 +1,6 @@
 [
   "boot/debian-grub.cfg",
+  "boot/flashos-apps.service",
   "boot/flashos.service",
   "boot/oneshot.cfg",
   "boot/pipewire-flashos.conf",
@@ -11,6 +12,7 @@
   "docs/en/components.md",
   "docs/en/guide.md",
   "docs/en/installer.md",
+  "docs/en/release-2026.10.13.md",
   "docs/en/testing.md",
   "docs/en/troubleshooting.md",
   "docs/images/flashos.png",
@@ -21,6 +23,7 @@
   "docs/ru/guide.md",
   "docs/ru/installer-audit-2026-09-10.md",
   "docs/ru/installer.md",
+  "docs/ru/release-2026.10.13.md",
   "docs/ru/testing.md",
   "docs/ru/troubleshooting.md",
   "licenses/GPL-3.0-only.txt",
@@ -315,6 +318,8 @@
   "licenses/rhvoice/voices/talgat/about-rus.txt",
   "licenses/rhvoice/voices/talgat/license-eng.txt",
   "licenses/rhvoice/voices/talgat/license-rus.txt",
+  "metadata/app-runtime-packages.json",
+  "metadata/app-runtime-packages.tsv",
   "metadata/build-inputs.json",
   "metadata/debian-packages.json",
   "metadata/debian-sources.json",
@@ -322,5 +327,13 @@
   "metadata/rhvoice-sources.json",
   "metadata/source-archives.json",
   "metadata/testing.json",
-  "metadata/ventoy-extra-sources.json"
+  "metadata/ventoy-extra-sources.json",
+  "src/network_profiles.py",
+  "src/network_proxy.py",
+  "src/network_runtime.py",
+  "src/network_secrets.py",
+  "src/network_settings.py",
+  "src/orca_settings.py",
+  "tools/provision-shared-speech.py",
+  "tools/repack-app-runtime.py"
 ]

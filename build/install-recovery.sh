@@ -9,9 +9,5 @@ cp /etc/resolv.conf "$root/etc/resolv.conf"
 chroot "$root" apt-get update
 chroot "$root" apt-get install -y --no-install-recommends partclone testdisk hwinfo mtr-tiny \
     python3-tk xserver-xorg-core xserver-xorg-input-libinput xserver-xorg-video-fbdev \
-    xserver-xorg-video-vesa xinit x11-xserver-utils fonts-dejavu-core wireless-regdb \
-    firmware-ath9k-htc firmware-carl9170 firmware-zd1211
-chroot "$root" apt-get install -y --no-install-recommends -t trixie-backports \
-    firmware-ast firmware-intel-misc firmware-libertas firmware-cavium \
-    firmware-myricom firmware-netronome firmware-netxen firmware-ti-connectivity
+    xserver-xorg-video-vesa xinit x11-xserver-utils fonts-dejavu-core
 chroot "$root" apt-get clean

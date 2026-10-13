@@ -12,7 +12,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - run: python -m unittest discover -s tests -v
+      - run: python -m pip install cryptography==43.0.0
+      - run: sudo apt-get update -qq && sudo apt-get install -y xvfb
+      - run: xvfb-run -a python -m unittest discover -s tests -v
       - run: python tools/check-publication.py
   windows:
     runs-on: windows-latest

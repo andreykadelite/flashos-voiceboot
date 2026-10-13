@@ -96,10 +96,11 @@ function Safe-Join([string]$root,[string]$relative) {
   }
   return $path
 }
-function Progress-Bytes([int]$count,[string]$name) {
+function Progress-Bytes([long]$count,[string]$name) {
   $script:doneBytes+=$count
   if(([datetime]::UtcNow-$script:lastProgress).TotalMilliseconds -ge 500 -or $script:doneBytes -eq $script:totalBytes) {
-    Event 'progress' $name ([math]::Min(100,[math]::Round(100*$script:doneBytes/[math]::Max(1,$script:totalBytes),1)))
+    # Select the Int64 overload for byte totals and Double for percentages.
+    Event 'progress' $name ([math]::Min([double]100,[math]::Round(100.0*$script:doneBytes/[math]::Max([long]1,[long]$script:totalBytes),1)))
     $script:lastProgress=[datetime]::UtcNow
   }
 }
@@ -222,8 +223,8 @@ try {
     $roots=@{usb=(Io-Root $mainRoot 1);boot=(Io-Root $bootRoot 3)}
     $letters=@{usb=$mainRoot;boot=$bootRoot}
     Phase 'copy' 'Запись системы FlashOS'
-    $script:doneBytes=0
-    $script:totalBytes=($manifest.files | Where-Object section -in @('usb','boot') | Measure-Object bytes -Sum).Sum
+    $script:doneBytes=[long]0
+    $script:totalBytes=[long](($manifest.files | Where-Object section -in @('usb','boot') | Measure-Object bytes -Sum).Sum)
     foreach($entry in $manifest.files | Where-Object section -in @('usb','boot')) {
       Check-IoTarget
       $destination=Safe-Join $roots[$entry.section] $entry.path
@@ -252,8 +253,8 @@ try {
     $uuid=Data-Uuid $roots.usb
   }
   Phase 'verify' 'Проверка записанных файлов по SHA256'
-  $script:doneBytes=0
-  $script:totalBytes=($manifest.files | Where-Object section -in @('usb','boot') | Measure-Object bytes -Sum).Sum
+  $script:doneBytes=[long]0
+  $script:totalBytes=[long](($manifest.files | Where-Object section -in @('usb','boot') | Measure-Object bytes -Sum).Sum)
   foreach($entry in $manifest.files | Where-Object section -in @('usb','boot')) {
     Check-IoTarget
     $path=Safe-Join $roots[$entry.section] $entry.path

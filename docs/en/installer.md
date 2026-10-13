@@ -2,7 +2,7 @@
 
 [Русский](../ru/installer.md) · [Home](../../README.en.md)
 
-Installer 1.0.4 packages FlashOS 2026.09.12.1. It runs on Windows 10 1809+ and Windows 11 x64. It contains its runtime and system files; no Python, Qt installation or network connection is required. Allow several gigabytes of free local space for extraction.
+Installer 1.0.6 packages FlashOS 2026.10.12.2. It runs on Windows 10 1809+ and Windows 11 x64. It contains its runtime and system files; no Python, Qt installation or network connection is required. Allow several gigabytes of free local space for extraction.
 
 ## Install a USB drive
 

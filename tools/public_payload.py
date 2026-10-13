@@ -101,6 +101,21 @@ def verified_system(root, version):
             or report.get('sources_sha256') != sources or report.get('squashfs_sha256') != image_hash
             or report.get('system_version') != version):
         raise ValueError('Live system is stale or unverified. Repack it and run tools/verify-toolkit-build.py before packaging.')
+    store = report.get('app_store', {})
+    if store.get('verified') is not True or store.get('filesystem_sha256') != image_hash:
+        raise ValueError('Application runtime is absent or stale. Run tools/verify-app-store-build.py and certify the build.')
+    hardware = report.get('hardware', {})
+    if hardware.get('verified') is not True:
+        raise ValueError('Hardware drivers are unverified. Run tools/verify-hardware-build.py and certify the build again.')
+    for name in ('filesystem.squashfs', 'vmlinuz', 'initrd'):
+        path = safe_path(root, root / 'dist/usb/flashos' / name)
+        with path.open('rb') as stream:
+            digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+        if hardware.get('artifact_sha256', {}).get(name) != digest:
+            raise ValueError('Boot files changed after hardware verification: ' + name)
+        if name != 'filesystem.squashfs' and (safe_path(root, root / 'dist/boot/flashos' / name).read_bytes()
+                                            != path.read_bytes()):
+            raise ValueError('Boot partition does not match verified hardware: ' + name)
     for section in ('usb', 'boot'):
         marker = safe_path(root, root / 'dist' / section / 'flashos/flashos.marker')
         if marker.read_text(encoding='utf-8').strip() != 'FlashOS ' + version:

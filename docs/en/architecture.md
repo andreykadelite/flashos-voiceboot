@@ -6,7 +6,29 @@ FlashOS has two independent runtimes in one repository: a bootable Linux environ
 
 On USB boot, Ventoy and Debian boot components start Linux. The live system reads `filesystem.squashfs` with a temporary RAM overlay. Drivers, ALSA, PipeWire/WirePlumber and UCM profiles provide audio access. The Python menu uses RHVoice or eSpeak NG. Its graphical frontend is Tk/Xorg, with a talking text fallback.
 
+`speech.py` runs speech on a separate thread; the default voice is Elena RHVoice. F7 stops the current utterance without cancelling the selected action or job. `interface.UI.speak_wait` handles keys during introductory announcements: Enter, Space and F7 interrupt only speech, while navigation is passed to the next menu. Skipping an announcement cannot accept a confirmation. ISO selection and application launch use asynchronous announcements, so handoff does not depend on the spoken name's length.
+
 The catalog is built from `iso`. A choice is stored as a one-time job on FLASHBOOT. After restart, Ventoy's configuration reads and clears it, then boots the ISO. This accounts for the restart and the need to reselect USB on some BIOS machines. Signed EFI files are separate from the modified GRUB configuration.
+
+Applications use a separate Debian root inside `flashos/applications/store.ext4` on the main USB partition (`DATA_USB` in code). A verified `/opt/flashos/app-runtime.tar.xz` seeds it; application files and dpkg state are separate from the live root, while the kernel and hardware drivers are shared. This separates package installation rather than running a separate VM.
+
+`store.py` implements spoken tabs and change-plan review; `store_storage.py` validates the boot medium and manages file allocation and loop mounts; `store_packages.py` handles signed APT indexes, dependencies, reviewed versions and result verification. User settings live inside the image. An external session runs Openbox, Orca and the application as UID 1000; `store_launch.py` and `store_session.py` manage exit and Ctrl+Alt+Escape return. Application AT-SPI support determines window accessibility.
+
+Utilities follows Applications and uses `utilities.py` for a spoken menu of fixed settings. `store_preferences.py` changes only permitted GSettings keys and matching GTK preferences as UID 1000 through a separate D-Bus session. Scale, contrast, animations and cursor size persist in the USB image user profile; confirmed reset preserves other keys and Orca files. The utility keeps screen-reader accessibility enabled. The next external session receives saved preferences; other applications may use their own settings.
+
+`orca_settings.py` reads and atomically writes Orca's native `user-settings.conf` JSON file inside the `store.ext4` user profile. That file is the single source of speech preferences. In follow mode, `store_launch.py` passes current FlashOS values through the UID-1000-readable RAM file `speech-defaults.json`; startup changes only speech in the selected starting profile. A snapshot of the last applied speech detects edits made through Orca's own preferences window and preserves them instead of applying another automatic update. Only the exact old FlashOS default profile is migrated; other profiles and preferences remain intact. Manual choices in Utilities save independent speech. Rate, pitch and volume scales map to ACSS for the installed Orca version.
+
+The application runtime contains the same RHVoice, five voice datasets and eSpeak NG as the live system. `store_storage.py` also binds the RHVoice module and data read-only into older stores; shared libraries and SONAME aliases live in `/run/flashos-rhvoice-libs`. A fixed `LD_LIBRARY_PATH` is applied only to Speech Dispatcher, preserving user libraries on USB. `store_session.py` registers both `rhvoice` and `espeak-ng` and starts Orca with its saved profile. Utilities preview uses a separate unprivileged PipeWire Pulse/Speech Dispatcher session, applies the voice through the actual `orca.speechdispatcherfactory` and checks the speech-end event; Escape stops that preview session.
+
+NetworkManager 1.52.1 manages networking through `nmcli` and the system D-Bus. `network_settings.py` provides the spoken editor; `network_profiles.py` validates IPv4/IPv6, DNS, routes, Wi-Fi and proxies. Persistent profiles are in `flashos/network/profiles.json` on the FAT32 FLASHBOOT partition; this JSON contains no secrets. Matching uses a hashed machine identifier and the adapter's permanent MAC rather than an interface name. Unknown machines or replacement adapters skip automatic application. Portable Wi-Fi with automatic IP permits manual use; a newly bound copy has a separate identifier and disabled autoconnect. At most one automatic profile is saved per machine and adapter. Moving the same PC to another wired network requires suitable settings: machine identity does not identify the attached LAN.
+
+`network_secrets.py` stores Wi-Fi and proxy passwords in `flashos/network/secrets.bin`: AES-256-GCM with a fresh random nonce, and a key derived from a shared password using salted scrypt with a fixed cost of about 128 MiB RAM. Protection does not rely on FAT32 permissions. The master password is never written; unlocked contents stay in session memory. File size, format, authenticated ciphertext and write conflicts are checked; atomic replacement requests a flush to the medium. Save errors reach the UI. Passwords are excluded from reports and command arguments.
+
+`network_runtime.py` creates temporary NetworkManager connections with `save no` and native autoconnect disabled. Before switching it checkpoints only the selected adapter. Assigned addresses are checked; manual application waits up to 60 seconds for confirmation. Cancellation, failure or timeout restores the previous connection, including when the menu process exits. Confirmation removes the checkpoint and writes active-profile metadata only to `/run`, checked against actual connection UUID and adapter. On reboot FlashOS explicitly selects a matching saved profile; locked secrets are skipped. Quick DHCP creates a separate automatic IP connection rather than selecting an arbitrary old static connection.
+
+Startup makes at most three attempts with matching saved profiles and stops after the first successful connection, establishing at most one connection automatically per boot. Other profiles are connected manually. If multiple automatic profiles ambiguously match the same adapter, startup skips that adapter.
+
+`network_proxy.py` hands a confirmed active profile's proxy to the store through an APT configuration in RAM and a read-only bind mount. New external sessions receive proxy environment variables through a RAM file read by UID 1000. Passwords are neither written to the USB application root nor passed through argv. Applications can ignore these variables; diagnostics make direct requests. PAC/WPAD and corporate 802.1X/EAP editing are outside this interface.
 
 Tools share job handling for device selection, preconditions, speech, logs, cancellation and result parsing. A successful command is not treated as proof of complete hardware health. Recovery writes are separate from read-only diagnostics.
 
@@ -14,7 +36,7 @@ The installer uses PySide6/Qt Widgets. Discovery and writing run separately from
 
 | Directory | Contents |
 | --- | --- |
-| `src` | Menu, speech, ISO catalog, diagnostics and recovery |
+| `src` | Menu, speech, ISO catalog, diagnostics, recovery and application store |
 | `installer` | Qt GUI, USB discovery, writing and verification |
 | `boot` | systemd, audio and boot configuration |
 | `build` | Debian provisioning and system image build |

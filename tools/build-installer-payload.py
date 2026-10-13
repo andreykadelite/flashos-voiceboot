@@ -7,8 +7,8 @@ import zipfile
 from public_payload import payload_files, pinned_zip, safe_path, verified_system
 
 ROOT = Path(__file__).resolve().parents[1]
-SYSTEM_VERSION = '2026.09.12.1'
-INSTALLER_VERSION = '1.0.4'
+SYSTEM_VERSION = '2026.10.13.2'
+INSTALLER_VERSION = '1.0.8'
 OUT = ROOT / 'build/installer/payload.zip'
 OUT.parent.mkdir(parents=True, exist_ok=True)
 records, objects = [], {}
