@@ -113,7 +113,7 @@ class BundleRules(unittest.TestCase):
 
     def test_onefile_uses_outer_executable_even_with_a_valid_sidecar(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             runtime = root / 'unpacked'
             embedded = runtime / 'installer' / 'payload.zip'
             embedded.parent.mkdir(parents=True)
@@ -130,7 +130,7 @@ class BundleRules(unittest.TestCase):
 
     def test_compiled_standalone_uses_adjacent_payload(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             module = root / 'installer' / 'bundle.py'
             embedded = module.with_name('payload.zip')
             with patch.object(bundle_module, '__compiled__', object(), create=True), \
@@ -140,7 +140,7 @@ class BundleRules(unittest.TestCase):
 
     def test_source_payload_fallback_is_unchanged(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             module = root / 'installer' / 'bundle.py'
             with patch.object(bundle_module, '__file__', str(module)), \
                  patch.object(sys, 'argv', [str(root / 'entry.py')]):
