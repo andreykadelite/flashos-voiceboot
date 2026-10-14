@@ -68,6 +68,7 @@ chroot "$root" apt-get clean
 mkdir -p "$project/dist/boot/flashos/efi" "$project/dist/boot/EFI/debian" "$project/dist/boot/ventoy" "$project/dist/usb/flashos" "$project/dist/usb/ventoy" "$project/dist/usb/iso"
 kernel=$(chroot "$root" readlink -f /vmlinuz)
 initrd=$(chroot "$root" readlink -f /initrd.img)
+test "${kernel#/boot/vmlinuz-}" = "${initrd#/boot/initrd.img-}"
 test -f "$root$kernel" && test -f "$root$initrd"
 test "$(stat -c %s "$root$kernel")" -gt 0
 # Installer creates a 512 MiB FLASHBOOT; leave room for EFI and reports.

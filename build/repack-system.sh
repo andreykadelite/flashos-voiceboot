@@ -14,16 +14,22 @@ chmod 644 "$root/etc/systemd/system/flashos-apps.service"
 chroot "$root" systemctl enable flashos-apps.service
 cp tools/verify-runtime.py "$root/tmp/verify-runtime.py"
 chroot "$root" python3 /tmp/verify-runtime.py
+python3 tools/sanitize-live-root.py "$root"
 kernel=$(chroot "$root" readlink -f /vmlinuz)
 initrd=$(chroot "$root" readlink -f /initrd.img)
 test "${kernel#/boot/vmlinuz-}" = "${initrd#/boot/initrd.img-}"
+kernel_version=${kernel#/boot/vmlinuz-}
+test -d "$root/lib/modules/$kernel_version"
+# Source/firmware/initramfs changes must not leave stale module indexes or initrd.
+# Always target the shipped Debian kernel, never the container's running kernel.
+chroot "$root" depmod -a "$kernel_version"
+chroot "$root" update-initramfs -u -k "$kernel_version"
 test "$(( $(stat -c %s "$root$kernel") + $(stat -c %s "$root$initrd") ))" -lt 470000000
 cp "$root$kernel" dist/usb/flashos/vmlinuz
 cp "$root$initrd" dist/usb/flashos/initrd
 cp dist/usb/flashos/vmlinuz dist/usb/flashos/initrd dist/boot/flashos/
 chroot "$root" apt-get clean
 chroot "$root" dpkg-query -W > dist/packages.tsv
-python3 tools/sanitize-live-root.py "$root"
 python3 tools/package-public-docs.py
 printf 'FlashOS 2026.10.13.2\n' > dist/usb/flashos/flashos.marker
 cp dist/usb/flashos/flashos.marker dist/boot/flashos/flashos.marker

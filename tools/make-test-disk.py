@@ -4,6 +4,8 @@ import argparse
 from pathlib import Path
 import lzma
 import os
+import re
+import stat
 import struct
 import subprocess
 import uuid
@@ -51,6 +53,25 @@ loop = subprocess.check_output(['losetup', '--find', '--show', '--partscan', str
 mount = Path('/mnt/flashos-test-disk')
 mount.mkdir(exist_ok=True)
 try:
+    if (not re.fullmatch(r'/dev/loop[0-9]+', loop)
+            or subprocess.check_output(['losetup', '--list', '--noheadings', '--output', 'BACK-FILE', loop],
+                                       text=True).strip() != str(image)):
+        raise RuntimeError('The loop device does not belong to the disposable image')
+    # Minimal privileged Docker containers have no running udev daemon. The
+    # kernel registers loop partitions in sysfs without creating /dev nodes.
+    for number in (1, 3):
+        node = Path(loop + 'p' + str(number))
+        sysnode = Path('/sys/class/block') / node.name
+        if sysnode.resolve().parent.name != Path(loop).name:
+            raise RuntimeError('Unexpected loop partition parent')
+        major, minor = map(int, (sysnode / 'dev').read_text().strip().split(':'))
+        device = os.makedev(major, minor)
+        if node.is_symlink():
+            raise RuntimeError('Loop partition node must not be a symlink')
+        if not node.exists():
+            os.mknod(node, stat.S_IFBLK | 0o600, device)
+        if not node.is_block_device() or node.stat().st_rdev != device:
+            raise RuntimeError('Loop partition node does not match the kernel device')
     subprocess.run(['mkfs.exfat', '-L', 'FLASHOS', loop + 'p1'], check=True)
     data_uuid = subprocess.check_output(['blkid', '-s', 'UUID', '-o', 'value', loop + 'p1'], text=True).strip()
     subprocess.run(['mount', loop + 'p1', str(mount)], check=True)

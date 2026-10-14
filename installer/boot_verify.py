@@ -24,9 +24,13 @@ def gpt_header(read, lba, sectors):
     require(current == lba and 0 < alternate < sectors and 34 <= first <= last < sectors - 1, 'Неверные границы GPT.')
     table, count, entry_size, entries_crc = struct.unpack_from('<QIII', raw, 72)
     require(entry_size == 128 and 1 <= count <= 4096 and table > 1 and table * 512 + count * entry_size <= sectors * 512, 'Недопустимая таблица GPT.')
-    entries = read(table * 512, ((count * entry_size + 511) // 512) * 512)[:count * entry_size]
+    table_sectors = (count * entry_size + 511) // 512
+    require(table + table_sectors <= first if lba == 1 else
+            last < table and table + table_sectors <= lba,
+            'Метаданные GPT пересекают доступные секторы или резервный заголовок.')
+    entries = read(table * 512, table_sectors * 512)[:count * entry_size]
     require(zlib.crc32(entries) == entries_crc, 'Не совпала контрольная сумма таблицы GPT.')
-    return raw[56:72], alternate, entries
+    return raw[56:72], alternate, entries, (first, last)
 
 
 def partitions(read, disk_bytes):
@@ -38,9 +42,10 @@ def partitions(read, disk_bytes):
         first, count = struct.unpack_from('<II', mbr, 454)
         require(mbr[446] == 0 and first == 1 and count == min(sectors - 1, 0xFFFFFFFF) and mbr[462:510] == b'\0' * 48,
                 'Повреждена защитная запись MBR для GPT.')
-        guid, alternate, entries = gpt_header(read, 1, sectors)
-        backup_guid, back_alternate, backup_entries = gpt_header(read, sectors - 1, sectors)
-        require(alternate == sectors - 1 and back_alternate == 1 and guid == backup_guid and entries == backup_entries,
+        guid, alternate, entries, usable = gpt_header(read, 1, sectors)
+        backup_guid, back_alternate, backup_entries, backup_usable = gpt_header(read, sectors - 1, sectors)
+        require(alternate == sectors - 1 and back_alternate == 1 and guid == backup_guid
+                and entries == backup_entries and usable == backup_usable,
                 'Основная и резервная таблицы GPT не совпали.')
         result = []
         basic_data = uuid.UUID('ebd0a0a2-b9e5-4433-87c0-68b6b72699c7').bytes_le
@@ -53,6 +58,8 @@ def partitions(read, disk_bytes):
                     require(flags & 0x8000000000000000, 'Отсутствует защитный атрибут раздела Ventoy в GPT.')
                 first, last = struct.unpack_from('<QQ', entry, 32)
                 require(last >= first, 'Неверный размер раздела GPT.')
+                require(usable[0] <= first <= last <= usable[1],
+                        'Раздел выходит за границы доступных секторов GPT.')
                 result.append((first * 512, (last - first + 1) * 512))
     else:
         require([mbr[446 + i * 16] for i in range(3)] == [0x80, 0, 0] and

@@ -183,6 +183,64 @@ def sha256(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
+def check_load_plan(output, root, module_name):
+    """Check modprobe's dry-run output, including every referenced dependency."""
+    loaded = []
+    for line in output.splitlines():
+        fields = line.split()
+        if fields[:1] == ['builtin'] and len(fields) == 2:
+            loaded.append(normalize_module(fields[1]))
+        elif fields[:1] == ['insmod'] and len(fields) >= 2:
+            path = Path(fields[1])
+            require(path.resolve().is_relative_to(root.resolve()) and path.is_file(),
+                    f'Module dependency absent from shipped image: {fields[1]}')
+            name = re.fullmatch(r'(.+)\.ko(?:\.(?:xz|zst|gz))?', path.name)
+            require(name is not None, f'Invalid module load plan: {line}')
+            loaded.append(normalize_module(name[1]))
+        else:
+            raise RuntimeError(f'Unexpected module load plan for {module_name}: {line}')
+    require(module_name in loaded,
+            f'{module_name} is blocked or absent in the shipped modprobe indexes/configuration')
+    return loaded
+
+
+def verify_module_resolution(image, paths, module_base, kernel_version):
+    # libkmod loads binary indexes; a correct-looking modules.alias text is insufficient.
+    for name in ('modules.dep.bin', 'modules.alias.bin', 'modules.builtin.bin'):
+        require(module_base + '/' + name in paths, f'Missing shipped modprobe index: {name}')
+    with tempfile.TemporaryDirectory(prefix='flashos-modules-') as folder:
+        root = Path(folder) / 'root'
+        command(['unsquashfs', '-no-progress', '-d', root, image, module_base])
+        # Support both Debian usrmerge and an image with a real /lib directory.
+        if not (root / 'lib').exists():
+            (root / 'lib').symlink_to('usr/lib', target_is_directory=True)
+        if not (root / 'usr/lib').exists():
+            (root / 'usr').mkdir(exist_ok=True)
+            (root / 'usr/lib').symlink_to('../lib', target_is_directory=True)
+        config = Path(folder) / 'modprobe.d'
+        config.mkdir()
+        seen = set()
+        for directory in ('etc/modprobe.d/', 'usr/local/lib/modprobe.d/',
+                          'usr/lib/modprobe.d/', 'lib/modprobe.d/'):
+            for path in sorted(paths):
+                if not path.startswith(directory) or not path.endswith('.conf'):
+                    continue
+                name = PurePosixPath(path).name
+                if name not in seen:
+                    (config / name).write_bytes(image_bytes(image, path))
+                    seen.add(name)
+        arguments = ['modprobe', '-d', root, '-S', kernel_version, '-C', config]
+        plans = {}
+        for name in sorted({name for group in REQUIRED_MODULES.values() for name in group}):
+            output = command([*arguments, '--use-blacklist', '--show-depends', name])
+            plans[name] = check_load_plan(output, root, name)
+        for device in NOTEBOOK_DEVICES:
+            aliases = command([*arguments, '--resolve-alias', device['modalias']]).splitlines()
+            require(device['driver'] in aliases,
+                    f'{device["pci_id"]} lacks {device["driver"]} in the shipped binary alias index')
+        return plans
+
+
 def verify_build(image, initrd, vmlinuz, kernel_version):
     require(bool(re.fullmatch(r'[A-Za-z0-9_.+~-]+', kernel_version)), 'Invalid explicit kernel version')
     for path in (image, initrd, vmlinuz):
@@ -199,6 +257,8 @@ def verify_build(image, initrd, vmlinuz, kernel_version):
     exported_hash = sha256(vmlinuz)
     require(hashlib.sha256(image_bytes(image, f'boot/vmlinuz-{kernel_version}')).hexdigest() == exported_hash,
             f'Exported vmlinuz differs from squashfs boot/vmlinuz-{kernel_version}; restage matching boot files')
+    require(hashlib.sha256(image_bytes(image, f'boot/initrd.img-{kernel_version}')).hexdigest() == sha256(initrd),
+            f'Exported initrd differs from squashfs boot/initrd.img-{kernel_version}; rebuild and restage matching boot files')
     module_path = module_inventory(paths, kernel_version, builtins)['iwlwifi']
     with tempfile.TemporaryDirectory(prefix='flashos-hardware-') as folder:
         module_file = Path(folder) / PurePosixPath(module_path).name
@@ -207,6 +267,7 @@ def verify_build(image, initrd, vmlinuz, kernel_version):
     firmware = notebook_firmware(declarations, paths, decode(f'boot/config-{kernel_version}'))
     for request, path in firmware['files'].items():
         require(len(image_bytes(image, path)) > 32, f'Empty/truncated AX211 firmware: {request}')
+    result['module_load_plans'] = verify_module_resolution(image, paths, module_base, kernel_version)
     result.update({'verified': True, 'completed_utc': datetime.now(timezone.utc).isoformat(),
                    'kernel_version': kernel_version, 'notebook_model': 'Lenovo 21MS',
                    'notebook_firmware': firmware,

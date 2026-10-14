@@ -61,6 +61,76 @@ class BootVerification(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'защитный атрибут'):
             partitions(lambda offset, length: chunks[offset][:length], size)
 
+    def update_header_crc(self, raw):
+        struct.pack_into('<I', raw, 16, 0)
+        struct.pack_into('<I', raw, 16, zlib.crc32(raw[:92]))
+        return bytes(raw)
+
+    def test_gpt_partition_cannot_overlap_backup_metadata_even_with_valid_crcs(self):
+        chunks, size = self.make_gpt()
+        sectors = size // 512
+        table = bytearray(chunks[2 * 512])
+        struct.pack_into('<Q', table, 2 * 128 + 40, sectors - 1)
+        chunks[2 * 512] = chunks[(sectors - 33) * 512] = bytes(table)
+        for offset in (512, size - 512):
+            header = bytearray(chunks[offset])
+            struct.pack_into('<I', header, 88, zlib.crc32(table))
+            chunks[offset] = self.update_header_crc(header)
+        with self.assertRaisesRegex(ValueError, 'доступных секторов GPT'):
+            partitions(lambda offset, length: chunks[offset][:length], size)
+
+    def test_gpt_partition_cannot_start_before_first_usable_sector(self):
+        chunks, size = self.make_gpt()
+        for offset in (512, size - 512):
+            header = bytearray(chunks[offset])
+            struct.pack_into('<Q', header, 40, 4096)
+            chunks[offset] = self.update_header_crc(header)
+        with self.assertRaisesRegex(ValueError, 'доступных секторов GPT'):
+            partitions(lambda offset, length: chunks[offset][:length], size)
+
+    def test_gpt_usable_bounds_must_match_in_primary_and_backup_headers(self):
+        chunks, size = self.make_gpt()
+        header = bytearray(chunks[size - 512])
+        struct.pack_into('<Q', header, 48, size // 512 - 35)
+        chunks[size - 512] = self.update_header_crc(header)
+        with self.assertRaisesRegex(ValueError, 'таблицы GPT не совпали'):
+            partitions(lambda offset, length: chunks[offset][:length], size)
+
+    def test_gpt_forged_usable_bounds_cannot_authorize_backup_table_overlap(self):
+        chunks, size = self.make_gpt()
+        sectors = size // 512
+        table = bytearray(chunks[2 * 512])
+        struct.pack_into('<Q', table, 2 * 128 + 40, sectors - 2)
+        chunks[2 * 512] = chunks[(sectors - 33) * 512] = bytes(table)
+        for offset in (512, size - 512):
+            header = bytearray(chunks[offset])
+            struct.pack_into('<Q', header, 48, sectors - 2)
+            struct.pack_into('<I', header, 88, zlib.crc32(table))
+            chunks[offset] = self.update_header_crc(header)
+        with self.assertRaisesRegex(ValueError, 'Метаданные GPT пересекают'):
+            partitions(lambda offset, length: chunks[offset][:length], size)
+
+    def test_gpt_primary_table_cannot_be_located_inside_usable_area(self):
+        chunks, size = self.make_gpt()
+        table_offset = 34 * 512
+        chunks[table_offset] = chunks[2 * 512]
+        header = bytearray(chunks[512])
+        struct.pack_into('<Q', header, 72, 34)
+        chunks[512] = self.update_header_crc(header)
+        with self.assertRaisesRegex(ValueError, 'Метаданные GPT пересекают'):
+            partitions(lambda offset, length: chunks[offset][:length], size)
+
+    def test_gpt_backup_table_cannot_extend_into_backup_header(self):
+        chunks, size = self.make_gpt()
+        sectors = size // 512
+        table_offset = (sectors - 32) * 512
+        chunks[table_offset] = chunks[(sectors - 33) * 512]
+        header = bytearray(chunks[size - 512])
+        struct.pack_into('<Q', header, 72, sectors - 32)
+        chunks[size - 512] = self.update_header_crc(header)
+        with self.assertRaisesRegex(ValueError, 'Метаданные GPT пересекают'):
+            partitions(lambda offset, length: chunks[offset][:length], size)
+
     def make_mbr(self, gap=0):
         raw = bytearray(512)
         size = 4 * 1024**3

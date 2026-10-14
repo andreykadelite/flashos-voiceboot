@@ -119,6 +119,45 @@ class OfflineHardwareTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, 'Exported vmlinuz differs'):
                     hardware.verify_build(image, initrd, kernel, 'fixture')
 
+    def test_exported_initrd_content_mismatch_prevents_success(self):
+        with tempfile.TemporaryDirectory() as folder:
+            base = Path(folder)
+            image, initrd, kernel = (base / name for name in ('image', 'initrd', 'kernel'))
+            for path in (image, initrd, kernel):
+                path.write_bytes(b'exported')
+            paths = ('squashfs-root/lib/modules/fixture/modules.alias\n'
+                     'squashfs-root/lib/modules/fixture/kernel/net/iwlwifi.ko.xz\n')
+            def image_bytes(_image, path):
+                return b'exported' if path == 'boot/vmlinuz-fixture' else b'different'
+            with mock.patch.object(hardware, 'command', return_value=paths), \
+                 mock.patch.object(hardware, 'check_inventory', return_value={}), \
+                 mock.patch.object(hardware, 'image_bytes', side_effect=image_bytes):
+                with self.assertRaisesRegex(RuntimeError, 'Exported initrd differs'):
+                    hardware.verify_build(image, initrd, kernel, 'fixture')
+
+    def test_load_plan_rejects_missing_dependencies_and_driver_blacklists(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            dependency, driver = (root / name for name in ('cfg80211.ko.xz', 'iwlwifi.ko.zst'))
+            dependency.write_bytes(b'fixture')
+            driver.write_bytes(b'fixture')
+            plan = f'insmod {dependency}\ninsmod {driver}\n'
+            self.assertEqual(hardware.check_load_plan(plan, root, 'iwlwifi'), ['cfg80211', 'iwlwifi'])
+            dependency.unlink()
+            with self.assertRaisesRegex(RuntimeError, 'dependency absent'):
+                hardware.check_load_plan(plan, root, 'iwlwifi')
+            with self.assertRaisesRegex(RuntimeError, 'blocked or absent'):
+                hardware.check_load_plan('', root, 'iwlwifi')
+            with self.assertRaisesRegex(RuntimeError, 'Unexpected module load plan'):
+                hardware.check_load_plan('install /bin/false\n', root, 'iwlwifi')
+
+    def test_text_alias_without_runtime_binary_indexes_is_not_certified(self):
+        paths = {'lib/modules/fixture/modules.alias', 'lib/modules/fixture/modules.dep.bin'}
+        with mock.patch.object(hardware, 'command') as command:
+            with self.assertRaisesRegex(RuntimeError, 'modules.alias.bin'):
+                hardware.verify_module_resolution(Path('image'), paths, 'lib/modules/fixture', 'fixture')
+        command.assert_not_called()
+
     def test_failed_check_replaces_stale_passing_report(self):
         with tempfile.TemporaryDirectory() as folder:
             report = Path(folder) / 'verification.json'
