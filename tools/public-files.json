@@ -333,6 +333,7 @@
   "src/network_runtime.py",
   "src/network_secrets.py",
   "src/network_settings.py",
+  "src/wifi_hardware.py",
   "src/orca_settings.py",
   "tools/provision-shared-speech.py",
   "tools/repack-app-runtime.py"

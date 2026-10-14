@@ -66,9 +66,10 @@ def network_menu(ui):
             ui.message('Подключение к сети', str(error))
 
 
-def request(job, command, timeout=15):
+def request(job, command, timeout=15, output_limit=262144):
     try:
-        return job.command(command, timeout=timeout, accepted=None, log_output=False)
+        return job.command(command, timeout=timeout, accepted=None, log_output=False,
+                           output_limit=output_limit)
     except (OSError, RuntimeError) as error:
         return 1, str(error)
 
@@ -81,7 +82,13 @@ def addresses(data):
 
 def wired_interfaces():
     return [path.name for path in sorted(Path('/sys/class/net').iterdir())
-            if (path / 'device').exists() and not (path / 'wireless').exists()]
+            if (path / 'device').exists() and not (path / 'wireless').exists()
+            and not (path / 'phy80211').exists()]
+
+
+def wireless_interfaces():
+    return [path.name for path in sorted(Path('/sys/class/net').iterdir())
+            if (path / 'wireless').exists() or (path / 'phy80211').exists()]
 
 
 def dhcp_job(name):
