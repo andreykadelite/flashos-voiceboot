@@ -89,16 +89,32 @@ def payload_files(root, section):
     return sorted(found.items())
 
 
+def python_source_hashes(content):
+    """Match only LF/CRLF transport variants, keeping every other source byte."""
+    hashes = {hashlib.sha256(content).hexdigest()}
+    normalized = content.replace(b'\r\n', b'\n')
+    # A bare CR can combine with the following LF after replacement and alter
+    # Python's interpreted lines; keep such files strictly byte-for-byte.
+    if b'\r' not in normalized:
+        hashes.update(hashlib.sha256(variant).hexdigest() for variant in (
+            normalized, normalized.replace(b'\n', b'\r\n')))
+    return hashes
+
+
 def verified_system(root, version):
     """Require evidence for this exact live image and the current application sources."""
     report = json.loads(safe_path(root, root / 'dist/toolkit-build-verification.json').read_text(encoding='utf-8'))
-    sources = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+    sources = {path.relative_to(root / 'src').as_posix(): python_source_hashes(path.read_bytes())
                for path in regular_tree(root, root / 'src') if path.suffix == '.py'}
+    certified_sources = report.get('sources_sha256')
+    sources_match = (isinstance(certified_sources, dict) and set(certified_sources) == set(sources)
+                     and all(isinstance(certified_sources[name], str) and certified_sources[name] in hashes
+                             for name, hashes in sources.items()))
     image = safe_path(root, root / 'dist/usb/flashos/filesystem.squashfs')
     with image.open('rb') as stream:
         image_hash = hashlib.file_digest(stream, 'sha256').hexdigest()
     if (not sources or report.get('sources_match') is not True or report.get('no_test_fixture') is not True
-            or report.get('sources_sha256') != sources or report.get('squashfs_sha256') != image_hash
+            or not sources_match or report.get('squashfs_sha256') != image_hash
             or report.get('system_version') != version):
         raise ValueError('Live system is stale or unverified. Repack it and run tools/verify-toolkit-build.py before packaging.')
     store = report.get('app_store', {})

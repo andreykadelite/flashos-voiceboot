@@ -80,6 +80,71 @@ class PublicPayload(unittest.TestCase):
                 payload.verified_system(self.root, 'test-version')
             target.write_bytes(original)
 
+    def test_python_source_lf_and_crlf_variants_match_the_same_certified_code(self):
+        lf = b"VALUE = 'same code'\nprint(VALUE)\n"
+        for certified in (lf, lf.replace(b'\n', b'\r\n')):
+            for checkout in (lf, lf.replace(b'\n', b'\r\n'), lf.replace(b'\n', b'\r\n', 1)):
+                with self.subTest(certified=certified, checkout=checkout):
+                    source, _ = self.system_proof()
+                    report_path = self.root / 'dist/toolkit-build-verification.json'
+                    report = json.loads(report_path.read_text(encoding='utf-8'))
+                    report['sources_sha256']['menu.py'] = hashlib.sha256(certified).hexdigest()
+                    report_path.write_text(json.dumps(report), encoding='utf-8')
+                    source.write_bytes(checkout)
+                    payload.verified_system(self.root, 'test-version')
+
+    def test_python_source_other_bytes_cannot_be_hidden_by_line_ending_equivalence(self):
+        certified = b"VALUE = 'same code'\nprint(VALUE)\n"
+        for changed in (certified.replace(b'same code', b'new code'), b'\xef\xbb\xbf' + certified,
+                        certified + b' ', certified.replace(b'\n', b'\r\r\n')):
+            with self.subTest(changed=changed):
+                source, _ = self.system_proof()
+                report_path = self.root / 'dist/toolkit-build-verification.json'
+                report = json.loads(report_path.read_text(encoding='utf-8'))
+                report['sources_sha256']['menu.py'] = hashlib.sha256(certified).hexdigest()
+                report_path.write_text(json.dumps(report), encoding='utf-8')
+                source.write_bytes(changed)
+                with self.assertRaisesRegex(ValueError, 'stale or unverified'):
+                    payload.verified_system(self.root, 'test-version')
+
+    def test_python_source_filename_set_must_match_without_missing_extra_or_duplicate_names(self):
+        for change in ('missing', 'extra', 'nested-duplicate'):
+            with self.subTest(change=change):
+                source, _ = self.system_proof()
+                original = source.read_bytes()
+                extra = None
+                if change == 'missing':
+                    source.unlink()
+                else:
+                    extra = self.put('src/' + ('new.py' if change == 'extra' else 'nested/menu.py'), '')
+                    extra.write_bytes(original)
+                with self.assertRaisesRegex(ValueError, 'stale or unverified'):
+                    payload.verified_system(self.root, 'test-version')
+                source.write_bytes(original)
+                if extra:
+                    extra.unlink()
+
+    def test_line_ending_equivalence_never_relaxes_image_or_boot_binary_hashes(self):
+        _, image = self.system_proof()
+        binary = b'unchanged binary content\nsecond line\n'
+        image.write_bytes(binary)
+        for name in ('vmlinuz', 'initrd'):
+            for section in ('usb', 'boot'):
+                (self.root / 'dist' / section / 'flashos' / name).write_bytes(binary)
+        report_path = self.root / 'dist/toolkit-build-verification.json'
+        report = json.loads(report_path.read_text(encoding='utf-8'))
+        digest = hashlib.sha256(binary).hexdigest()
+        report['squashfs_sha256'] = report['app_store']['filesystem_sha256'] = digest
+        report['hardware']['artifact_sha256'] = {name: digest for name in ('filesystem.squashfs', 'vmlinuz', 'initrd')}
+        report_path.write_text(json.dumps(report), encoding='utf-8')
+        payload.verified_system(self.root, 'test-version')
+        for target in (image, self.root / 'dist/usb/flashos/vmlinuz', self.root / 'dist/usb/flashos/initrd'):
+            with self.subTest(target=target):
+                target.write_bytes(binary.replace(b'\n', b'\r\n'))
+                with self.assertRaises(ValueError):
+                    payload.verified_system(self.root, 'test-version')
+                target.write_bytes(binary)
+
     def test_hardware_proof_is_required_and_boot_files_cannot_be_swapped(self):
         self.system_proof()
         report_path = self.root / 'dist/toolkit-build-verification.json'
