@@ -16,6 +16,16 @@ def environment(path=''):
     return data.ljust(SIZE, b'#')
 
 
+def write_environment(stream, path=''):
+    """Complete raw writes without replacing GRUB's preallocated block."""
+    pending = memoryview(environment(path))
+    while pending:
+        written = stream.write(pending)
+        if not written:
+            raise OSError('Не удалось сохранить одноразовую загрузку')
+        pending = pending[written:]
+
+
 def initialize(root):
     """Reset the request after the caller has verified the USB state partition.
 
@@ -34,8 +44,7 @@ def initialize(root):
     except FileNotFoundError:
         stream = target.open('xb', buffering=0)
     with stream:
-        if stream.write(environment()) != SIZE:
-            raise OSError('Не удалось сбросить одноразовую загрузку')
+        write_environment(stream)
         stream.truncate(SIZE)
         os.fsync(stream.fileno())
 
@@ -55,7 +64,7 @@ def arm(root, image, state_root=None):
         if len(old) != SIZE or not old.startswith(HEADER):
             raise ValueError('Повреждён файл одноразовой загрузки')
         stream.seek(0)
-        stream.write(environment(image.relative))
+        write_environment(stream, image.relative)
         os.fsync(stream.fileno())
 
 
@@ -65,6 +74,6 @@ def cancel(root):
         if stream.read(len(HEADER)) != HEADER:
             raise ValueError('Повреждён файл одноразовой загрузки')
         stream.seek(0)
-        stream.write(environment())
+        write_environment(stream)
         stream.truncate(SIZE)
         os.fsync(stream.fileno())

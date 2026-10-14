@@ -3,13 +3,82 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 from catalog import Image
-from selection import HEADER, SIZE, arm, environment, initialize
+from selection import HEADER, SIZE, arm, cancel, environment, initialize
+
+
+class PartialWriter:
+    def __init__(self, stream, limit):
+        self.stream, self.limit = stream, limit
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.stream.close()
+
+    def __getattr__(self, name):
+        return getattr(self.stream, name)
+
+    def write(self, data):
+        return self.stream.write(data[:self.limit])
 
 
 class BootSelectionRecoveryTests(unittest.TestCase):
+    def test_partial_writes_save_the_complete_request_in_place(self):
+        for action in ('initialize', 'arm', 'cancel'):
+            with self.subTest(action=action), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                (root / 'ventoy').mkdir()
+                target = root / 'ventoy/flashos.env'
+                target.write_bytes(environment('/iso/old.iso'))
+                inode = target.stat().st_ino
+                iso = root / 'iso/test.iso'
+                iso.parent.mkdir()
+                iso.write_bytes(b'test media')
+                image = Image(iso, '/iso/test.iso', 'Test', iso.stat().st_size, True)
+                original_open = Path.open
+                def partial_open(path, *args, **kwargs):
+                    stream = original_open(path, *args, **kwargs)
+                    return PartialWriter(stream, 11) if path == target else stream
+                with patch('selection.Path.open', new=partial_open):
+                    if action == 'arm':
+                        arm(root, image)
+                    elif action == 'cancel':
+                        cancel(root)
+                    else:
+                        initialize(root)
+                self.assertEqual(target.stat().st_ino, inode)
+                self.assertEqual(target.read_bytes(), environment(image.relative if action == 'arm' else ''))
+
+    def test_zero_length_writes_fail_without_claiming_a_saved_request(self):
+        for action in ('initialize', 'arm', 'cancel'):
+            with self.subTest(action=action), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                (root / 'ventoy').mkdir()
+                target = root / 'ventoy/flashos.env'
+                previous = environment('/iso/old.iso')
+                target.write_bytes(previous)
+                iso = root / 'iso/test.iso'
+                iso.parent.mkdir()
+                iso.write_bytes(b'test media')
+                image = Image(iso, '/iso/test.iso', 'Test', iso.stat().st_size, True)
+                original_open = Path.open
+                def stopped_open(path, *args, **kwargs):
+                    stream = original_open(path, *args, **kwargs)
+                    return PartialWriter(stream, 0) if path == target else stream
+                with patch('selection.Path.open', new=stopped_open), self.assertRaises(OSError):
+                    if action == 'arm':
+                        arm(root, image)
+                    elif action == 'cancel':
+                        cancel(root)
+                    else:
+                        initialize(root)
+                self.assertEqual(target.read_bytes(), previous)
+
     def test_startup_recovers_missing_truncated_and_oversized_state(self):
         for previous in (None, b'', b'bad', HEADER + b'x' * 2048):
             with self.subTest(previous=repr(previous)[:80]), tempfile.TemporaryDirectory() as folder:
