@@ -1,9 +1,11 @@
 # Установщик Flash OS
 
-Версия установщика 1.0.6. Встроенная система FlashOS 2026.10.12.2.
+Версия установщика 1.0.8. Встроенная система FlashOS 2026.10.13.2.
 Разработка: Зотов Андрей Анатольевич.
 
 [English](../en/installer.md) · [Главная](../../README.md)
+
+[Скачать FlashOS-Setup.exe](https://github.com/andreykadelite/flashos-voiceboot/releases/latest/download/FlashOS-Setup.exe). Системный архив и архивы исходников предназначены для разработчиков; для установки достаточно EXE.
 
 ## Установка
 

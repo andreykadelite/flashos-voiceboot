@@ -21,30 +21,36 @@ and Russian eSpeak NG. F7, Enter or Space can skip introductory announcements
 without confirming the next action. Kernel, firmware, SOF, Mesa and CPU
 microcode have also been updated.
 
-Download `FlashOS-Setup.exe` and compare its SHA256 with `SHA256SUMS.txt` from
-the [release](https://github.com/andreykadelite/flashos-voiceboot/releases/latest).
+Wi-Fi discovery now retries adapter detection while the driver starts and
+can load a missed driver for a matching device without resetting an active
+connection. Failed quick connections restore the previous network, and scan
+details remain on USB. Fixes also cover browsing large folders, UTF-8/UTF-16
+text previews, handing ISO selections to the bootloader and GPT handling in
+the installer. System and installer version numbers remain unchanged.
+
+Download [FlashOS-Setup.exe](https://github.com/andreykadelite/flashos-voiceboot/releases/latest/download/FlashOS-Setup.exe).
+The installer includes its runtime and system files; Python, Qt and internet
+are not needed for installation. The other
+[release files](https://github.com/andreykadelite/flashos-voiceboot/releases/latest)
+are for building from source.
 Installation erases the selected USB drive. Back up its ISO files, documents,
 settings and application store first. See the [installer guide](installer.md)
 and [user guide](guide.md).
 
-## Reassemble the system build archive
+## System archive for building
 
-The system ZIP exceeds GitHub's per-file release limit. Download both
-`FlashOS-2026.10.13.2-system.zip.001` and `.002`, `system-archive-parts.json`,
-and `join-system-archive.py` into one directory. With Python 3.11 or newer, run:
+`FlashOS-2026.10.13.2-system.7z` is for developers building the EXE from source; the
+ready-made EXE is sufficient for installation. It contains the `dist` tree
+and release information. Third-party sources remain in separate ZIP archives.
 
-```sh
-python join-system-archive.py system-archive-parts.json
-```
+Project sources are available in the repository and
+`FlashOS-2026.10.13.2-source.zip`.
 
-The script checks every part and the complete archive against the recorded
-SHA256 values. It refuses to replace an existing ZIP and removes an incomplete
-output after a verification failure. Extract the verified ZIP at the root of
-the source checkout for this release tag to populate `dist`. This build archive
-is not a bootable ISO; the ready-made EXE is sufficient to install FlashOS.
+Open the system archive in 7-Zip and extract at the root
+of the source checkout for the same tag, then follow the
+[build instructions](build.md). This archive is not a bootable ISO.
 
-See [verification results](testing.md) and the release's
-`FlashOS-Setup.verification.json` for test scope and the exact EXE hash.
-Physical USB installation, a physical PC reboot and Windows 10 were not tested
-for this release. Initial Secure Boot setup may require enrolling a Ventoy key
-on a firmware screen without speech. The EXE has no publisher signature yet.
+## Compatibility
+
+Initial Secure Boot setup may require enrolling a Ventoy key on a firmware
+screen without speech. The EXE has no publisher signature yet.

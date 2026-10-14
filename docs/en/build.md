@@ -22,9 +22,11 @@ Hardware provisioning is centralized in `build/install-hardware.sh`, called by f
 
 The portable live image explicitly uses `MODULES=most`. Initrd contains early microcode for both CPU vendors through `IUCODE_TOOL_INITRAMFS=early`, `IUCODE_TOOL_SCANCPUS=no` and `AMD64UCODE_INITRAMFS=early`, independent of the builder's CPU. udev loads hardware modules. No additional DKMS modules or forced driver blacklists are installed.
 
+Repacking runs `depmod` and regenerates initrd for the installed FlashOS kernel, independently of the running Docker/WSL kernel. Hardware verification compares the exported kernel and initrd with squashfs, checks libkmod binary indexes and complete required driver load plans with `modprobe --show-depends`, without loading modules on the builder. AX211 and I219-V PCI aliases are checked separately.
+
 The output is `dist/usb`, `dist/boot`, `dist/ventoy.disk.img.xz` and `dist/packages.tsv`. Never place personal ISOs, backups, settings or reports in this packaging tree. `tools/package-public-docs.py` copies only public documentation. Test ISOs belong in separate VM fixtures.
 
-To build the EXE with a prepared system, use `FlashOS-<version>-system.zip` from its matching [release](https://github.com/andreykadelite/flashos-voiceboot/releases), verify SHA256 and extract it into a source checkout of the same tag. It supplies the `dist` tree. Use the EXE to prepare USB media: the ZIP contains build files and cannot be written with Rufus or dd.
+To build the EXE with a prepared system, use `FlashOS-2026.10.13.2-system.7z` from its matching [release](https://github.com/andreykadelite/flashos-voiceboot/releases). Open it in 7-Zip and extract at the root of a source checkout of the same tag to populate `dist`. Project sources are also available in `FlashOS-2026.10.13.2-source.zip`. Release manifests, checksums and technical reports are inside the system archive. Use the EXE to prepare USB media: the archive contains build files and cannot be written with Rufus or dd.
 
 After changing FlashOS code, run `build/repack-system.sh` in the prepared Linux environment. `tools/verify-toolkit-build.py` compares the sources with files inside squashfs and records the image SHA256. Packaging stops if the system version, image or sources differ from that report. The prepared-system archive includes the report.
 
@@ -100,13 +102,14 @@ python3 tools/vm.py quit
 
 The disposable image is `dist/flashos-test.img`; QEMU receives that file, not host disks. Test one VM at a time. `uefi` and `secure` select the OVMF modes configured in `tools/vm.py`; Secure Boot key state is a separate setup step, not an accessibility guarantee. Guest recovery tests also require their documented fixture images. Do not turn physical-disk acceptance helpers into CI jobs.
 
-## Reassemble the release build archive
+Docker boot tests require loop/mount permissions and QEMU in the builder. In a minimal container without a running udev daemon, `make-test-disk.py` creates missing partition nodes only after checking the loop backing file and sysfs device numbers. Do not pass physical disks to the container. mac80211_hwsim testing does not establish compatibility with a physical PCI/USB Wi-Fi adapter.
 
-Release 2026.10.13.2 provides its system ZIP in two parts. Download both
-parts, `system-archive-parts.json` and `join-system-archive.py` into one
-directory, then run `python join-system-archive.py system-archive-parts.json`.
-The script verifies the parts and complete ZIP against their SHA256 values.
-See the [release overview](release-2026.10.13.md#reassemble-the-system-build-archive).
+## Extract the release build archive
+
+Open `FlashOS-2026.10.13.2-system.7z` in 7-Zip and extract at the root of
+the matching source checkout. This is a single archive; no separate parts or
+Python join script are required. See the
+[release overview](release-2026.10.13.md#system-archive-for-building).
 
 ## Publish a derivative
 

@@ -31,7 +31,7 @@ def main(argv=()):
                 digest = hashlib.file_digest(stream, 'sha256').hexdigest()
             sums.append(digest + '  ' + path.relative_to(ROOT).as_posix())
         archive.writestr('SYSTEM-SHA256SUMS.txt', '\n'.join(sums) + '\n')
-        archive.writestr('READ-ME.txt', 'FlashOS system build tree. Extract at the source checkout root to populate dist/.\nThis ZIP is not an ISO/raw disk image. Use FlashOS-Setup.exe to prepare USB media.\nRead dist/usb/README files and licenses before redistributing. ISO files are not included.\n')
+        archive.writestr('READ-ME.txt', 'FlashOS system build tree. Extract at the matching source checkout root to populate dist/.\nThis archive is not an ISO/raw disk image. Use FlashOS-Setup.exe to prepare USB media.\nRead dist/usb/README files and licenses before redistributing. ISO files are not included.\n')
     if out.stat().st_size >= 2 * 1024**3 and not args.allow_large_local:
         raise ValueError('Release asset exceeds GitHub size limit')
     print(out.name, out.stat().st_size)

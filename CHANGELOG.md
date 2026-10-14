@@ -12,6 +12,16 @@ network profiles, accessibility settings and hardware support updates.
 The development stages below retain the detailed history.
 [Release overview](docs/en/release-2026.10.13.md).
 
+## Исправления 2026-10-14 · FlashOS 2026.10.13.2 / Installer 1.0.8
+
+Добавлено сохранение отчётов обоих экранов поиска Wi-Fi, полный контекст ядра в автоматической диагностике и ограниченная загрузка пропущенных PCI/USB-модулей. Запреты модулей, загруженные драйверы и действующие соединения сохраняются. Имена адаптеров с подчёркиванием больше не прерывают запись вложений отчёта. После обновления флешки пользователь подтвердил работу Wi-Fi на своём ПК.
+
+Both Wi-Fi scan screens now persist diagnostics, automatic snapshots include kernel context, and missed PCI/USB modules can be loaded under strict device/module guards. Blacklists, loaded drivers and active connections are retained. Adapter names containing underscores no longer interrupt report attachment saving. After updating the USB, the user confirmed that Wi-Fi works on their PC.
+
+Номера версий сохранены. Поиск Wi-Fi различает отсутствие интерфейса, блокировки радио, ошибку NetworkManager и неуправляемый адаптер, повторяет обнаружение при задержке и сохраняет диагностические сведения. Неудачное быстрое подключение откатывает временное соединение. Повторная сборка обновляет индексы драйверов и initrd; проверка учитывает бинарные индексы, зависимости и совпадение загрузочных файлов с образом. Исправлены неполная запись выбора ISO, длинные ответы файлового браузера и предпросмотр текста с оборванным многобайтным символом.
+
+Version numbers are retained. Wi-Fi discovery distinguishes missing kernel interfaces, radio blocks, NetworkManager failures and unmanaged adapters, retries asynchronous discovery and records diagnostics. Failed quick connections roll back temporary state. Repacking refreshes driver indexes and initrd; verification checks binary indexes, dependencies and boot files against the image. Fixes also cover short ISO selection writes, long file browser replies and text previews ending inside a multibyte character.
+
 ## FlashOS 2026.10.13.2 · Установщик / Installer 1.0.8 — 2026-10-13
 
 Длинные вводные сообщения магазина, настроек и других разделов можно

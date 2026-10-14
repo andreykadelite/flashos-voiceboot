@@ -8,7 +8,9 @@ Copy your `.iso` files into the USB drive's `iso` folder. At each boot, FlashOS 
 
 **[Download the Windows EXE](https://github.com/andreykadelite/flashos-voiceboot/releases/latest/download/FlashOS-Setup.exe)** · [All release files](https://github.com/andreykadelite/flashos-voiceboot/releases/latest) · [User guide](docs/en/guide.md)
 
-New release: FlashOS 2026.10.13.2 and installer 1.0.8. The new Debian store installs applications, dependencies and updates in persistent storage on USB. Other additions include saved network profiles, Orca speech settings and interruptible announcements, along with updated drivers and firmware. [Release overview and downloads](docs/en/release-2026.10.13.md) · [Verification](docs/en/testing.md).
+New release: FlashOS 2026.10.13.2 and installer 1.0.8. The new Debian store installs applications, dependencies and updates in persistent storage on USB. Other additions include saved network profiles, Orca speech settings and interruptible announcements, along with updated drivers and firmware. [Release overview and downloads](docs/en/release-2026.10.13.md).
+
+Wi-Fi discovery now retries adapter detection, loads a missed driver when appropriate and retains connection details. A failed quick connection restores the previous network. Fixes also cover browsing large folders, text previews, passing ISO selections and GPT handling in the installer. System and installer version numbers remain unchanged.
 
 Ethernet and Wi-Fi settings include DHCP/static IPv4 and IPv6, DNS, routes and proxies, saved profiles matched to the PC and adapter, an encrypted password vault with a shared master password, and connection confirmation with rollback. A store connection failure offers networking tools and an explicit download retry. [Network settings and limits](docs/en/guide.md#ethernet-wi-fi-and-saved-profiles).
 
@@ -36,7 +38,7 @@ The installer uses native Qt 6 widgets and Windows accessibility interfaces. It 
 
 ## Get started
 
-1. Download `FlashOS-Setup.exe` and check it against `SHA256SUMS.txt` from the same release.
+1. Download `FlashOS-Setup.exe` from the [latest release](https://github.com/andreykadelite/flashos-voiceboot/releases/latest).
 2. Connect a USB drive of at least 4 GB; 16 GB or more leaves room for installation images. Save its existing files elsewhere.
 3. Run the EXE and allow the Windows administrator prompt before the menu opens. Select the drive by model, capacity and serial number, then choose **Установить** (Install).
 4. Confirm the selected drive. **Installation deletes all its partitions and files.** Wait for the write and verification to finish.
@@ -66,13 +68,13 @@ The USB system targets x86-64 PCs with legacy BIOS or 64-bit UEFI. The installer
 
 Linux drivers and firmware cover many devices, but coverage depends on the hardware. F6 cycles audio outputs. The memory test covers available user-space RAM, not all installed memory. FlashOS speech does not make another OS installer accessible.
 
-The EXE is currently unsigned. [Testing and known limits](docs/en/testing.md) distinguish automated and virtual-machine checks from physical hardware testing.
+The EXE is currently unsigned. Download it from the project release page.
 
 ## Documentation and source
 
 - [Using FlashOS](docs/en/guide.md) · [Windows installer](docs/en/installer.md)
 - [Building both parts](docs/en/build.md) · [Architecture](docs/en/architecture.md)
-- [Troubleshooting](docs/en/troubleshooting.md) · [Test coverage](docs/en/testing.md)
+- [Troubleshooting](docs/en/troubleshooting.md)
 - [Components and versions](docs/en/components.md) · [Licenses and source archives](THIRD-PARTY.md)
 - [Contributing](CONTRIBUTING.md) · [Change log](CHANGELOG.md)
 

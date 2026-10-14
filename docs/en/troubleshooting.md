@@ -8,7 +8,7 @@ Press F5, try another USB port and check Windows Disk Management. The installer 
 
 ## Windows reports an unknown publisher
 
-The EXE is unsigned. Get it from the [project release](https://github.com/andreykadelite/flashos-voiceboot/releases/latest) and compare `Get-FileHash .\FlashOS-Setup.exe -Algorithm SHA256` with `SHA256SUMS.txt`. Organisational Windows policies may block unsigned applications; FlashOS does not bypass them.
+The EXE is unsigned. Get it from the [project release](https://github.com/andreykadelite/flashos-voiceboot/releases/latest). If needed, compare `Get-FileHash .\FlashOS-Setup.exe -Algorithm SHA256` with the file's digest in GitHub Releases. Checksums and technical reports are also included inside the system archive. Organisational Windows policies may block unsigned applications; FlashOS does not bypass them.
 
 ## A write failed or was cancelled
 
@@ -23,6 +23,20 @@ Some firmware requires Ventoy certificate enrollment through MOK. FlashOS cannot
 ## There is no sound
 
 Wait for boot, check speakers/headphones and volume, then try F6 with a pause between presses. Audio may initially use HDMI or another connector. USB headsets can be detected after boot, though connecting before boot is preferable. F8 saves an audio report. A driver being present does not guarantee support for a particular board; new hardware may need a newer kernel, firmware or UCM profile. Bluetooth audio is not a supported first-boot method.
+
+## Wi-Fi hardware or networks are missing
+
+Retry Tools → Wi-Fi: NetworkManager may discover a newly enabled radio or USB adapter asynchronously. An unmanaged device, hardware/software radio block, service error and missing kernel interface are reported separately. FlashOS does not automatically take ownership of unmanaged interfaces.
+
+Wi-Fi scanning and profile network scanning automatically save reports and attachments under `flashos/reports` on FLASHBOOT. Details include NetworkManager state, kernel interfaces (`iw dev`), `rfkill`, PCI drivers, USB devices, discovery services and driver boot logs. Diagnostics → Drivers provides another report. The automatic `flashos/audio-last.json` snapshot and F8 now retain kernel context and PCI driver bindings, including non-audio Wi-Fi failures. Network passwords are not passed to diagnostic commands.
+
+If no kernel Wi-Fi interface exists, FlashOS checks missed PCI/USB driver autoload once. Loading is permitted only for an unbound device with an unloaded module from the installed wireless driver tree. Module blacklists are respected. Loaded/bound drivers and active connections are retained; attempt context is saved in `wifi-recovery.json` beside the report. This does not repair faulty hardware or failed initialization of an already loaded driver.
+
+A missing interface needs the exact PCI/USB ID, driver binding and requested firmware filename from the kernel log. Driver files being present does not establish successful initialization. The official [Linux Wireless debugging instructions](https://wireless.docs.kernel.org/en/latest/en/users/drivers/iwlwifi/debugging.html) also require a kernel log for Intel Wi-Fi failures.
+
+When booting after Windows, check its Fast Startup setting: ordinary shutdown with this enabled can retain hardware state. For comparison, hold Shift while choosing Shut down, then boot FlashOS. The [iwlwifi documentation describes this dual-boot factor](https://wireless.docs.kernel.org/en/latest/en/users/drivers/iwlwifi.html). It is a possible cause; a missing-interface message alone cannot establish the diagnosis.
+
+Clear hardware blocks using the switch/key or BIOS/UEFI setting. Firmware failures require that PC's kernel messages. Mention whether the issue persists after a full shutdown. A failed quick connection attempts to restore the previous connection; saved profiles and unrelated connections are retained.
 
 ## An ISO is missing or fails to boot
 

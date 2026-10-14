@@ -1,3 +1,53 @@
+# Wi-Fi after the update — user confirmation, 14 October 2026
+
+After updating the USB, the user booted FlashOS and confirmed that Wi-Fi works on the PC where the preceding image did not create a wireless interface. This confirmation applies to image `e6eef74bbf7cd6b813bb5e3c7b37145a5b2fc702203b89e987f7473f0e98c736` and that PC. It neither establishes the initial root cause nor extends to other adapter models.
+
+The technical verification history is retained below. Statements about no physical USB write and unconfirmed physical Wi-Fi describe the state before this update and the user's reply. Current metadata records this confirmation separately from virtual test results.
+
+The new release includes `SHA256SUMS.txt`, `FlashOS-Setup.verification.json` and other technical information inside the system archive. Historical references to these files beside the EXE describe the previous release asset layout.
+
+---
+
+# FlashOS Wi-Fi continuation audit — 14 October 2026
+
+Versions remain system `2026.10.13.2`, installer `1.0.8`. New squashfs SHA256: `e6eef74bbf7cd6b813bb5e3c7b37145a5b2fc702203b89e987f7473f0e98c736`. The complete first audit metadata is retained under `historical_previous_build_before_20261014_wifi_fix`; its text and preceding tests remain below.
+
+The user rebooted the preceding corrected image `80fbc0907a72bc455385cdde98a5c4c5a3e7ee8f8ce8e1b946a5f0d88b2b6902` and reported that the kernel had not registered a Wi-Fi interface. PCI Wi-Fi is visible, but the previous automatic report omitted driver binding and unfiltered probe/module errors. **The physical root cause remains unestablished; virtual checks do not prove repair of Wi-Fi on the user's PC.**
+
+Both Wi-Fi scan entrypoints now persist reports on USB. Attachments accept a safe underscore in legal interface names. Diagnostics retain the actual kernel version, NetworkManager/udev state, PCI/USB, driver binding, modalias and bounded hardware logs at all priorities. The automatic boot report also retains a bounded full kernel log and `lspci -nnk`.
+
+After repeated successful empty NetworkManager and known-empty sysfs inventories, recovery attempts normal loading of **only an unloaded, unbound** wireless driver matched by the exact PCI/USB alias. It validates the running-kernel module file, dependencies and blacklist. Loaded drivers and active interfaces are preserved; no NetworkManager restart, module unload, forced reset or rebind occurs. This handles missed autoload, not an unknown probe failure of a loaded driver.
+
+Windows Fast Startup was observed enabled. This is a **possible factor**, not an established cause: [iwlwifi documentation](https://wireless.docs.kernel.org/en/latest/en/users/drivers/iwlwifi.html#about-dual-boot-with-windows-and-fast-boot-enabled) describes dual-boot initialization failures, and [Microsoft](https://learn.microsoft.com/en-us/windows/win32/power/system-power-states) explains retained kernel state during hybrid shutdown. Windows settings were not changed automatically.
+
+- Docker/Debian with Xvfb: **652 tests, 27 skips, no errors**. Windows: **97 installer tests**.
+- The new clean production image passed BIOS, UEFI and Secure Boot with previously enrolled disposable OVMF keys; the visible menu was checked separately. First enrollment was not tested.
+- A separate QA layer checked no-adapter diagnostics, missed autoload through a synthetic PCI alias and real `mac80211_hwsim`, scanning beside an unmanaged AP, WPA2/DHCP and wrong-password rollback. This is virtual testing; QEMU does not emulate AX211. Guest source/boot files matched production, and the test layer was removed.
+- Debian/firmware package versions remain unchanged. An inventory of 90 wireless modules and potentially missing declared firmware does not establish universal support. Legacy b43/b43legacy devices require separate appropriate firmware with redistribution permission; speculative firmware was not added.
+
+At this metadata snapshot the physical USB update to the new image remains pending; its results will be recorded separately in private local evidence. User applications, ISOs, settings and reports are outside the system repair payload. Raw hardware reports and USB identifiers stay in `build/wifi-fix-20261014`, outside public documentation. New EXE evidence belongs in `release/FlashOS-Setup.verification.json`.
+
+---
+
+# FlashOS 2026.10.13.2 audit — 14 October 2026
+
+System `2026.10.13.2` and installer `1.0.8` retain their version numbers. New squashfs SHA256: `80fbc0907a72bc455385cdde98a5c4c5a3e7ee8f8ce8e1b946a5f0d88b2b6902`. The checks below this audit belong to the preceding image; their complete metadata is retained under `historical_previous_build_before_20261014_audit`.
+
+FlashOS uses Debian 13, Linux 7.2.6, live-boot, Ventoy/Debian GRUB and Python. Tk/Xorg or curses provides the menu; RHVoice/eSpeak NG provides speech. NetworkManager and wpa_supplicant manage networking with drivers and firmware in the live image. The application store uses a separate persistent Debian root on USB with the shared host kernel/network. Nuitka compiles the Python 3.12.10/PySide6 installer and attaches the certified system payload.
+
+The connected USB's original squashfs matched the project artifact. The exact AX211 `8086:7e40` PCI alias, iwlwifi/iwlmvm dependencies, MA API89 firmware/PNVM, kernel configuration and pinned Linux sources were verified. Removal of these drivers was not established. The user reports failure after a full shutdown. **The physical failure remains undiagnosed without that PC's Linux boot log; virtual tests do not establish recovery of the physical AX211.**
+
+Fixes cover unmanaged Wi-Fi falsely appearing absent, asynchronous discovery, phy80211 classification, quick connection rollback and tentative IPv6; long file browser replies, truncated UTF-8/UTF-16, short ISO request writes and GPT usable bounds. Repacking now refreshes binary module indexes/initrd; verification checks dependency plans and boot files against squashfs.
+
+- Docker/Debian with Xvfb: 624 tests, 27 skips, no errors. Windows: 97 installer tests and six Qt verification groups.
+- Clean production QEMU boots produced the menu readiness marker in BIOS, UEFI and Secure Boot with previously enrolled disposable OVMF keys. The visible menu after greeting was checked separately; first enrollment was not tested.
+- A separate mac80211_hwsim QA layer verified scanning beside an unmanaged AP, real WPA2 association/DHCP, restoration of the previous UUID/address after an incorrect password and candidate-only cleanup. Guest sources matched production; job reports contained no passwords.
+- Debian package versions and the application seed were retained. No test hostapd/dnsmasq/services are in production. No physical USB writes or host reboot occurred.
+
+Exact compiled EXE evidence and SHA256 are in `release/FlashOS-Setup.verification.json`. Local logs, screenshots, source evidence and original artifact backups are in `build/audit-20261014`. Distinguish this rebuild by SHA256 because version numbers were retained. See [Wi-Fi troubleshooting](troubleshooting.md#wi-fi-hardware-or-networks-are-missing).
+
+---
+
 # FlashOS 2026.10.13.2 verification — 13 October 2026
 
 The Linux image was repacked with skippable informational speech and Orca preferences. `filesystem.squashfs` SHA256: `6c20d8ad5794b47e34be483a324cda8f6a2c84a714c50c263589cd04a0ee95c9`. Installer 1.0.8 packages this same certified image, including the preceding network profiles and encrypted credential vault.
