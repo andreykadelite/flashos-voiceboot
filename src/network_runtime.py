@@ -435,6 +435,40 @@ def _verify_addresses(manager, profile, interface, dad_seconds=8):
     return sorted(assigned)
 
 
+def rollback_temporary_connection(manager, interface, identifier, checkpoint, previous):
+    """Restore only our affected adapter; keep NM's timeout if recovery fails."""
+    failures = (OSError, RuntimeError, subprocess.SubprocessError)
+    restored = False
+    try:
+        try:
+            native = manager.rollback(checkpoint)
+        except failures:
+            native = False
+        current = (manager.wait_active_uuid(interface, previous) if native else
+                   manager.active_uuid(interface, cleanup=True))
+        if current != previous and current in (None, identifier):
+            if current == identifier:
+                manager.command(['nmcli', 'connection', 'down', 'uuid', identifier],
+                                timeout=8, cleanup=True, required=False)
+            if previous:
+                manager.command(['nmcli', '--wait', '15', 'connection', 'up', 'uuid', previous,
+                                 'ifname', interface], timeout=20, cleanup=True, required=False)
+        restored = manager.wait_active_uuid(interface, previous) == previous
+    except failures:
+        pass
+    finally:
+        try:
+            manager.delete(identifier)
+        except failures:
+            pass
+    if restored:
+        try:
+            manager.destroy(checkpoint, required=False)
+        except failures:
+            pass
+    return restored
+
+
 def temporary_dhcp_job(interface):
     """Quick Ethernet DHCP never lets device-connect pick a saved static profile."""
     def run(job):
@@ -464,18 +498,7 @@ def temporary_dhcp_job(interface):
             job.check()
             manager.destroy(checkpoint)
         except BaseException:
-            restored = manager.rollback(checkpoint)
-            current = manager.wait_active_uuid(interface, previous) if restored else manager.active_uuid(interface, cleanup=True)
-            if current != previous and current in (None, identifier):
-                if current == identifier:
-                    manager.command(['nmcli', 'connection', 'down', 'uuid', identifier],
-                                    timeout=8, cleanup=True, required=False)
-                if previous:
-                    manager.command(['nmcli', '--wait', '15', 'connection', 'up', 'uuid', previous,
-                                     'ifname', interface], timeout=20, cleanup=True, required=False)
-            manager.delete(identifier)
-            if manager.wait_active_uuid(interface, previous) == previous:
-                manager.destroy(checkpoint, required=False)
+            rollback_temporary_connection(manager, interface, identifier, checkpoint, previous)
             raise
         value = _read_state(ACTIVE_STATE)
         if value and value.get('interface') == interface and value.get('connection_uuid') == previous:

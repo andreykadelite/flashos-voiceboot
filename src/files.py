@@ -26,20 +26,26 @@ def mount_options(fstype):
 
 def worker(job, action, root, relative='.', extra=()):
     result, errors = [], []
-    def receive(line):
+    def receive(line, complete=False):
         try:
             data = json.loads(line)
         except ValueError:
             return
-        if 'progress' in data:
+        if not isinstance(data, dict):
+            return
+        if 'progress' in data and not complete:
             job.update(data['progress'])
-        if 'result' in data:
+        if 'result' in data and complete:
             result.append(data['result'])
-        if 'error' in data:
+        if 'error' in data and complete:
             errors.append(data['error'])
-    code, _ = job.command([sys.executable, str(Path(__file__).with_name('file_worker.py')), action,
+    code, output = job.command([sys.executable, str(Path(__file__).with_name('file_worker.py')), action,
         str(root), str(relative), *extra], timeout=3600 if action == 'plan' else 30,
         on_line=receive, accepted=None, log_output=False, resource='storage', output_limit=1024**2)
+    # Job's live line callbacks are bounded; a complete page or text preview can
+    # be longer. Decode final records from the separately bounded capture.
+    for line in output.splitlines():
+        receive(line, complete=True)
     if code or not result:
         raise RuntimeError(errors[-1] if errors else 'Прочитать файлы не удалось.')
     return result[-1]

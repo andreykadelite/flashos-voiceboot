@@ -289,7 +289,7 @@ class UI:
             stream.flush()
             os.fsync(stream.fileno())
         for name, content in (attachments or {}).items():
-            if not name.replace('-', '').replace('.', '').isalnum() or '..' in name:
+            if not name.replace('-', '').replace('_', '').replace('.', '').isalnum() or '..' in name:
                 raise ValueError('Недопустимое имя вложения отчёта')
             with path.with_name(path.stem + '-' + name).open('x', encoding='utf-8') as stream:
                 stream.write(content)

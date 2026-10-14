@@ -112,7 +112,7 @@ class NetworkSettings:
         wifi = None
         if kind == 'wifi':
             from wifi import scan_job
-            scan = self.ui.run_job('Поиск сетей для профиля', scan_job, review=False, save=False)
+            scan = self.ui.run_job('Поиск сетей для профиля', scan_job, review=False, save=True)
             if scan.cancelled:
                 return
             if scan.failed:

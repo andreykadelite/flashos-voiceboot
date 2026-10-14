@@ -151,7 +151,35 @@ class FileTests(unittest.TestCase):
             (root / 'русский.txt').write_bytes('Проверка'.encode('utf-16'))
             job = Job('worker', None)
             self.assertEqual(worker(job, 'text', root, 'русский.txt')['lines'], ['Проверка'])
+            (root / 'legacy.txt').write_bytes('Проверка старого файла'.encode('cp1251'))
+            self.assertEqual(worker(job, 'text', root, 'legacy.txt')['lines'], ['Проверка старого файла'])
             self.assertGreater(worker(job, 'space', root)['free'], 0)
+
+    @unittest.skipUnless(os.name == 'posix', 'Linux subprocess pipe selectors')
+    def test_real_worker_preserves_large_directory_and_text_results(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for index in range(250):
+                (root / f'{index:03}-document-with-a-long-name.txt').touch()
+            job = Job('worker', None)
+            expected = listing(root, '.')
+            self.assertGreater(len(json.dumps({'result': expected})), 8192)
+            self.assertEqual(worker(job, 'list', root), expected)
+            text = ('Длинный текст для просмотра.\n' * 500)
+            (root / 'preview.txt').write_text(text, encoding='utf-8')
+            self.assertEqual(worker(job, 'text', root, 'preview.txt')['lines'], text.splitlines())
+
+    @unittest.skipUnless(os.name == 'posix', 'Linux subprocess pipe selectors')
+    def test_truncated_unicode_preview_keeps_its_encoding(self):
+        for encoding, text, expected in (
+                ('utf-8', 'A' + 'я' * 40000, 'A' + 'я' * 32767),
+                ('utf-16', '𐍈' * 20000, '𐍈' * 16383)):
+            with self.subTest(encoding=encoding), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                (root / 'preview.txt').write_bytes(text.encode(encoding))
+                result = worker(Job('worker', None), 'text', root, 'preview.txt')
+                self.assertTrue(result['truncated'])
+                self.assertEqual(result['lines'], [expected])
 
 
 class WifiTests(unittest.TestCase):
@@ -163,7 +191,11 @@ class WifiTests(unittest.TestCase):
             def temporary_file(*args, **kwargs):
                 self.assertEqual(kwargs.pop('dir'), '/run')
                 return create(*args, dir=directory, **kwargs)
-            with patch('wifi.tempfile.NamedTemporaryFile', side_effect=temporary_file):
+            def manager(job):
+                return Mock(command=lambda args, **kwargs: job.command(
+                    args, accepted=None, log_output=False, resource='network', **kwargs))
+            with patch('wifi.tempfile.NamedTemporaryFile', side_effect=temporary_file), \
+                    patch('wifi.NetworkManager', side_effect=manager):
                 yield
 
     def test_scan_ignores_unmanaged_radio_and_waits_for_first_results(self):
@@ -220,10 +252,11 @@ class WifiTests(unittest.TestCase):
         job = Job('wifi', None)
         def command(args, **kwargs):
             return (4, 'failed') if 'passwd-file' in args else (0, '')
-        with self.private_files(), patch.object(job, 'command', side_effect=command) as run:
+        with self.private_files(), patch.object(job, 'command', side_effect=command), \
+                patch('wifi.rollback_temporary_connection', return_value=True) as rollback:
             job._run(connect_job(point, 'wrong-password'))
         self.assertTrue(job.failed)
-        self.assertIn('delete', run.call_args.args[0])
+        rollback.assert_called_once()
 
     def test_quick_wpa2_and_wpa3_keep_psk_only_in_ram_for_later_rollback(self):
         address = json.dumps([{'ifname': 'wlan0', 'addr_info': [

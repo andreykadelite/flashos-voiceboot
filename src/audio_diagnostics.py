@@ -13,7 +13,7 @@ _running = threading.Lock()
 def collect(destination):
     commands = {
         'kernel': ['uname', '-r'],
-        'pci': ['lspci', '-nn'],
+        'pci': ['lspci', '-nnk'],
         'usb': ['lsusb'],
         'alsa_cards': ['aplay', '-l'],
         'pipewire': ['pw-dump'],
@@ -30,9 +30,16 @@ def collect(destination):
             report[key] = str(error)
     try:
         kernel = subprocess.run(['dmesg'], capture_output=True, text=True, errors='replace', timeout=4)
+        # Keep probe/module errors even when they do not mention sound or
+        # firmware. This automatic boot snapshot must also explain absent NICs.
+        raw = kernel.stdout + kernel.stderr
+        report['kernel_log_truncated'] = len(raw) > 524288
+        report['kernel_log'] = (raw if len(raw) <= 524288 else
+                                raw[:262144] + '\n[Kernel log truncated]\n' + raw[-262144:])
         report['audio_kernel'] = '\n'.join(line for line in kernel.stdout.splitlines()
             if re.search(r'snd|sof|hda|audio|soundwire|firmware|cs35|tas27|acp', line, re.I))[-65536:]
     except (OSError, subprocess.SubprocessError) as error:
+        report['kernel_log'] = str(error)
         report['audio_kernel'] = str(error)
     destination = Path(destination)
     temporary = destination.with_suffix('.tmp')

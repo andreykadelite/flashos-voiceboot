@@ -1,6 +1,10 @@
 from pathlib import Path
 import sys
 import threading
+import json
+import os
+import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -9,6 +13,25 @@ import audio_diagnostics as diagnostics
 
 
 class DiagnosticTests(unittest.TestCase):
+    @unittest.skipIf(os.name == 'nt', 'Linux directory fsync')
+    def test_boot_snapshot_keeps_wifi_probe_errors_and_bound_pci_drivers(self):
+        error = 'iwlwifi 0000:00:14.3: probe with driver iwlwifi failed with error -110\n'
+        calls = []
+        def command(argv, **kwargs):
+            calls.append(argv)
+            output = (error if argv == ['dmesg'] else
+                      'Kernel driver in use: iwlwifi\n' if argv == ['lspci', '-nnk'] else '')
+            return SimpleNamespace(stdout=output, stderr='', returncode=0)
+        with tempfile.TemporaryDirectory() as directory, patch.object(diagnostics.subprocess, 'run', side_effect=command):
+            destination = Path(directory) / 'audio-last.json'
+            diagnostics.collect(destination)
+            report = json.loads(destination.read_text())
+        self.assertIn(error.strip(), report['kernel_log'])
+        self.assertNotIn(error.strip(), report['audio_kernel'])
+        self.assertIn('Kernel driver in use: iwlwifi', report['pci'])
+        self.assertFalse(report['kernel_log_truncated'])
+        self.assertIn(['lspci', '-nnk'], calls)
+
     def test_delayed_startup_does_not_block_manual_request(self):
         sleeping, release, saved, finished = (threading.Event() for _ in range(4))
         calls = []

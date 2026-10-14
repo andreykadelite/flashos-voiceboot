@@ -1,5 +1,6 @@
 """Bounded child for filesystem traversal; never follow links or special files."""
 import argparse
+import codecs
 import heapq
 import json
 import os
@@ -108,7 +109,10 @@ def main():
             raise ValueError('Файл не похож на текст. Его можно скопировать.')
         encoding = 'utf-16' if raw.startswith((b'\xff\xfe', b'\xfe\xff')) else 'utf-8-sig'
         try:
-            text = raw[:65536].decode(encoding)
+            # A preview boundary can split a UTF-8 character or UTF-16 surrogate.
+            # Discard only that incomplete suffix, keeping the file's encoding.
+            decoder = codecs.getincrementaldecoder(encoding)()
+            text = decoder.decode(raw[:65536], final=len(raw) <= 65536)
         except UnicodeDecodeError:
             text = raw[:65536].decode('cp1251', errors='replace')
         result = {'lines': text.splitlines(), 'truncated': len(raw) > 65536}
