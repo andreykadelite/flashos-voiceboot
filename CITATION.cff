@@ -5,8 +5,8 @@ title: FlashOS VoiceBoot
 authors:
   - family-names: Zotov
     given-names: Andrey Anatolyevich
-version: 2026.09.12.1
-date-released: 2026-09-12
+version: 2026.10.22.2
+date-released: 2026-10-23
 url: "https://github.com/andreykadelite/flashos-voiceboot"
 license: MIT
 abstract: "Original FlashOS software: a talking multiboot USB environment and Windows installer. Bundled third-party software and voices have separate licenses."

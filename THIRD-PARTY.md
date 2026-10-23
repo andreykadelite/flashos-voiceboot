@@ -55,7 +55,17 @@ RHVoice создан Ольгой Яковлевой и участниками �
 
 В архиве есть исходники BusyBox 1.27.1, 1.30.0, 1.31.0 и 1.32.0, опубликованные конфигурации и дополнительные зависимости из списка Ventoy. Для старых статических апплетов BusyBox.net конфигурация указывает компилятор `i486-linux-uclibc-`, но не точную ревизию встроенной uClibc. Приложенная uClibc 0.9.30.1 относится к инструментарию mini-native, указанному Ventoy; её соответствие каждому старому апплету отдельно не подтверждено. Это ограничение проверки происхождения, а не обещание полной воспроизводимости сторонних бинарников. [Список источников](metadata/ventoy-extra-sources.json) содержит ссылки и контрольные суммы.
 
+Терминал live-системы использует неизменённые пакеты Debian GTK, VTE,
+PyGObject/GI и ATK. Их уведомления находятся в `/usr/share/doc/*/copyright`,
+точные версии и исходники — в `metadata/debian-packages.json`,
+`metadata/debian-sources.json` и `metadata/source-archives.json`.
+
 ## English
+
+The live terminal uses unmodified Debian GTK, VTE, PyGObject/GI and ATK
+packages. Their notices remain in `/usr/share/doc/*/copyright`; exact binary
+and source versions are recorded in `metadata/debian-packages.json`,
+`metadata/debian-sources.json` and `metadata/source-archives.json`.
 
 The root MIT license covers FlashOS's original code and documentation. Bundled operating-system packages, bootloaders, libraries, voices and firmware retain their own terms. Notices are preserved in `licenses/`, source archives and the live system's `/usr/share/doc`.
 

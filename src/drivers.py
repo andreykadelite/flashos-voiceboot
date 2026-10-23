@@ -56,23 +56,35 @@ def report_job(job):
     for command, title in ((['lspci', '-nnk'], 'Названия PCI и драйверы'),
                            (['lsusb', '-t'], 'Дерево USB и драйверы'),
                            (['hwinfo', '--short', '--pci', '--usb', '--cpu', '--memory'], 'Сводка hwinfo')):
-        code, output = job.command(command, timeout=45, accepted=None, log_output=False)
+        try:
+            code, output = job.command(command, timeout=45, accepted=None, log_output=False)
+        except (OSError, RuntimeError) as error:
+            code, output = 1, str(error)
         if code:
             failures += 1
-        job.sections.append((title, output.splitlines() or ['Сведения недоступны.']))
+        job.sections.append((title + ('. Недоступно' if code else ''),
+                             output.splitlines() or ['Сведения недоступны.']))
         job.attachments[command[0] + '.txt'] = output
-    code, output = job.command(['journalctl', '-k', '-b', '--no-pager', '-n', '4000'],
+    try:
+        code, output = job.command(['journalctl', '-k', '-b', '--no-pager', '-n', '4000'],
                                 timeout=15, accepted=None, log_output=False, output_limit=2*1024**2)
+    except (OSError, RuntimeError) as error:
+        code, output = 1, str(error)
     firmware_errors = [line for line in output.splitlines() if re.search(r'firmware|sof[- _]|ucode', line, re.I)
                        and re.search(r'fail|error|not found|missing|timed out', line, re.I)]
     failures += bool(code)
-    job.sections.insert(0, ('Ошибки загрузки прошивок', firmware_errors or [
-        'В просмотренной части журнала ошибок прошивки не найдено. Это не проверка всех функций устройств.']))
+    firmware_rows = list(firmware_errors)
+    if code:
+        firmware_rows.append('Не удалось прочитать журнал ядра. Отсутствие ошибок загрузки прошивок не подтверждено.')
+    elif not firmware_rows:
+        firmware_rows.append('В просмотренной части журнала ошибок прошивки не найдено. Это не проверка всех функций устройств.')
+    job.sections.insert(0, ('Ошибки загрузки прошивок', firmware_rows))
     job.attachments['kernel.txt'] = output
     job.incomplete = bool(failures)
     job.warning = bool(firmware_errors or unbound)
     job.result = (f'Устройств с подключённым драйвером: {bound}. Без подключённого драйвера: {unbound}. '
-        f'Записей об ошибках прошивки: {len(firmware_errors)}. '
+        + ('Проверка журнала загрузки прошивок не завершена. ' if code else
+           f'Записей об ошибках прошивки: {len(firmware_errors)}. ') +
         'Наличие драйвера не подтверждает исправность устройства. Некоторые служебные устройства не требуют отдельного драйвера.')
 
 

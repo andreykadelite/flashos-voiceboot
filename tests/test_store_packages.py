@@ -16,6 +16,108 @@ spec.loader.exec_module(store)
 
 
 class PackageStoreTests(unittest.TestCase):
+    def test_updates_include_dependencies_when_the_application_version_is_unchanged(self):
+        class Cache(dict):
+            def __iter__(self):
+                return iter(self.values())
+        def package(name, version, candidate, essential=False):
+            return SimpleNamespace(name=name, is_installed=True, essential=essential,
+                installed=SimpleNamespace(version=version), candidate=SimpleNamespace(version=candidate))
+        packages = Cache(editor=package('editor', '1', '1'),
+                         libeditor=package('libeditor', '1', '2'),
+                         apt=package('apt', '1', '2'),
+                         essential=package('essential', '1', '2', essential=True),
+                         kernel=package('linux-image-test', '1', '2'))
+        with mock.patch.object(store, 'cache', return_value=packages), \
+             mock.patch.object(store, 'registry', return_value={'editor'}), \
+             mock.patch.object(store, 'effective_source', side_effect=lambda package, source: source), \
+             mock.patch.object(store, 'selected_version', side_effect=lambda package, source: package.candidate), \
+             mock.patch.object(store, 'package_info', side_effect=lambda package, version: {
+                 'package': package.name, 'version': version.version}), \
+             mock.patch.dict(sys.modules, {'apt_pkg': SimpleNamespace(
+                 version_compare=lambda left, right: int(left) - int(right))}):
+            result = store.upgrades('stable')
+        self.assertEqual(result['entries'], [{'package': 'libeditor', 'version': '2'}])
+
+    def test_repair_finishes_already_installed_plan_without_original_free_space_budget(self):
+        import json
+        change = {'package': 'editor', 'action': 'install', 'from_version': None,
+                  'to_version': '2', 'download_bytes': 1024, 'installed_size_delta': 2048}
+        plan = {'source': 'stable', 'operation': 'install', 'requested': ['editor'],
+                'changes': [change], 'required_bytes': 3 * 1024**3}
+        packages = mock.MagicMock()
+        packages.get.side_effect = {'editor': SimpleNamespace(
+            is_installed=True, installed=SimpleNamespace(version='2'))}.get
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(store, 'STATE', Path(directory)), \
+             mock.patch.object(store, 'cache', return_value=packages), \
+             mock.patch.object(store, 'changes_from_cache', return_value=[]), \
+             mock.patch.object(store, 'command', return_value=(0, '')) as command, \
+             mock.patch.object(store, 'check_transaction_space',
+                side_effect=store.StoreError('Original free-space budget is no longer available')) as space, \
+             mock.patch.object(store, 'verify_packages') as verify:
+            store.atomic_json(store.STATE / 'base-packages.json', [])
+            store.atomic_json(store.STATE / 'journal.json', {'format': 1, 'phase': 'verified',
+                'plan': plan, 'previous_packages': [], 'previous_manual': []})
+            result = store.repair()
+            self.assertIn('проверены', result['message'])
+            self.assertEqual(store.registry(), {'editor'})
+            self.assertEqual(json.loads((store.STATE / 'journal.json').read_text())['phase'], 'complete')
+        space.assert_not_called()
+        self.assertFalse(any(call.args[0][0] == 'apt-get' for call in command.call_args_list))
+        verify.assert_called_once_with([change])
+
+    def test_repair_checks_versions_and_files_of_dependency_fixes_without_a_journal(self):
+        fix = {'package': 'libeditor', 'action': 'install', 'from_version': None,
+               'to_version': '1', 'download_bytes': 100, 'installed_size_delta': 200}
+        packages = mock.MagicMock()
+        packages.__getitem__.return_value = SimpleNamespace(candidate=SimpleNamespace(installed_size=200))
+        with mock.patch.object(store, 'pending', return_value=None), \
+             mock.patch.object(store, 'cache', return_value=packages), \
+             mock.patch.object(store, 'baseline', return_value=set()), \
+             mock.patch.object(store, 'changes_from_cache', return_value=[fix]), \
+             mock.patch.object(store, 'simulate'), mock.patch.object(store, 'check_space'), \
+             mock.patch.object(store, 'command', return_value=(0, '')), \
+             mock.patch.object(store, 'verify_packages') as verify:
+            store.repair()
+        verify.assert_called_once_with([fix])
+
+    def test_dependency_repair_reserves_full_unpacked_size_before_an_upgrade(self):
+        fix = {'package': 'libeditor', 'action': 'upgrade', 'from_version': '1',
+               'to_version': '2', 'download_bytes': 100, 'installed_size_delta': 0}
+        packages = mock.MagicMock()
+        packages.__getitem__.return_value = SimpleNamespace(candidate=SimpleNamespace(installed_size=2 * 1024**2))
+        with mock.patch.object(store, 'pending', return_value=None), \
+             mock.patch.object(store, 'cache', return_value=packages), \
+             mock.patch.object(store, 'baseline', return_value=set()), \
+             mock.patch.object(store, 'changes_from_cache', return_value=[fix]), \
+             mock.patch.object(store, 'simulate'), \
+             mock.patch.object(store.shutil, 'disk_usage', return_value=SimpleNamespace(
+                 free=store.RESERVE + 1024**2)), \
+             mock.patch.object(store.os, 'statvfs', create=True, return_value=SimpleNamespace(f_favail=5000)), \
+             mock.patch.object(store, 'command', return_value=(0, '')) as command:
+            with self.assertRaisesRegex(store.StoreError, 'места'):
+                store.repair()
+        self.assertEqual([call.args[0] for call in command.call_args_list], [['dpkg', '--configure', '-a']])
+
+    def test_repair_still_requires_space_before_writing_an_unfinished_plan(self):
+        plan = {'source': 'stable', 'changes': [
+            {'package': 'editor', 'action': 'install', 'to_version': '2'}], 'required_bytes': 1000}
+        packages = mock.MagicMock()
+        packages.get.side_effect = {'editor': SimpleNamespace(
+            is_installed=True, installed=SimpleNamespace(version='1'))}.get
+        with mock.patch.object(store, 'pending', return_value={'phase': 'applying', 'plan': plan}), \
+             mock.patch.object(store, 'cache', return_value=packages), \
+             mock.patch.object(store, 'baseline', return_value=set()), \
+             mock.patch.object(store, 'changes_from_cache', return_value=[]), \
+             mock.patch.object(store, 'command', return_value=(0, '')) as command, \
+             mock.patch.object(store, 'check_transaction_space', side_effect=store.StoreError('No space')), \
+             mock.patch.object(store, 'verify_packages') as verify:
+            with self.assertRaisesRegex(store.StoreError, 'No space'):
+                store.repair()
+        verify.assert_not_called()
+        self.assertEqual([call.args[0] for call in command.call_args_list], [['dpkg', '--configure', '-a']])
+
     def test_package_names_cannot_be_options_or_shell_fragments(self):
         for name in ('--allow-unauthenticated', 'mousepad;rm', '../pkg', 'pkg=1', 'Pkg', 'pkg:i386', 'pkg\n'):
             with self.subTest(name=name), self.assertRaises(store.StoreError):
@@ -190,6 +292,30 @@ class PackageStoreTests(unittest.TestCase):
         with mock.patch.object(store, 'registry_sources', return_value={'tmux': 'backports'}):
             self.assertEqual(store.effective_source(package, 'all'), 'backports')
             self.assertEqual(store.effective_source(package, 'stable'), 'stable')
+
+    def test_dependency_backports_origin_survives_transactions_without_becoming_a_managed_app(self):
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(store, 'STATE', Path(directory)), \
+             mock.patch.object(store, 'baseline', return_value=set()):
+            store.save_registry(set(), {'operation': 'install', 'source': 'backports',
+                'requested': ['editor'], 'changes': [
+                    {'package': 'editor', 'action': 'install', 'source': 'backports'},
+                    {'package': 'libeditor', 'action': 'install', 'source': 'backports'}]})
+            self.assertEqual(store.registry(), {'editor'})
+            library = SimpleNamespace(name='libeditor', is_installed=True,
+                                      installed=SimpleNamespace(origins=[]))
+            self.assertEqual(store.effective_source(library, 'all'), 'backports')
+            store.save_registry(store.registry(), {'operation': 'install', 'source': 'stable',
+                'requested': ['other-app'], 'changes': [
+                    {'package': 'other-app', 'action': 'install', 'source': 'stable'}]})
+            self.assertEqual(store.effective_source(library, 'all'), 'backports')
+            self.assertEqual(store.registry(), {'editor', 'other-app'})
+            store.save_registry(store.registry(), {'operation': 'remove', 'source': 'all',
+                'requested': ['editor'], 'changes': [
+                    {'package': 'editor', 'action': 'remove'},
+                    {'package': 'libeditor', 'action': 'remove'}]})
+            self.assertEqual(store.registry(), {'other-app'})
+            self.assertNotIn('libeditor', store.registry_sources())
 
     def test_postinstall_version_or_unexpected_still_installed_removal_is_rejected(self):
         packages = {'editor': SimpleNamespace(is_installed=True, installed=SimpleNamespace(version='2'))}

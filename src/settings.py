@@ -20,7 +20,7 @@ def validate(data):
     result = dict(DEFAULTS)
     if not isinstance(data, dict):
         return result
-    if data.get('voice') in {item[0] for item in VOICES}:
+    if isinstance(data.get('voice'), str) and data['voice'] in {item[0] for item in VOICES}:
         result['voice'] = data['voice']
     for key, low, high in [('rate', 50, 250), ('pitch', 50, 150), ('volume', 10, 100),
                            ('progress_seconds', 15, 120)]:
@@ -39,10 +39,17 @@ class Settings:
         try:
             if self.path.stat().st_size > 4096:
                 raise ValueError('Settings file is too large')
-            self.data = validate(json.loads(self.path.read_text(encoding='utf-8')))
+            with self.path.open(encoding='utf-8') as stream:
+                content = stream.read(4097)
+            if len(content.encode('utf-8')) > 4096:
+                raise ValueError('Settings file is too large')
+            parsed = json.loads(content)
+            if not isinstance(parsed, dict):
+                raise ValueError('Settings must be a JSON object')
+            self.data = validate(parsed)
         except FileNotFoundError:
             pass
-        except (OSError, ValueError) as error:
+        except (OSError, ValueError, RecursionError) as error:
             self.error = 'Настройки не прочитаны. Использованы стандартные значения. ' + str(error)
 
     def save(self, changes):

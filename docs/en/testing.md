@@ -1,3 +1,39 @@
+# Tests on 22–23 October 2026 — FlashOS 2026.10.22.2 / installer 1.0.10
+
+The final sources passed 827 Linux tests both in the normal environment and
+with cryptography 50.0.2, with 32 platform skips each; Windows passed 110
+installer tests. Separately, 18 real GTK/VTE/Bash scenarios, four window sizes
+and keyboard focus under Xorg without a window manager passed.
+
+The new image passed BIOS, UEFI and Secure Boot with prepared OVMF keys:
+the main menu, Help, return and nonzero recorded audio. All 45 Python modules
+matched the image certificate. Physical USB media and PCs were not retested.
+
+In a clean UEFI session, speech was recorded separately for a command, automatic
+output, a Russian line and the terminal screen; the silent control interval
+contained zero PCM. Hidden input, Ctrl C, default close cancellation, return to
+the menu and background-process cleanup passed. Human speech intelligibility
+was not evaluated.
+
+Real APT in an isolated container installed, verified, launched, repaired the
+completed-operation journal without reinstalling, and removed `hello`.
+Catalog search fell from 64.118 to 3.860 seconds with identical complete JSON
+results. Protected base-package upgrades are still rejected.
+
+[System and terminal audit (Russian)](../ru/system-audit-2026-10-22.md).
+`metadata/testing.json` and `release/FlashOS-Setup.verification.json` bind the
+finished build to its evidence. Earlier build history follows.
+
+---
+
+# Audit on 22 October 2026 — FlashOS 2026.10.22.1 / installer 1.0.9
+
+The final sources passed 693 Linux tests (32 Windows/Qt/PowerShell platform skips) and 110 Windows installer tests. Clean BIOS, UEFI and Secure Boot with prepared keys reached the graphical menu, Help and return, with nonzero recorded audio. A separate guest test verified terminal restoration after an Xorg startup timeout. Physical USB drives and PCs were not retested.
+
+[Full audit, fixes and limits (Russian)](../ru/production-audit-2026-10-22.md) · [Dependency review (Russian)](../ru/dependency-audit-2026-10-22.md). metadata/testing.json binds the current image to its evidence; release/FlashOS-Setup.verification.json records the final compiled EXE. Earlier build history follows.
+
+---
+
 # Wi-Fi after the update — user confirmation, 14 October 2026
 
 After updating the USB, the user booted FlashOS and confirmed that Wi-Fi works on the PC where the preceding image did not create a wireless interface. This confirmation applies to image `e6eef74bbf7cd6b813bb5e3c7b37145a5b2fc702203b89e987f7473f0e98c736` and that PC. It neither establishes the initial root cause nor extends to other adapter models.

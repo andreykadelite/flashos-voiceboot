@@ -42,6 +42,7 @@
 !/build/install-sof.py
 !/build/install-hardware.sh
 !/build/install-app-store.sh
+!/build/install-terminal.sh
 !/build/repack-system.sh
 !/tools/
 /tools/*
@@ -68,6 +69,7 @@
 !/tools/verify-toolkit-build.py
 !/tools/verify-hardware-build.py
 !/tools/verify-app-store-build.py
+!/tools/verify-terminal-build.py
 !/tools/provision-shared-speech.py
 !/tools/repack-app-runtime.py
 !/tools/verify-product.py

@@ -154,7 +154,51 @@ class StoreStorageSafety(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'Файл сохранён'):
                 self.env.repair_image(job)
         self.assertEqual(self.env.image.read_bytes(), b'important user data')
-        self.assertFalse(any(args[0] in ('resize2fs', 'mkfs.ext4', 'losetup', 'mount') for args in job.commands))
+        self.assertFalse(any(args[0] in ('resize2fs', 'mkfs.ext4', 'mount') or
+                             (args[0] == 'losetup' and '--associated' not in args)
+                             for args in job.commands))
+
+    def test_offline_operations_refuse_a_store_owned_by_another_live_process(self):
+        self.env.image.write_bytes(b'important user data')
+        self.env.state.write_text('{}')
+        for operation in (lambda job: self.env.repair_image(job),
+                          lambda job: self.env.grow(job, 2)):
+            job = Job()
+            with patch.object(storage, 'runtime_state', return_value={
+                    'owner_pid': 77, 'owner_starttime': '123'}), \
+                 patch.object(storage, 'process_starttime', return_value='123'), \
+                 patch.object(self.env, 'close'), \
+                 patch.object(storage, 'allocate'), \
+                 patch.object(storage, 'shutdown') as shutdown, \
+                 patch.object(storage, 'writable') as writable:
+                with self.assertRaisesRegex(RuntimeError, 'другим процессом'):
+                    operation(job)
+                shutdown.assert_not_called()
+                writable.assert_not_called()
+            self.assertEqual(job.commands, [])
+            self.assertEqual(self.env.image.read_bytes(), b'important user data')
+
+    def test_offline_operations_refuse_an_associated_image_without_running_fsck(self):
+        self.env.image.write_bytes(b'important user data')
+        for operation in (lambda job: self.env.repair_image(job),
+                          lambda job: self.env.grow(job, 2)):
+            job = Job({'losetup': (0, '/dev/loop9')})
+            with patch.object(self.env, 'close'), \
+                 patch.object(storage, 'allocate'), \
+                 patch.object(storage, 'writable') as writable:
+                with self.assertRaisesRegex(RuntimeError, 'остаётся подключённым'):
+                    operation(job)
+                writable.assert_not_called()
+            self.assertEqual(len(job.commands), 1)
+            self.assertIn('--associated', job.commands[0])
+            self.assertEqual(self.env.image.read_bytes(), b'important user data')
+
+    def test_attach_refuses_an_unknown_mount_state_without_creating_a_loop(self):
+        job = Job({'findmnt': (32, 'mount table unreadable')})
+        with self.assertRaisesRegex(RuntimeError, 'Не удалось проверить'):
+            self.env._attach(job, self.env.image)
+        self.assertEqual(len(job.commands), 1)
+        self.assertEqual(job.commands[0][0], 'findmnt')
 
     @unittest.skipIf(sys.platform == 'win32', 'Linux root ownership semantics')
     def test_shutdown_rejects_changed_loop_without_unmount_or_detach(self):
@@ -178,6 +222,22 @@ class StoreStorageSafety(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Небезопасный'):
             storage.shutdown(job, self.medium, self.env.state)
         self.assertEqual(job.commands, [])
+
+    def test_shutdown_preserves_loop_and_state_when_mount_inspection_fails(self):
+        self.env.image.write_bytes(b'preserved')
+        self.env.state.write_text('{}')
+        state = {'format': 1, 'medium': str(self.medium.resolve()),
+                 'live_disk': '/dev/usb', 'source': '/dev/usb1',
+                 'image': str(self.env.image), 'mount': str(storage.MOUNT),
+                 'loop': '/dev/loop7', 'restore_ro': True}
+        job = Job({'losetup': (0, str(self.env.image)), 'findmnt': (32, '')})
+        with patch.object(storage, 'runtime_state', return_value=state):
+            with self.assertRaisesRegex(RuntimeError, 'паспорт сохранён'):
+                storage.shutdown(job, self.medium, self.env.state)
+        self.assertTrue(self.env.state.exists())
+        self.assertEqual(self.env.image.read_bytes(), b'preserved')
+        self.assertFalse(any(args[0] in ('umount', 'mount') or '-d' in args
+                             for args in job.commands))
 
     @unittest.skipIf(sys.platform == 'win32', 'Linux root ownership semantics')
     def test_open_refuses_live_owner_without_closing_other_mount(self):

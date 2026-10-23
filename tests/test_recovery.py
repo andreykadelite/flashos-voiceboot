@@ -8,13 +8,53 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 from jobs import Job
-from recovery import image_path, read_manifest, restore_job, repair_job, MANIFEST, map_extent, image_extent
+from recovery import image_path, read_manifest, restore_job, repair_job, MANIFEST, map_extent, image_extent, catalog_job
 from restore_verify import ranges
 from toolkit import Device
 from launch import previous_service_processes
 
 
 class RecoveryTests(unittest.TestCase):
+    @staticmethod
+    def manifest():
+        return {'format': 'flashos-partclone-1', 'file': 'partition.pcl', 'source_bytes': 4096,
+                'image_bytes': 500, 'fstype': 'ext4', 'sha256': '0' * 64,
+                'filesystem_bytes': 4096, 'map_bytes': 100, 'map_sha256': '1' * 64,
+                'used_sha256': '2' * 64, 'created': '2026-10-22 12:00:00', 'model': 'Test disk'}
+
+    def test_malformed_manifests_are_rejected_as_validation_errors(self):
+        valid = self.manifest()
+        malformed = [None, [], 42, 'image', {**valid, 'fstype': []},
+                     {**valid, 'created': None}, {**valid, 'model': {}}]
+        with tempfile.TemporaryDirectory() as temporary:
+            image = Path(temporary) / 'partition.pcl'
+            for value in malformed:
+                with self.subTest(value=value):
+                    image.with_name(MANIFEST).write_text(json.dumps(value), encoding='utf-8')
+                    with self.assertRaises(ValueError):
+                        read_manifest(image)
+            image.with_name(MANIFEST).write_text('[' * 1500 + '0' + ']' * 1500, encoding='utf-8')
+            with self.assertRaises(ValueError):
+                read_manifest(image)
+
+    def test_corrupt_manifest_does_not_hide_healthy_backups(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            medium = Path(temporary)
+            malformed = [[], {**self.manifest(), 'created': None},
+                         {**self.manifest(), 'fstype': []}]
+            for index, value in enumerate([*malformed, self.manifest()]):
+                folder = medium / 'backups' / ('files-' + str(index) * 12)
+                folder.mkdir(parents=True)
+                (folder / MANIFEST).write_text(json.dumps(value), encoding='utf-8')
+            function = catalog_job(medium, '/dev/test')
+            job = Job('catalog', function)
+            with patch('recovery.medium_info'):
+                job._run(function)
+            self.assertFalse(job.failed, job.result)
+            self.assertEqual(len(job.payload), 1)
+            self.assertEqual(len(job.lines), 3)
+            self.assertIn('files-' + '3' * 12, job.payload[0][1])
+
     def test_restart_refuses_to_overlap_lingering_service_process(self):
         with patch('launch.Path.read_text', side_effect=['0::/system.slice/flashos.service\n', '42\n99\n']), patch('launch.os.getpid', return_value=42):
             self.assertEqual(previous_service_processes(), [99])

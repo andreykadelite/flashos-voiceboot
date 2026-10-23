@@ -26,11 +26,50 @@ Repacking runs `depmod` and regenerates initrd for the installed FlashOS kernel,
 
 The output is `dist/usb`, `dist/boot`, `dist/ventoy.disk.img.xz` and `dist/packages.tsv`. Never place personal ISOs, backups, settings or reports in this packaging tree. `tools/package-public-docs.py` copies only public documentation. Test ISOs belong in separate VM fixtures.
 
-To build the EXE with a prepared system, use `FlashOS-2026.10.13.2-system.7z` from its matching [release](https://github.com/andreykadelite/flashos-voiceboot/releases). Open it in 7-Zip and extract at the root of a source checkout of the same tag to populate `dist`. Project sources are also available in `FlashOS-2026.10.13.2-source.zip`. Release manifests, checksums and technical reports are inside the system archive. Use the EXE to prepare USB media: the archive contains build files and cannot be written with Rufus or dd.
+To build the EXE with a prepared system, use `FlashOS-2026.10.22.2-system.7z` from its matching [release](https://github.com/andreykadelite/flashos-voiceboot/releases). Open it in 7-Zip and extract at the root of a source checkout of the same tag to populate `dist`. Project sources are also available in `FlashOS-2026.10.22.2-source.zip`. The system archive contains the system certificate, metadata and `SYSTEM-SHA256SUMS.txt` for checking its contents. Component and source information is also included in the project source archive. The release page provides the ready-to-use EXE and archives. Use the EXE to prepare USB media: the archive contains build files and cannot be written with Rufus or dd.
 
 After changing FlashOS code, run `build/repack-system.sh` in the prepared Linux environment. `tools/verify-toolkit-build.py` compares the sources with files inside squashfs and records the image SHA256. Packaging stops if the system version, image or sources differ from that report. The prepared-system archive includes the report.
 
 The full Linux build uses current trixie/backports indexes. To reconstruct older Debian package binaries, use the exact `.dsc`, original tarballs and Debian patches in the release's Debian source archive with `dpkg-source -x` and `dpkg-buildpackage` in the matching Debian environment. See `metadata/debian-sources.json` for source files and SHA256, and `metadata/source-archives.json` for archive membership. Release 2026.10.12.1 retains the 2026.09.09.3 source archives and adds new or changed Debian sources plus the original SOF 2026.09.2 asset in `FlashOS-2026.10.12.1-hardware-sources.zip`. Debian downloads are checked against signed deb-src indexes; SOF is checked against its pinned `metadata/build-inputs.json` record. Third-party source archives include upstream build instructions. Rebuilding signed upstream EFI binaries will not reproduce the upstream signing keys; use originals or your own trust setup.
+
+## Repacking and terminal dependencies
+
+Before repacking a prepared live root for 2026.10.22.2, install the new
+terminal dependencies:
+
+```sh
+sudo unshare --mount --propagation private bash -eu -c '
+root=/opt/flashos-rootfs
+mountpoint -q "$root/proc" || mount -t proc proc "$root/proc"
+mountpoint -q "$root/sys" || mount --rbind /sys "$root/sys"
+mountpoint -q "$root/dev" || mount --rbind /dev "$root/dev"
+mount --make-rslave "$root/sys"
+mount --make-rslave "$root/dev"
+if [ "$(readlink "$root/etc/resolv.conf" || true)" = /run/NetworkManager/resolv.conf ]; then
+    mkdir -p "$root/run/NetworkManager"
+    touch "$root/run/NetworkManager/resolv.conf"
+    mount --bind /etc/resolv.conf "$root/run/NetworkManager/resolv.conf"
+    mount -o remount,bind,ro "$root/run/NetworkManager/resolv.conf"
+fi
+bash build/install-terminal.sh
+bash build/repack-system.sh
+'
+```
+
+Virtual filesystems need mounting again after restarting the builder. This
+example uses a private mount namespace; its mounts are released when the
+process exits. For subsequent Python-only changes, repeat the example without
+the `install-terminal.sh` stage. `repack-system.sh` checks the mounts before
+changing the image and stops with an actionable error for an unprepared chroot.
+The read-only DNS bind is needed for package installation in a sanitized live
+root and stays outside the image (`run/*` is excluded).
+
+Full builds invoke this stage automatically. It adds GTK 3, VTE, PyGObject
+and the ATK bridge; Bash must already be installed. After package changes,
+refresh `metadata/debian-packages.json` and `metadata/packages.tsv` and check
+corresponding-source coverage for the exact versions. `verify-terminal-build.py`
+checks actual packages, libraries and typelibs inside squashfs; the main image
+certificate includes its result.
 
 ## Application runtime and corresponding source
 
@@ -38,7 +77,7 @@ The full Linux build uses current trixie/backports indexes. To reconstruct older
 
 `tools/provision-shared-speech.py` copies the same RHVoice 1.18.4 binaries, libraries, `sd_rhvoice` module, five unmodified voice datasets and license notices from the live root. It compares copies by SHA256, checks both synthesizers' dependencies through `ldd`, and verifies voice enumeration through the Speech Dispatcher protocol. Its manifest is `var/lib/flashos-store/speech-runtime.json` inside the runtime. No separate Debian RHVoice package or different model versions are installed for applications.
 
-`tools/repack-app-runtime.py` writes the sanitized seed to `/opt/flashos-rootfs/opt/flashos/app-runtime.tar.xz`; `app-runtime.json` records size, SHA256 and UID 1000. The packer checks package versions and corresponding-source coverage, excluding machine identifiers, builder DNS state, logs and temporary directories. In build 2026.10.13.2 the runtime contains 455 Debian packages: only `espeak-ng` version `1.52.0+dfsg-5` was added to the previous seed, without upgrading or removing existing packages. Its source is already covered by the existing source archives. Copying RHVoice from the live root does not add dpkg packages.
+`tools/repack-app-runtime.py` writes the sanitized seed to `/opt/flashos-rootfs/opt/flashos/app-runtime.tar.xz`; `app-runtime.json` records size, SHA256 and UID 1000. The packer checks package versions and corresponding-source coverage, excluding machine identifiers, builder DNS state, logs and temporary directories. In build 2026.10.22.1 the runtime contains 455 Debian packages: only `espeak-ng` version `1.52.0+dfsg-5` was added to the previous seed, without upgrading or removing existing packages. Its source is already covered by the existing source archives. Copying RHVoice from the live root does not add dpkg packages.
 
 After preparing the packages, refresh shared speech and the seed without another APT operation:
 
@@ -106,10 +145,10 @@ Docker boot tests require loop/mount permissions and QEMU in the builder. In a m
 
 ## Extract the release build archive
 
-Open `FlashOS-2026.10.13.2-system.7z` in 7-Zip and extract at the root of
+Open `FlashOS-2026.10.22.2-system.7z` in 7-Zip and extract at the root of
 the matching source checkout. This is a single archive; no separate parts or
 Python join script are required. See the
-[release overview](release-2026.10.13.md#system-archive-for-building).
+[release overview](release-2026.10.22.md#installation-and-release-files).
 
 ## Publish a derivative
 

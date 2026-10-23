@@ -129,6 +129,30 @@ class FileTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 plan(root, '.', windows=True)
 
+    def test_all_supported_windows_destinations_reject_name_collisions_before_copy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'Test').write_text('one')
+            (root / 'test').write_text('two')
+            volume = SimpleNamespace(device=Mock(), live_disk='/dev/usb', root=root, verify=Mock())
+            for fstype in ('exfat', 'vfat', 'ntfs', 'ntfs3', 'fuseblk'):
+                with self.subTest(fstype=fstype), patch('files.check_device'), \
+                        patch('files.medium_info', return_value=('/dev/usb1', fstype)), \
+                        patch('files.destination') as destination:
+                    with self.assertRaisesRegex(RuntimeError, 'Имена нельзя без потерь'):
+                        copy_job(volume, Path('.'), Path('/usb'))(Job('copy', None))
+                    destination.assert_not_called()
+
+    def test_skipped_links_and_special_files_cannot_block_windows_name_validation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'test').write_text('one')
+            (root / 'Test').symlink_to('/not-copied')
+            (root / 'NUL').symlink_to('/not-copied')
+            os.mkfifo(root / 'CON')
+            result = plan(root, '.', windows=True)
+            self.assertEqual(result, {'files': 1, 'bytes': 3, 'skipped': 3, 'directory': True})
+
     def test_fat32_size_rejected_without_reading_contents(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

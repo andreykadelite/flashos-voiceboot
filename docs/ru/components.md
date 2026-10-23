@@ -2,13 +2,14 @@
 
 [English](../en/components.md) · [Главная](../../README.md)
 
-FlashOS 2026.10.13.2; установщик 1.0.8. Результаты сборки и проверки указаны в [отчёте](testing.md). Точные версии всех Linux-пакетов находятся в [packages.tsv](../../metadata/packages.tsv), соответствие исходным пакетам — в [debian-packages.json](../../metadata/debian-packages.json).
+FlashOS 2026.10.22.2; установщик 1.0.10. Результаты сборки и проверки указаны в [отчёте](testing.md). Точные версии всех Linux-пакетов находятся в [packages.tsv](../../metadata/packages.tsv), соответствие исходным пакетам — в [debian-packages.json](../../metadata/debian-packages.json).
 
 | Компонент | Версия | Назначение |
 | --- | --- | --- |
 | Debian | 13.6, trixie и backports | Основа live-системы |
 | Загружаемое ядро Linux | 7.2.6-1~bpo13+1 | Драйверы и работа оборудования |
 | Ventoy | 1.1.17 | BIOS/UEFI и запуск ISO |
+| GTK / VTE / Bash | 3.24.49 / 0.80.1 / 5.2.37 | Полноценный терминал live-системы с озвучкой |
 | RHVoice | 1.18.4 | Речь меню и Orca; Елена по умолчанию |
 | eSpeak NG | 1.52.0+dfsg-5 | Резервная речь меню и доступный синтезатор Orca |
 | Orca | 48.1-1+deb13u2 | Экранный диктор внешних приложений |

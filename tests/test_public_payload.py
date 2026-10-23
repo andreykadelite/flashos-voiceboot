@@ -57,6 +57,14 @@ class PublicPayload(unittest.TestCase):
     def system_proof(self):
         source = self.put('src/menu.py', 'current source')
         image = self.root / 'dist/usb/flashos/filesystem.squashfs'
+        boot_names = set(payload.BOOT_STAGED_CONFIGS) | set(payload.BOOT_ROOT_CONFIGS) | {'oneshot.cfg'}
+        for name in boot_names:
+            self.put('boot/' + name, 'reviewed ' + name + '\n')
+        for name, targets in payload.BOOT_STAGED_CONFIGS.items():
+            for target in targets:
+                self.put(target, (self.root / 'boot' / name).read_text(encoding='utf-8'))
+        self.put('dist/ventoy.disk.img.xz', 'prepared Ventoy image')
+        self.put('dist/ventoy-efi.img', 'matching raw Ventoy image')
         for section in ('usb', 'boot'):
             self.put('dist/' + section + '/flashos/flashos.marker', 'FlashOS test-version\n')
         for name in ('vmlinuz', 'initrd'):
@@ -64,9 +72,15 @@ class PublicPayload(unittest.TestCase):
         report = {'app_store': {'verified': True, 'filesystem_sha256': hashlib.sha256((self.root / 'dist/usb/flashos/filesystem.squashfs').read_bytes()).hexdigest()}, 'sources_match': True, 'no_test_fixture': True, 'system_version': 'test-version',
                   'sources_sha256': {'menu.py': hashlib.sha256(source.read_bytes()).hexdigest()},
                   'squashfs_sha256': hashlib.sha256(image.read_bytes()).hexdigest(),
+                  'boot_sources_match': True,
+                  'boot_sources_sha256': {name: hashlib.sha256((self.root / 'boot' / name).read_bytes()).hexdigest()
+                                         for name in boot_names},
+                  'boot_artifact_sha256': {name: hashlib.sha256((self.root / name).read_bytes()).hexdigest()
+                                           for name in payload.BOOT_ARTIFACTS},
                   'hardware': {'verified': True, 'artifact_sha256': {
                       name: hashlib.sha256((self.root / 'dist/usb/flashos' / name).read_bytes()).hexdigest()
                       for name in ('filesystem.squashfs', 'vmlinuz', 'initrd')}}}
+        report['terminal'] = {'verified': True, 'filesystem_sha256': hashlib.sha256(image.read_bytes()).hexdigest()}
         self.put('dist/toolkit-build-verification.json', json.dumps(report))
         return source, image
 
@@ -92,6 +106,93 @@ class PublicPayload(unittest.TestCase):
                     report_path.write_text(json.dumps(report), encoding='utf-8')
                     source.write_bytes(checkout)
                     payload.verified_system(self.root, 'test-version')
+
+    def test_all_boot_source_edits_require_new_certification(self):
+        self.system_proof()
+        for source in (self.root / 'boot').iterdir():
+            original = source.read_bytes()
+            source.write_bytes(original + b'changed after verification\n')
+            with self.subTest(source=source.name), self.assertRaisesRegex(ValueError, 'Boot sources'):
+                payload.verified_system(self.root, 'test-version')
+            source.write_bytes(original)
+        added = self.put('boot/new-config.cfg', 'new input')
+        with self.assertRaisesRegex(ValueError, 'Boot sources'):
+            payload.verified_system(self.root, 'test-version')
+        added.unlink()
+        source.unlink()
+        with self.assertRaisesRegex(ValueError, 'Boot sources'):
+            payload.verified_system(self.root, 'test-version')
+
+    def test_boot_source_line_endings_allow_transport_but_keep_other_bytes(self):
+        self.system_proof()
+        for source in (self.root / 'boot').iterdir():
+            original = source.read_bytes().replace(b'\r\n', b'\n')
+            source.write_bytes(original.replace(b'\n', b'\r\n'))
+        payload.verified_system(self.root, 'test-version')
+        source.write_bytes(original.replace(b'\n', b'\r\r\n'))
+        with self.assertRaisesRegex(ValueError, 'Boot sources'):
+            payload.verified_system(self.root, 'test-version')
+
+    def test_boot_artifacts_cannot_change_after_certification(self):
+        self.system_proof()
+        for name in payload.BOOT_ARTIFACTS:
+            target = self.root / name
+            original = target.read_bytes()
+            target.write_bytes(original + b'changed')
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                payload.verified_system(self.root, 'test-version')
+            target.write_bytes(original)
+
+    def test_staged_boot_text_allows_line_ending_transport(self):
+        self.system_proof()
+        for targets in payload.BOOT_STAGED_CONFIGS.values():
+            for name in targets:
+                target = self.root / name
+                content = target.read_bytes().replace(b'\r\n', b'\n')
+                target.write_bytes(content.replace(b'\n', b'\r\n'))
+        payload.verified_system(self.root, 'test-version')
+
+    def test_certification_requires_current_staged_config_in_both_efi_locations(self):
+        self.system_proof()
+        report_path = self.root / 'dist/toolkit-build-verification.json'
+        original_report = json.loads(report_path.read_text(encoding='utf-8'))
+        for targets in payload.BOOT_STAGED_CONFIGS.values():
+            for name in targets:
+                target = self.root / name
+                original = target.read_bytes()
+                target.write_bytes(b'old boot configuration')
+                report = {**original_report, 'boot_artifact_sha256': {
+                    **original_report['boot_artifact_sha256'], name: hashlib.sha256(target.read_bytes()).hexdigest()}}
+                report_path.write_text(json.dumps(report), encoding='utf-8')
+                with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'Stale boot configuration'):
+                    payload.verified_system(self.root, 'test-version')
+                target.write_bytes(original)
+                report_path.write_text(json.dumps(original_report), encoding='utf-8')
+
+    def test_old_reports_without_boot_certification_are_rejected(self):
+        self.system_proof()
+        report_path = self.root / 'dist/toolkit-build-verification.json'
+        original = json.loads(report_path.read_text(encoding='utf-8'))
+        for key in ('boot_sources_match', 'boot_sources_sha256', 'boot_artifact_sha256'):
+            report = dict(original)
+            report.pop(key)
+            report_path.write_text(json.dumps(report), encoding='utf-8')
+            with self.subTest(key=key), self.assertRaisesRegex(ValueError, 'Boot'):
+                payload.verified_system(self.root, 'test-version')
+
+    def test_terminal_runtime_requires_certification_for_the_same_image(self):
+        self.system_proof()
+        report_path = self.root / 'dist/toolkit-build-verification.json'
+        original = json.loads(report_path.read_text(encoding='utf-8'))
+        for record in (None, {}, {'verified': False}, {'verified': True, 'filesystem_sha256': 'old'}):
+            report = dict(original)
+            if record is None:
+                report.pop('terminal')
+            else:
+                report['terminal'] = record
+            report_path.write_text(json.dumps(report), encoding='utf-8')
+            with self.subTest(record=record), self.assertRaisesRegex(ValueError, 'Terminal runtime'):
+                payload.verified_system(self.root, 'test-version')
 
     def test_python_source_other_bytes_cannot_be_hidden_by_line_ending_equivalence(self):
         certified = b"VALUE = 'same code'\nprint(VALUE)\n"
@@ -135,7 +236,10 @@ class PublicPayload(unittest.TestCase):
         report = json.loads(report_path.read_text(encoding='utf-8'))
         digest = hashlib.sha256(binary).hexdigest()
         report['squashfs_sha256'] = report['app_store']['filesystem_sha256'] = digest
+        report['terminal']['filesystem_sha256'] = digest
         report['hardware']['artifact_sha256'] = {name: digest for name in ('filesystem.squashfs', 'vmlinuz', 'initrd')}
+        for name in ('vmlinuz', 'initrd'):
+            report['boot_artifact_sha256']['dist/boot/flashos/' + name] = digest
         report_path.write_text(json.dumps(report), encoding='utf-8')
         payload.verified_system(self.root, 'test-version')
         for target in (image, self.root / 'dist/usb/flashos/vmlinuz', self.root / 'dist/usb/flashos/initrd'):

@@ -155,3 +155,31 @@ Alt+F8 starts resizing. Enter confirms, Escape cancels the change. Alt+F4 closes
 the active window; respond to the application’s save prompt if necessary.
 Ctrl+Alt+Escape ends the external session and returns to FlashOS. The spoken help
 also lists these shortcuts.
+
+## Spoken system terminal
+
+![Bash terminal with screen reading, automatic speech, stop, help and close controls](../images/terminal.png)
+
+Open Tools → the spoken terminal. It runs Bash in the live system as root,
+independently of the application store. GTK/VTE provides a real PTY terminal,
+history, Tab completion, interactive applications and the normal Ctrl+C/Ctrl+D
+keys. The graphical display is required; console fallback retains the existing
+spoken diagnostic tools.
+
+Enter reads and submits a command. Ctrl+Shift+A toggles new-output reading;
+Ctrl+Shift+Space stops speech and its queue. Ctrl+Shift+R reads the visible
+screen, Ctrl+Shift+L the cursor line, and Ctrl+Shift+Up/Down reviews a retained
+history snapshot. Ctrl+Shift+Home selects its first line; Ctrl+Shift+End refreshes
+it and reads the last. Shift+PageUp/PageDown scrolls the terminal itself.
+
+Ctrl+Shift+E changes word/character input echo. Ctrl+Tab focuses the toolbar;
+Tab chooses a button and Escape returns to terminal input. Ctrl+Shift+C/V
+copies/pastes, Ctrl+plus/minus changes the font, Ctrl+Shift+F6 changes audio,
+and Ctrl+Shift+F1 opens help. Multiline paste and Ctrl+Shift+Q closing require
+confirmation. Closing the production session stops its child processes.
+
+Hidden program input is not spoken. Turn off input echo and automatic reading
+before entering commands containing secrets. Session history is kept in memory,
+with up to 5000 terminal rows; applications may save their own files. Speech is
+bounded and reports omissions. Use `less` or redirect output to a chosen file
+for large logs.

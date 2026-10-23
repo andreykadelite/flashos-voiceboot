@@ -254,6 +254,47 @@ class UtilityUITests(unittest.TestCase):
 
 
 class ClientTests(unittest.TestCase):
+    def test_failed_service_cannot_confirm_preferences_even_after_success_json(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            root = base / 'root'
+            helper = root / 'opt/flashos-store/preferences.py'
+            helper.parent.mkdir(parents=True)
+            helper.write_text('test')
+            environment = mock.Mock(root=root)
+            environment.lock.return_value = mock.MagicMock()
+            job = mock.Mock()
+            job.command.return_value = (1, json.dumps({'format': 1, 'ok': True,
+                                                      'data': {'message': 'saved'}}))
+            with mock.patch.object(utilities, 'RUNTIME_BASE', base / 'runtime'), \
+                 mock.patch('utilities.os.chown', create=True), \
+                 mock.patch('utilities.subprocess.run', return_value=mock.Mock(returncode=0)) as stop:
+                with self.assertRaisesRegex(RuntimeError, 'код 1'):
+                    utilities.PreferencesClient(environment).call(job, 'set', {'key': 'contrast', 'value': True})
+            job.cancel_event.clear.assert_not_called()
+            self.assertNotIn('payload', job.__dict__)
+            self.assertFalse(job.cancellation_deferred)
+            self.assertEqual(stop.call_args.args[0][:2], ['systemctl', 'stop'])
+            self.assertEqual(list((base / 'runtime').iterdir()), [])
+
+    def test_failed_service_preserves_helper_error_and_cleans_runtime(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            helper = base / 'root/opt/flashos-store/preferences.py'
+            helper.parent.mkdir(parents=True)
+            helper.write_text('test')
+            environment = mock.Mock(root=base / 'root')
+            environment.lock.return_value = mock.MagicMock()
+            job = mock.Mock()
+            job.command.return_value = (1, json.dumps({'format': 1, 'ok': False,
+                                                      'error': 'profile commit failed'}))
+            with mock.patch.object(utilities, 'RUNTIME_BASE', base / 'runtime'), \
+                 mock.patch('utilities.os.chown', create=True), \
+                 mock.patch('utilities.subprocess.run', return_value=mock.Mock(returncode=0)):
+                with self.assertRaisesRegex(RuntimeError, 'profile commit failed'):
+                    utilities.PreferencesClient(environment).call(job, 'set', {'key': 'contrast', 'value': True})
+            self.assertEqual(list((base / 'runtime').iterdir()), [])
+
     def test_profile_runs_with_nonroot_identity_private_dbus_and_no_x_authorization(self):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)

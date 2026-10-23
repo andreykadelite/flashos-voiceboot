@@ -6,6 +6,12 @@
     "source_version": "3.152"
   },
   {
+    "binary": "adwaita-icon-theme",
+    "binary_version": "48.1-1",
+    "source": "adwaita-icon-theme",
+    "source_version": "48.1-1"
+  },
+  {
     "binary": "alsa-firmware-loaders",
     "binary_version": "1.2.14-1",
     "source": "alsa-tools",
@@ -40,6 +46,12 @@
     "binary_version": "3.0.3",
     "source": "apt",
     "source_version": "3.0.3"
+  },
+  {
+    "binary": "at-spi2-common",
+    "binary_version": "2.56.2-1+deb13u2",
+    "source": "at-spi2-core",
+    "source_version": "2.56.2-1+deb13u2"
   },
   {
     "binary": "atmel-firmware",
@@ -492,6 +504,12 @@
     "source_version": "1:1.5-13"
   },
   {
+    "binary": "fontconfig",
+    "binary_version": "2.15.0-2.3",
+    "source": "fontconfig",
+    "source_version": "2.15.0-2.3"
+  },
+  {
     "binary": "fontconfig-config",
     "binary_version": "2.15.0-2.3",
     "source": "fontconfig",
@@ -544,6 +562,60 @@
     "binary_version": "0.23.1-2",
     "source": "gettext",
     "source_version": "0.23.1-2"
+  },
+  {
+    "binary": "gir1.2-atk-1.0:amd64",
+    "binary_version": "2.56.2-1+deb13u2",
+    "source": "at-spi2-core",
+    "source_version": "2.56.2-1+deb13u2"
+  },
+  {
+    "binary": "gir1.2-freedesktop:amd64",
+    "binary_version": "1.84.0-1",
+    "source": "gobject-introspection",
+    "source_version": "1.84.0-1"
+  },
+  {
+    "binary": "gir1.2-gdkpixbuf-2.0:amd64",
+    "binary_version": "2.42.12+dfsg-4+deb13u1",
+    "source": "gdk-pixbuf",
+    "source_version": "2.42.12+dfsg-4+deb13u1"
+  },
+  {
+    "binary": "gir1.2-girepository-2.0:amd64",
+    "binary_version": "1.84.0-1",
+    "source": "gobject-introspection",
+    "source_version": "1.84.0-1"
+  },
+  {
+    "binary": "gir1.2-glib-2.0:amd64",
+    "binary_version": "2.84.4-3~deb13u5",
+    "source": "glib2.0",
+    "source_version": "2.84.4-3~deb13u5"
+  },
+  {
+    "binary": "gir1.2-gtk-3.0:amd64",
+    "binary_version": "3.24.49-3",
+    "source": "gtk+3.0",
+    "source_version": "3.24.49-3"
+  },
+  {
+    "binary": "gir1.2-harfbuzz-0.0:amd64",
+    "binary_version": "10.2.0-1+deb13u1",
+    "source": "harfbuzz",
+    "source_version": "10.2.0-1+deb13u1"
+  },
+  {
+    "binary": "gir1.2-pango-1.0:amd64",
+    "binary_version": "1.56.3-1",
+    "source": "pango1.0",
+    "source_version": "1.56.3-1"
+  },
+  {
+    "binary": "gir1.2-vte-2.91:amd64",
+    "binary_version": "0.80.1-1",
+    "source": "vte2.91",
+    "source_version": "0.80.1-1"
   },
   {
     "binary": "gnupg",
@@ -636,6 +708,12 @@
     "source_version": "2.12-9+deb13u2"
   },
   {
+    "binary": "gtk-update-icon-cache",
+    "binary_version": "4.18.6+ds-2",
+    "source": "gtk4",
+    "source_version": "4.18.6+ds-2"
+  },
+  {
     "binary": "gzip",
     "binary_version": "1.13-1",
     "source": "gzip",
@@ -646,6 +724,12 @@
     "binary_version": "9.65+ds-1.1",
     "source": "hdparm",
     "source_version": "9.65+ds-1.1"
+  },
+  {
+    "binary": "hicolor-icon-theme",
+    "binary_version": "0.18-2",
+    "source": "hicolor-icon-theme",
+    "source_version": "0.18-2"
   },
   {
     "binary": "hostname",
@@ -798,6 +882,24 @@
     "source_version": "0.8-6"
   },
   {
+    "binary": "libatk-adaptor:amd64",
+    "binary_version": "2.56.2-1+deb13u2",
+    "source": "at-spi2-core",
+    "source_version": "2.56.2-1+deb13u2"
+  },
+  {
+    "binary": "libatk-bridge2.0-0t64:amd64",
+    "binary_version": "2.56.2-1+deb13u2",
+    "source": "at-spi2-core",
+    "source_version": "2.56.2-1+deb13u2"
+  },
+  {
+    "binary": "libatk1.0-0t64:amd64",
+    "binary_version": "2.56.2-1+deb13u2",
+    "source": "at-spi2-core",
+    "source_version": "2.56.2-1+deb13u2"
+  },
+  {
     "binary": "libatomic1:amd64",
     "binary_version": "14.2.0-19",
     "source": "gcc-14",
@@ -808,6 +910,12 @@
     "binary_version": "1.2.16.1-1~bpo13+1",
     "source": "alsa-lib",
     "source_version": "1.2.16.1-1~bpo13+1"
+  },
+  {
+    "binary": "libatspi2.0-0t64:amd64",
+    "binary_version": "2.56.2-1+deb13u2",
+    "source": "at-spi2-core",
+    "source_version": "2.56.2-1+deb13u2"
   },
   {
     "binary": "libattr1:amd64",
@@ -900,6 +1008,18 @@
     "source_version": "2.41-12+deb13u3"
   },
   {
+    "binary": "libcairo-gobject2:amd64",
+    "binary_version": "1.18.4-1+b1",
+    "source": "cairo",
+    "source_version": "1.18.4-1"
+  },
+  {
+    "binary": "libcairo2:amd64",
+    "binary_version": "1.18.4-1+b1",
+    "source": "cairo",
+    "source_version": "1.18.4-1"
+  },
+  {
     "binary": "libcap-ng0:amd64",
     "binary_version": "0.8.5-4+b1",
     "source": "libcap-ng",
@@ -916,6 +1036,18 @@
     "binary_version": "1:2.75-10+deb13u1+b1",
     "source": "libcap2",
     "source_version": "1:2.75-10+deb13u1"
+  },
+  {
+    "binary": "libcloudproviders0:amd64",
+    "binary_version": "0.3.6-2",
+    "source": "libcloudproviders",
+    "source_version": "0.3.6-2"
+  },
+  {
+    "binary": "libcolord2:amd64",
+    "binary_version": "1.4.7-3",
+    "source": "colord",
+    "source_version": "1.4.7-3"
   },
   {
     "binary": "libcom-err2:amd64",
@@ -936,6 +1068,12 @@
     "source_version": "1:4.4.38-1"
   },
   {
+    "binary": "libcups2t64:amd64",
+    "binary_version": "2.4.10-3+deb13u2",
+    "source": "cups",
+    "source_version": "2.4.10-3+deb13u2"
+  },
+  {
     "binary": "libcurl3t64-gnutls:amd64",
     "binary_version": "8.14.1-2+deb13u4",
     "source": "curl",
@@ -946,6 +1084,12 @@
     "binary_version": "8.14.1-2+deb13u4",
     "source": "curl",
     "source_version": "8.14.1-2+deb13u4"
+  },
+  {
+    "binary": "libdatrie1:amd64",
+    "binary_version": "0.2.13-3+b1",
+    "source": "libdatrie",
+    "source_version": "0.2.13-3"
   },
   {
     "binary": "libdb5.3t64:amd64",
@@ -970,6 +1114,12 @@
     "binary_version": "0.280",
     "source": "cdebconf",
     "source_version": "0.280"
+  },
+  {
+    "binary": "libdeflate0:amd64",
+    "binary_version": "1.23-2",
+    "source": "libdeflate",
+    "source_version": "1.23-2"
   },
   {
     "binary": "libdevmapper1.02.1:amd64",
@@ -1128,6 +1278,12 @@
     "source_version": "2.13.3+dfsg-1+deb13u1"
   },
   {
+    "binary": "libfribidi0:amd64",
+    "binary_version": "1.0.16-1",
+    "source": "fribidi",
+    "source_version": "1.0.16-1"
+  },
+  {
     "binary": "libfstrm0:amd64",
     "binary_version": "0.6.1-1+b3",
     "source": "fstrm",
@@ -1158,6 +1314,24 @@
     "source_version": "1.11.0-7+deb13u1"
   },
   {
+    "binary": "libgdk-pixbuf-2.0-0:amd64",
+    "binary_version": "2.42.12+dfsg-4+deb13u1",
+    "source": "gdk-pixbuf",
+    "source_version": "2.42.12+dfsg-4+deb13u1"
+  },
+  {
+    "binary": "libgdk-pixbuf2.0-common",
+    "binary_version": "2.42.12+dfsg-4+deb13u1",
+    "source": "gdk-pixbuf",
+    "source_version": "2.42.12+dfsg-4+deb13u1"
+  },
+  {
+    "binary": "libgirepository-1.0-1:amd64",
+    "binary_version": "1.84.0-1",
+    "source": "gobject-introspection",
+    "source_version": "1.84.0-1"
+  },
+  {
     "binary": "libgl1:amd64",
     "binary_version": "1.7.0-1+b2",
     "source": "libglvnd",
@@ -1177,9 +1351,9 @@
   },
   {
     "binary": "libglib2.0-0t64:amd64",
-    "binary_version": "2.84.4-3~deb13u3",
+    "binary_version": "2.84.4-3~deb13u5",
     "source": "glib2.0",
-    "source_version": "2.84.4-3~deb13u3"
+    "source_version": "2.84.4-3~deb13u5"
   },
   {
     "binary": "libglibmm-2.4-1t64:amd64",
@@ -1230,16 +1404,46 @@
     "source_version": "1.51-4"
   },
   {
+    "binary": "libgraphite2-3:amd64",
+    "binary_version": "1.3.14-2+deb13u1",
+    "source": "graphite2",
+    "source_version": "1.3.14-2+deb13u1"
+  },
+  {
     "binary": "libgssapi-krb5-2:amd64",
     "binary_version": "1.21.3-5+deb13u1",
     "source": "krb5",
     "source_version": "1.21.3-5+deb13u1"
   },
   {
+    "binary": "libgtk-3-0t64:amd64",
+    "binary_version": "3.24.49-3",
+    "source": "gtk+3.0",
+    "source_version": "3.24.49-3"
+  },
+  {
+    "binary": "libgtk-3-common",
+    "binary_version": "3.24.49-3",
+    "source": "gtk+3.0",
+    "source_version": "3.24.49-3"
+  },
+  {
     "binary": "libgudev-1.0-0:amd64",
     "binary_version": "238-6",
     "source": "libgudev",
     "source_version": "238-6"
+  },
+  {
+    "binary": "libharfbuzz-gobject0:amd64",
+    "binary_version": "10.2.0-1+deb13u1",
+    "source": "harfbuzz",
+    "source_version": "10.2.0-1+deb13u1"
+  },
+  {
+    "binary": "libharfbuzz0b:amd64",
+    "binary_version": "10.2.0-1+deb13u1",
+    "source": "harfbuzz",
+    "source_version": "10.2.0-1+deb13u1"
   },
   {
     "binary": "libhd21t64:amd64",
@@ -1314,6 +1518,12 @@
     "source_version": "2.14-2"
   },
   {
+    "binary": "libjbig0:amd64",
+    "binary_version": "2.1-6.1+b2",
+    "source": "jbigkit",
+    "source_version": "2.1-6.1"
+  },
+  {
     "binary": "libjemalloc2:amd64",
     "binary_version": "5.3.0-3",
     "source": "jemalloc",
@@ -1386,10 +1596,22 @@
     "source_version": "2.41.5-0+deb13u1"
   },
   {
+    "binary": "liblcms2-2:amd64",
+    "binary_version": "2.16-2+deb13u2",
+    "source": "lcms2",
+    "source_version": "2.16-2+deb13u2"
+  },
+  {
     "binary": "libldap2:amd64",
     "binary_version": "2.6.10+dfsg-1",
     "source": "openldap",
     "source_version": "2.6.10+dfsg-1"
+  },
+  {
+    "binary": "liblerc4:amd64",
+    "binary_version": "4.0.0+ds-5",
+    "source": "lerc",
+    "source_version": "4.0.0+ds-5"
   },
   {
     "binary": "liblilv-0-0:amd64",
@@ -1656,6 +1878,30 @@
     "source_version": "1.7.0-5"
   },
   {
+    "binary": "libpango-1.0-0:amd64",
+    "binary_version": "1.56.3-1",
+    "source": "pango1.0",
+    "source_version": "1.56.3-1"
+  },
+  {
+    "binary": "libpangocairo-1.0-0:amd64",
+    "binary_version": "1.56.3-1",
+    "source": "pango1.0",
+    "source_version": "1.56.3-1"
+  },
+  {
+    "binary": "libpangoft2-1.0-0:amd64",
+    "binary_version": "1.56.3-1",
+    "source": "pango1.0",
+    "source_version": "1.56.3-1"
+  },
+  {
+    "binary": "libpangoxft-1.0-0:amd64",
+    "binary_version": "1.56.3-1",
+    "source": "pango1.0",
+    "source_version": "1.56.3-1"
+  },
+  {
     "binary": "libparted2t64:amd64",
     "binary_version": "3.6-5",
     "source": "parted",
@@ -1872,6 +2118,12 @@
     "source_version": "1.48-2"
   },
   {
+    "binary": "libsharpyuv0:amd64",
+    "binary_version": "1.5.0-0.1",
+    "source": "libwebp",
+    "source_version": "1.5.0-0.1"
+  },
+  {
     "binary": "libsigc++-2.0-0v5:amd64",
     "binary_version": "2.12.1-3",
     "source": "libsigc++-2.0",
@@ -1992,6 +2244,24 @@
     "source_version": "1.31-1"
   },
   {
+    "binary": "libthai-data",
+    "binary_version": "0.1.29-2",
+    "source": "libthai",
+    "source_version": "0.1.29-2"
+  },
+  {
+    "binary": "libthai0:amd64",
+    "binary_version": "0.1.29-2+b1",
+    "source": "libthai",
+    "source_version": "0.1.29-2"
+  },
+  {
+    "binary": "libtiff6:amd64",
+    "binary_version": "4.7.0-3+deb13u3",
+    "source": "tiff",
+    "source_version": "4.7.0-3+deb13u3"
+  },
+  {
     "binary": "libtinfo6:amd64",
     "binary_version": "6.5+20250216-2",
     "source": "ncurses",
@@ -2070,6 +2340,18 @@
     "source_version": "1.3.7-3"
   },
   {
+    "binary": "libvte-2.91-0:amd64",
+    "binary_version": "0.80.1-1",
+    "source": "vte2.91",
+    "source_version": "0.80.1-1"
+  },
+  {
+    "binary": "libvte-2.91-common",
+    "binary_version": "0.80.1-1",
+    "source": "vte2.91",
+    "source_version": "0.80.1-1"
+  },
+  {
     "binary": "libvulkan1:amd64",
     "binary_version": "1.4.309.0-1",
     "source": "vulkan-loader",
@@ -2094,10 +2376,28 @@
     "source_version": "1.23.1-3"
   },
   {
+    "binary": "libwayland-cursor0:amd64",
+    "binary_version": "1.23.1-3",
+    "source": "wayland",
+    "source_version": "1.23.1-3"
+  },
+  {
+    "binary": "libwayland-egl1:amd64",
+    "binary_version": "1.23.1-3",
+    "source": "wayland",
+    "source_version": "1.23.1-3"
+  },
+  {
     "binary": "libwayland-server0:amd64",
     "binary_version": "1.23.1-3",
     "source": "wayland",
     "source_version": "1.23.1-3"
+  },
+  {
+    "binary": "libwebp7:amd64",
+    "binary_version": "1.5.0-0.1",
+    "source": "libwebp",
+    "source_version": "1.5.0-0.1"
   },
   {
     "binary": "libwebrtc-audio-processing-1-3:amd64",
@@ -2172,6 +2472,12 @@
     "source_version": "1.17.0-2"
   },
   {
+    "binary": "libxcb-render0:amd64",
+    "binary_version": "1.17.0-2+b1",
+    "source": "libxcb",
+    "source_version": "1.17.0-2"
+  },
+  {
     "binary": "libxcb-shm0:amd64",
     "binary_version": "1.17.0-2+b1",
     "source": "libxcb",
@@ -2196,6 +2502,12 @@
     "source_version": "1.17.0-2"
   },
   {
+    "binary": "libxcomposite1:amd64",
+    "binary_version": "1:0.4.6-1",
+    "source": "libxcomposite",
+    "source_version": "1:0.4.6-1"
+  },
+  {
     "binary": "libxcursor1:amd64",
     "binary_version": "1:1.2.3-1",
     "source": "libxcursor",
@@ -2206,6 +2518,12 @@
     "binary_version": "0.1.3-1",
     "source": "libxcvt",
     "source_version": "0.1.3-1"
+  },
+  {
+    "binary": "libxdamage1:amd64",
+    "binary_version": "1:1.1.6-1+b2",
+    "source": "libxdamage",
+    "source_version": "1:1.1.6-1"
   },
   {
     "binary": "libxdmcp6:amd64",
@@ -2242,6 +2560,18 @@
     "binary_version": "2:1.8.2-1",
     "source": "libxi",
     "source_version": "2:1.8.2-1"
+  },
+  {
+    "binary": "libxinerama1:amd64",
+    "binary_version": "2:1.1.4-3+b4",
+    "source": "libxinerama",
+    "source_version": "2:1.1.4-3"
+  },
+  {
+    "binary": "libxkbcommon0:amd64",
+    "binary_version": "1.7.0-2",
+    "source": "libxkbcommon",
+    "source_version": "1.7.0-2"
   },
   {
     "binary": "libxkbfile1:amd64",
@@ -2664,6 +2994,12 @@
     "source_version": "1.4.0-1"
   },
   {
+    "binary": "python3-gi",
+    "binary_version": "3.50.0-4+b1",
+    "source": "pygobject",
+    "source_version": "3.50.0-4"
+  },
+  {
     "binary": "python3-minimal",
     "binary_version": "3.13.5-1",
     "source": "python3-defaults",
@@ -2722,6 +3058,12 @@
     "binary_version": "1.48-2",
     "source": "sg3-utils",
     "source_version": "1.48-2"
+  },
+  {
+    "binary": "shared-mime-info",
+    "binary_version": "2.4-5+b2",
+    "source": "shared-mime-info",
+    "source_version": "2.4-5"
   },
   {
     "binary": "shim-helpers-amd64-signed",

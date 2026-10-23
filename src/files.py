@@ -110,7 +110,7 @@ def copy_job(volume, relative, medium):
         check_device(volume.device, volume.live_disk)
         volume.verify(job)
         _, fstype = medium_info(job, Path(medium), volume.live_disk)
-        options = ['--windows'] if fstype in ('exfat', 'vfat', 'ntfs', 'fuseblk') else []
+        options = ['--windows'] if fstype in ('exfat', 'vfat', 'ntfs', 'ntfs3', 'fuseblk') else []
         if fstype == 'vfat':
             options += ['--fat32']
         job.update('Подсчёт файлов и проверка имён.')

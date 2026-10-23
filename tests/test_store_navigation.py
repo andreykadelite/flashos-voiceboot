@@ -31,6 +31,12 @@ class NavigationTests(unittest.TestCase):
                 store.task.assert_called_once_with('Чтение магазина', 'updates', source=source)
                 store.transaction.assert_not_called()
 
+    def test_update_all_plans_every_dependency_instead_of_only_visible_apps(self):
+        store = self.store([('upgrade-all', None), None], tab=2)
+        store.task.return_value = {'entries': [{'package': 'libeditor', 'version': '2'}]}
+        store.store()
+        store.transaction.assert_called_once_with('upgrade', [])
+
     def test_source_change_in_updates_refreshes_the_same_tab(self):
         store = self.store([('__tab__', 2), ('source', None), 'backports', None])
         store.store()

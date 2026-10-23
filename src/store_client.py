@@ -91,7 +91,7 @@ class StoreClient:
                     job.log(line)
                     if not line.startswith('{'):
                         job.update(line[:250])
-                _, output = job.command(command, timeout=7200, accepted=None,
+                code, output = job.command(command, timeout=7200, accepted=None,
                     output_limit=2 * 1024 * 1024, cleanup=mutation, resource='applications',
                     log_output=False, on_line=progress)
                 try:
@@ -102,6 +102,9 @@ class StoreClient:
                     raise error from None
                 except RuntimeError as error:
                     raise RuntimeError(redact_proxy(str(error), proxy_environment)) from None
+                if code != 0:
+                    raise RuntimeError('Служба магазина завершилась с ошибкой. Код: ' + str(code) +
+                                       '. Результат не подтверждён; откройте отчёт.')
                 if mutation:
                     job.cancel_event.clear()
                 job.payload = data

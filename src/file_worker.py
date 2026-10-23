@@ -63,13 +63,16 @@ def plan(root, relative, windows=False, fat32=False):
             names = set()
             with os.scandir(current) as entries:
                 for entry in entries:
+                    pending.append(current / entry.name)
                     if windows:
+                        child = entry.stat(follow_symlinks=False)
+                        if child.st_dev != device or not (stat.S_ISDIR(child.st_mode) or stat.S_ISREG(child.st_mode)):
+                            continue
                         normalized = unicodedata.normalize('NFC', entry.name).casefold()
                         if normalized in names or not compatible_name(entry.name):
                             raise ValueError('Имена нельзя без потерь перенести на раздел Windows: ' + str(current / entry.name) +
                                              '. Выберите отдельные файлы или сохраните накопитель в образ.')
                         names.add(normalized)
-                    pending.append(current / entry.name)
         elif stat.S_ISREG(info.st_mode):
             if fat32 and info.st_size >= 4 * 1024**3:
                 raise ValueError('Файл больше предела FAT32: ' + str(current))

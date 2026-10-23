@@ -132,7 +132,7 @@ class Operation:
             if device_lost.is_set():
                 self.terminal = False
                 raise RuntimeError('Связь с USB-накопителем потеряна. Все процессы записи остановлены. Подключите флешку и повторите операцию.')
-            if pending_complete is not None and code == 0:
+            if pending_complete is not None and code == 0 and not self.terminal:
                 if self.request['action'] != 'format':
                     verify_boot(lease, self.work, bundle.manifest, self.emit, self.stop.is_set,
                                 self.request['style'] if self.request['action'] == 'install' else None)

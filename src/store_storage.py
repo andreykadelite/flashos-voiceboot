@@ -269,6 +269,8 @@ class StoreEnvironment:
                               accepted=None, log_output=False)
         if code == 0:
             raise RuntimeError('Папка хранилища занята другим подключением.')
+        if code != 1:
+            raise RuntimeError('Не удалось проверить папку подключения хранилища.')
         if self.mount.is_symlink():
             raise ValueError('Папка подключения является ссылкой.')
         self.mount.mkdir(mode=0o700, exist_ok=True)
@@ -463,13 +465,17 @@ class StoreEnvironment:
         creating = safe_path(self.medium, self.image.with_suffix('.ext4.creating'))
         if not creating.is_file():
             raise ValueError('Незавершённая подготовка не найдена.')
+        self._require_offline(job, creating)
+        return creating
+
+    def _require_offline(self, job, image):
+        """Never check, resize or move a file still used by another app root."""
         self.close(job)
         self._cleanup_stale_state(job)
-        _, loops = job.command(['losetup', '--associated', str(creating), '--noheadings',
+        _, loops = job.command(['losetup', '--associated', str(image), '--noheadings',
                                 '--output', 'NAME'], timeout=10, log_output=False)
         if loops.strip():
-            raise RuntimeError('Временный образ остаётся подключённым; его изменение запрещено.')
-        return creating
+            raise RuntimeError('Образ остаётся подключённым; его изменение запрещено.')
 
     def recover_preparation(self, job):
         """Finish only a clean, complete seed; never replace an existing store."""
@@ -635,7 +641,7 @@ class StoreEnvironment:
             self._validate(job)
             if not self.image.is_file():
                 raise ValueError('Хранилище ещё не создано.')
-            self.close(job)
+            self._require_offline(job, self.image)
             with writable(job, self.medium, self.live_disk):
                 _, kind = job.command(['blkid', '-p', '-s', 'TYPE', '-o', 'value',
                                       str(self.image)], timeout=10, log_output=False)
@@ -672,7 +678,7 @@ class StoreEnvironment:
             if size <= old:
                 raise ValueError('Новый размер должен быть больше прежнего. Уменьшение запрещено.')
             filesystem = self._validate(job, size_gib, size - old)
-            self.close(job)
+            self._require_offline(job, self.image)
             with writable(job, self.medium, self.live_disk):
                 code, _ = job.command(['e2fsck', '-f', '-n', str(self.image)], timeout=300,
                                       accepted=None, log_output=False)
@@ -721,6 +727,8 @@ def shutdown(job, medium, state=STATE):
     code, raw = job.command(['findmnt', '-J', '-R', '-M', str(mount),
                              '-o', 'TARGET,SOURCE,FSTYPE'], timeout=5, accepted=None,
                             cleanup=True, log_output=False)
+    if code not in (0, 1):
+        raise RuntimeError('Не удалось проверить подключение хранилища; паспорт сохранён.')
     if not attached:
         # Idempotent retry after detach succeeded but state unlink did not.
         if code != 1 or not recorded_image.is_file() or recorded_image.stat().st_dev != medium.stat().st_dev or data.get('source') != source:

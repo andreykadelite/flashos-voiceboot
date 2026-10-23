@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check tracked source boundaries and local links without external writes."""
+"""Check public source boundaries, including pending additions, without writes."""
 from pathlib import Path
 import re
 import subprocess
@@ -11,10 +11,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    tracked = subprocess.check_output(['git', 'ls-files', '-z'], cwd=ROOT).decode('utf-8').split('\0')
-    tracked = [name for name in tracked if name]
+    tracked = subprocess.check_output(['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+                                      cwd=ROOT).decode('utf-8').split('\0')
+    tracked = sorted({name for name in tracked if name})
     if not tracked:
-        raise RuntimeError('Stage the public source files before running this check')
+        raise RuntimeError('No public source files found in the checkout')
     errors = []
     inventoried = public_inventory(ROOT)
     def string_constant(filename, constant):
@@ -51,7 +52,7 @@ def main():
                     errors.append('Broken local link: ' + name + ' -> ' + target)
     if errors:
         raise SystemExit('\n'.join(errors))
-    print(f'Checked {len(tracked)} tracked files: source boundaries, credentials and local documentation links passed.')
+    print(f'Checked {len(tracked)} source files: source boundaries, credentials and local documentation links passed.')
 
 
 if __name__ == '__main__':

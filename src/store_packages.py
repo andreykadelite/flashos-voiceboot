@@ -260,12 +260,16 @@ def effective_source(package, source):
 
 def save_registry(old, plan):
     current = updated_registry(old, plan)
-    sources = {name: value for name, value in registry_sources().items() if name in current}
-    changed = {item['package']: item for item in plan['changes']}
+    # Dependencies need their backports origin even after the installed version
+    # disappears from current APT indexes. They remain outside the app registry.
+    sources = dict(registry_sources())
+    for item in plan['changes']:
+        if item['action'] == 'remove':
+            sources.pop(item['package'], None)
+        elif item.get('source'):
+            sources[item['package']] = item['source']
     for name in current:
-        if name in changed and changed[name].get('source'):
-            sources[name] = changed[name]['source']
-        elif name in plan['requested'] and plan['operation'] == 'install':
+        if name in plan['requested'] and plan['operation'] == 'install':
             sources.setdefault(name, plan['source'])
     atomic_json(STATE / 'state.json', {'format': 1, 'packages': sorted(current), 'sources': sources})
 
@@ -390,24 +394,54 @@ def package_info(package, version):
             'installed_bytes': int(version.installed_size), 'sources': origins}
 
 
+def catalog_scan_order(selected):
+    """Read compressed description records in storage order, with no new index.
+
+    Alphabetical package order repeatedly seeks backwards in compressed APT
+    lists. The public low-level cache exposes each translated record's key; it
+    only changes the read order, never which version or description is searched.
+    Fall back to the original order if a binding/record cannot supply the key.
+    """
+    if not selected:
+        return selected
+    try:
+        import apt_pkg
+        from apt.progress.base import OpProgress
+        records = apt_pkg.Cache(OpProgress())
+        keyed = []
+        for package, version in selected:
+            primitive = next(item for item in records[package.name].version_list
+                             if item.ver_str == version.version and item.arch == version.architecture)
+            package_file, index = primitive.translated_description.file_list[0]
+            keyed.append((package_file.id, index, package, version))
+        return [(package, version) for _file, _index, package, version in
+                sorted(keyed, key=lambda item: item[:2])]
+    except (ImportError, AttributeError, IndexError, KeyError, StopIteration,
+            TypeError, ValueError, OSError, SystemError):
+        return selected
+
+
 def catalog(query, source, offset, limit):
     query = query.strip().casefold()
     if len(query) > 250 or offset < 0 or offset > 200000 or not 1 <= limit <= 100:
         raise StoreError('Некорректные параметры поиска или страницы.')
     packages = cache(source)
-    found = []
-    total = 0
+    selected = []
     for package in sorted(packages, key=lambda item: (item.name != query, not item.name.startswith(query), item.name)):
         if protected_name(package.name):
             continue
         version = selected_version(package, source)
         if version is None:
             continue
+        selected.append((package, version))
+    matches = []
+    for package, version in catalog_scan_order(selected) if query else selected:
         if query and query not in (package.name + ' ' + (version.summary or '') + ' ' + (version.description or '')).casefold():
             continue
-        if offset <= total < offset + limit:
-            found.append(package_info(package, version))
-        total += 1
+        matches.append((package, version))
+    matches.sort(key=lambda item: (item[0].name != query, not item[0].name.startswith(query), item[0].name))
+    total = len(matches)
+    found = [package_info(package, version) for package, version in matches[offset:offset + limit]]
     return {'entries': found, 'total': total, 'offset': offset, 'limit': limit,
             'next_offset': offset + limit if offset + limit < total else None,
             'needs_refresh': not any(path.is_file() for path in LISTS.glob('*_Packages*'))}
@@ -476,6 +510,14 @@ def check_transaction_space(required, changes):
     return check_space(required, minimum_inodes=64 if removal_only(changes) else 2048)
 
 
+def required_space(changes, packages):
+    # Upgrades keep the old files while unpacking complete replacements.
+    download = sum(item['download_bytes'] for item in changes)
+    unpacked = sum(int(packages[item['package']].candidate.installed_size)
+                   for item in changes if item['to_version'])
+    return download + unpacked + (REMOVAL_RESERVE if removal_only(changes) else RESERVE)
+
+
 def make_plan(request):
     require_healthy()
     if not isinstance(request, dict):
@@ -532,10 +574,7 @@ def make_plan(request):
     changes = changes_from_cache(packages)
     allowed_changes(changes, baseline())
     download = sum(item['download_bytes'] for item in changes)
-    # Count complete new unpacked sizes, not merely net growth: upgrades need temporary space.
-    unpacked = sum(int(packages[item['package']].candidate.installed_size)
-                   for item in changes if item['to_version'])
-    required = download + unpacked + (REMOVAL_RESERVE if removal_only(changes) else RESERVE)
+    required = required_space(changes, packages)
     check_transaction_space(required, changes)
     require_snapshot(before)
     plan = {'format': 1, 'operation': operation, 'source': source, 'requested': requested,
@@ -692,20 +731,32 @@ def repair():
     if fixes:
         fix_plan = {'source': 'all', 'changes': fixes}
         simulate(fix_plan)
-        check_space(sum(item['download_bytes'] + max(0, item['installed_size_delta']) for item in fixes) + RESERVE)
+        check_transaction_space(required_space(fixes, packages), fixes)
         command(apt_arguments(fix_plan))
     changes = journal.get('plan', {}).get('changes', []) if journal else []
     if journal:
         allowed_changes(changes, baseline())
-        check_transaction_space(journal['plan']['required_bytes'], changes)
-        command(apt_arguments(journal['plan']))
+        current = cache(journal['plan']['source'])
+        unfinished = False
+        for item in changes:
+            package = current.get(item['package'])
+            actual = package.installed.version if package and package.is_installed else None
+            if actual != item['to_version']:
+                unfinished = True
+                break
+        # A crash after dpkg/verification can leave only the registry commit.
+        # Do not require the original installation budget after it was consumed.
+        if unfinished:
+            check_transaction_space(journal['plan']['required_bytes'], changes)
+            command(apt_arguments(journal['plan']))
     if journal and 'previous_manual' in journal:
         automatic = [item['package'] for item in changes if item['to_version'] and
                      item['package'] not in set(journal['previous_manual']) |
                      set(journal['previous_packages']) | set(journal['plan']['requested']) | baseline()]
         if automatic:
             command(['apt-mark', 'auto', *automatic], progress=False)
-    verify_packages(changes)
+    verified_changes = {item['package']: item for item in [*fixes, *changes]}
+    verify_packages(list(verified_changes.values()))
     if journal:
         plan = journal['plan']
         packages = cache(plan['source'])
@@ -869,14 +920,14 @@ def upgrades(source):
     packages = cache(source)
     entries = []
     import apt_pkg
-    for name in sorted(registry()):
-        if name not in packages or not packages[name].is_installed:
+    for package in packages:
+        if (not package.is_installed or package.name in FROZEN or package.essential
+                or protected_name(package.name)):
             continue
-        package = packages[name]
         version = selected_version(package, effective_source(package, source))
         if version and apt_pkg.version_compare(version.version, package.installed.version) > 0:
             entries.append(package_info(package, version))
-    return {'entries': entries}
+    return {'entries': sorted(entries, key=lambda item: item['package'])}
 
 
 @contextlib.contextmanager

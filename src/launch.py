@@ -1,7 +1,6 @@
 """Start the native display and fall back to the speaking console if X fails."""
 import os
 from pathlib import Path
-import signal
 import subprocess
 import sys
 import time
@@ -30,26 +29,28 @@ def main():
     if not failed.exists() and 'flashos.text=1' not in Path('/proc/cmdline').read_text().split():
         ready.unlink(missing_ok=True)
         with open('/run/flashos-graphics.log', 'a') as log:
-            graphical = subprocess.Popen(['xinit', sys.executable, menu, *arguments, '--graphical',
-                '--', '/usr/bin/Xorg', ':0', 'vt1', '-keeptty', '-nolisten', 'tcp'],
-                stdout=log, stderr=log, start_new_session=True)
-            deadline = time.monotonic() + 35
-            while graphical.poll() is None and not ready.exists() and time.monotonic() < deadline:
-                time.sleep(.2)
-            if ready.exists():
-                graphical.wait()
-                failed.write_text('Use console after service cleanup.\n')
-                # Let systemd stop the whole service cgroup, including detached storage
-                # commands, before it restarts this launcher in console mode.
-                sys.exit(1)
-            elif graphical.poll() is None:
-                os.killpg(graphical.pid, signal.SIGTERM)
-                try:
-                    graphical.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    os.killpg(graphical.pid, signal.SIGKILL)
-                    graphical.wait(timeout=5)
-        print('Графическое меню недоступно. Запускаю говорящий текстовый режим.', flush=True)
+            try:
+                graphical = subprocess.Popen(['xinit', sys.executable, menu, *arguments, '--graphical',
+                    '--', '/usr/bin/Xorg', ':0', 'vt1', '-keeptty', '-nolisten', 'tcp'],
+                    stdout=log, stderr=log, start_new_session=True)
+            except OSError as error:
+                reason = 'Не удалось запустить графическое меню: ' + str(error)
+            else:
+                deadline = time.monotonic() + 35
+                while graphical.poll() is None and not ready.exists() and time.monotonic() < deadline:
+                    time.sleep(.2)
+                if ready.exists():
+                    reason = 'Графическое меню завершилось. Код: ' + str(graphical.wait())
+                elif graphical.poll() is None:
+                    reason = 'Графическое меню не подтвердило готовность за 35 секунд.'
+                else:
+                    reason = 'Графическое меню завершилось до готовности. Код: ' + str(graphical.returncode)
+            print(reason, file=log, flush=True)
+        failed.write_text(reason + '\n')
+        # Xinit puts Xorg and its client in separate process groups. Only systemd
+        # can clean the entire service cgroup and reset the VT before console use.
+        print('Графическое меню недоступно. Ожидаю очистки службы перед текстовым режимом.', flush=True)
+        sys.exit(1)
     os.execv(sys.executable, [sys.executable, menu, *arguments])
 
 

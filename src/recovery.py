@@ -33,14 +33,25 @@ def read_manifest(image):
     path = image.with_name(MANIFEST)
     if path.is_symlink() or path.stat().st_size > 16384:
         raise ValueError('Недопустимый паспорт образа.')
-    data = json.loads(path.read_text(encoding='utf-8'))
-    if (data.get('format') != 'flashos-partclone-1' or data.get('file') != IMAGE or
+    with path.open(encoding='utf-8') as stream:
+        content = stream.read(16385)
+    if len(content.encode('utf-8')) > 16384:
+        raise ValueError('Недопустимый паспорт образа.')
+    try:
+        data = json.loads(content)
+    except RecursionError as error:
+        raise ValueError('Паспорт образа имеет слишком сложную структуру.') from error
+    if (not isinstance(data, dict) or
+        data.get('format') != 'flashos-partclone-1' or data.get('file') != IMAGE or
+        not isinstance(data.get('fstype'), str) or
         data.get('fstype') not in ENGINES or type(data.get('source_bytes')) is not int or data['source_bytes'] <= 0 or
         type(data.get('image_bytes')) is not int or data['image_bytes'] <= 0 or
         type(data.get('filesystem_bytes')) is not int or not 0 < data['filesystem_bytes'] <= data['source_bytes'] or
         type(data.get('map_bytes')) is not int or data['map_bytes'] <= 0 or
         any(not re.fullmatch('[0-9a-f]{64}', str(data.get(key, ''))) for key in ('sha256', 'map_sha256', 'used_sha256'))):
         raise ValueError('Паспорт образа неполон или имеет неизвестный формат.')
+    if any(not isinstance(data.get(key), str) for key in ('created', 'model')):
+        raise ValueError('В паспорте образа отсутствуют дата или модель устройства.')
     return data
 
 

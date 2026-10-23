@@ -18,6 +18,13 @@ assert not missing, 'Missing menu commands: ' + ', '.join(missing)
 print('Verified menu runtime commands:', len(commands))
 import tkinter
 print('Tkinter:', tkinter.TkVersion)
+import gi
+gi.require_version('Gtk', '3.0')
+gi.require_version('Vte', '2.91')
+from gi.repository import Gtk, Vte
+assert hasattr(Vte.Terminal, 'get_text_range_format'), 'Missing terminal screen review API'
+assert shutil.which('bash'), 'Missing interactive terminal shell'
+print('Verified GTK/VTE spoken terminal:', Vte.MAJOR_VERSION, Vte.MINOR_VERSION, Vte.MICRO_VERSION)
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 assert shutil.which('busctl'), 'Missing NetworkManager checkpoint control'
 key = AESGCM.generate_key(bit_length=256)

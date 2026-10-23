@@ -282,13 +282,22 @@ def checksum_job(image):
         job.log('Образ: ' + image.path.name)
         job.log('SHA256: ' + value)
         sidecar = image.path.with_name(image.path.name + '.sha256')
+        references = set()
         if sidecar.is_file() and not sidecar.is_symlink() and sidecar.stat().st_size < 4096:
-            tokens = sidecar.read_text().split()
-            expected = tokens[0].lower() if tokens else ''
-            if re.fullmatch('[0-9a-f]{64}', expected):
-                job.failed = value != expected
-                job.result = 'Контрольная сумма ' + ('совпадает.' if not job.failed else 'НЕ совпадает. Образ может быть повреждён.')
-                return
+            try:
+                with sidecar.open(encoding='utf-8-sig') as stream:
+                    reference = stream.read(4096)
+                if len(reference) < 4096:
+                    for line in reference.splitlines():
+                        match = re.fullmatch(r'([0-9a-fA-F]{64})(?:[ \t]+\*?(.+))?', line.strip())
+                        if match and (match[2] is None or match[2] in (image.path.name, './' + image.path.name)):
+                            references.add(match[1].lower())
+            except (OSError, UnicodeError) as error:
+                job.log('Эталон SHA256 недоступен: ' + str(error))
+        if len(references) == 1:
+            job.failed = value != references.pop()
+            job.result = 'Контрольная сумма ' + ('совпадает.' if not job.failed else 'НЕ совпадает. Образ может быть повреждён.')
+            return
         job.incomplete = True
         job.result = 'SHA256 вычислена. Подходящего эталона рядом с ISO нет; целостность по эталону не подтверждена.'
     return run

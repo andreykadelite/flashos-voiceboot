@@ -50,6 +50,31 @@ class FakeAudio:
 
 
 class SpeechTests(unittest.TestCase):
+    def test_handoff_preserves_selected_output_across_discovery_and_renumbering(self):
+        audio = FakeAudio([USB, BUILTIN, HDMI])
+        speech = Speech(audio, watch=False, preferred_output=HDMI.name)
+        self.addCleanup(speech.close)
+        self.assertEqual(speech.output_name, HDMI.name)
+        self.assertEqual(speech._current(), HDMI)
+        renumbered = Output('hdmi', '85', 85, HDMI.title, 2)
+        audio.outputs = [USB, renumbered, BUILTIN]
+        speech.refresh(announce=False)
+        self.assertEqual(speech._current(), renumbered)
+        self.assertEqual(speech.output_name, HDMI.name)
+
+    def test_handoff_missing_output_uses_available_device_and_recovers_hotplug(self):
+        audio = FakeAudio([BUILTIN])
+        speech = Speech(audio, watch=False, preferred_output=HDMI.name)
+        self.addCleanup(speech.close)
+        self.assertEqual(speech.output_name, BUILTIN.name)
+        self.assertIsNone(speech.manual)
+        audio.outputs = []
+        speech.refresh(announce=False)
+        self.assertIsNone(speech.output_name)
+        audio.outputs = [USB]
+        speech.refresh(announce=False)
+        self.assertEqual(speech.output_name, USB.name)
+
     def test_rhvoice_launch_failure_uses_espeak_on_same_output(self):
         speech, audio = self.make_speech([BUILTIN])
         speech.voice = 'yuriy'

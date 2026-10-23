@@ -131,6 +131,7 @@ def tools_menu(ui, root, disk):
     while True:
         key = ui.choose('Инструменты', [
             ('Полная информация о компьютере', 'hardware'),
+            ('Терминал с озвучкой команд и вывода', 'terminal'),
             ('Файлы: просмотр и копирование на флешку', 'files'),
             ('Контрольная сумма ISO', 'checksum'),
             ('Сохранить таблицу разделов', 'table'),
@@ -148,6 +149,9 @@ def tools_menu(ui, root, disk):
             return
         if key == 'hardware':
             hardware_menu(ui)
+        elif key == 'terminal':
+            from terminal import launch
+            launch(ui, root)
         elif key == 'recovery':
             from recovery import recovery_menu
             recovery_menu(ui, root, disk)

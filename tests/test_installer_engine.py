@@ -152,6 +152,46 @@ Phase 'verify' 'reset verification'
                                           'message': 'reset verification', 'changed': False,
                                           'bytes': 0, 'total_bytes': 0}])
 
+    def test_cancellation_during_final_identity_check_never_starts_erasure(self):
+        # Run only each branch's prefix through its first mutation, with every
+        # device command replaced. A cancellation arriving in Assert-Target must
+        # be observed before either Clear-Disk or Ventoy can start.
+        for runtime in POWERSHELLS:
+            for action, mutation in (('format', 'Clear-Disk'), ('install', 'Start-Process')):
+                with self.subTest(runtime=runtime, action=action), tempfile.TemporaryDirectory() as directory:
+                    scenario = r'''
+$request=[pscustomobject]@{action=ACTION;style='GPT';engine='unused'}
+$disk=[pscustomobject]@{Number=9}
+$script:mutationAttempted=$false
+function Assert-Target {
+  [IO.File]::WriteAllText($cancel,'cancel')
+  return $disk
+}
+function Clear-Disk { $script:mutationAttempted=$true; throw 'Unexpected erasure' }
+function Start-Process { $script:mutationAttempted=$true; throw 'Unexpected writer' }
+$condition='$request.action -eq '+"'"+$request.action+"'"
+$branches=@($ast.FindAll({param($node)
+  $node -is [Management.Automation.Language.IfStatementAst] -and
+  $node.Clauses[0].Item1.Extent.Text -eq $condition
+},$true))
+if($branches.Count -ne 1) { throw 'Expected one production action branch' }
+$prefix=@()
+foreach($statement in $branches[0].Clauses[0].Item2.Statements) {
+  $prefix+=$statement.Extent.Text
+  if($statement.Extent.Text -match MUTATION) { break }
+}
+if($prefix[-1] -notmatch MUTATION) { throw 'Expected first mutation in action branch' }
+$caught=$false
+try { . ([scriptblock]::Create(($prefix -join "`n"))) }
+catch [OperationCanceledException] { $caught=$true }
+@{qa_result=$true;major=$PSVersionTable.PSVersion.Major;cancelled=$caught;
+  mutation_attempted=$script:mutationAttempted;changed=$script:changed} | ConvertTo-Json -Compress
+'''.replace('ACTION', powershell_literal(action)).replace('MUTATION', powershell_literal(mutation))
+                    result, _ = self.run_helpers(runtime, scenario, directory)
+                    self.assertTrue(result['cancelled'])
+                    self.assertFalse(result['mutation_attempted'])
+                    self.assertFalse(result['changed'])
+
     def local_file(self, directory):
         data = bytes(range(256)) * 16384 + b'final short block'
         source = Path(directory) / 'source.bin'

@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -39,6 +40,26 @@ class SettingsTests(unittest.TestCase):
             path = Path(folder) / 'flashos/settings.json'
             path.parent.mkdir()
             path.write_text(' ' * 4097)
+            settings = Settings(folder)
+            self.assertEqual(settings.data, DEFAULTS)
+            self.assertTrue(settings.error)
+
+    def test_malformed_voice_values_do_not_prevent_startup(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'flashos/settings.json'
+            path.parent.mkdir()
+            for value in ([], {}, ['elena'], None, True):
+                with self.subTest(value=value):
+                    path.write_text(json.dumps({'voice': value, 'rate': 150}), encoding='utf-8')
+                    settings = Settings(folder)
+                    self.assertEqual(settings.data['voice'], DEFAULTS['voice'])
+                    self.assertEqual(settings.data['rate'], 150)
+
+    def test_excessively_nested_json_uses_defaults(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'flashos/settings.json'
+            path.parent.mkdir()
+            path.write_text('[' * 1500 + '0' + ']' * 1500, encoding='utf-8')
             settings = Settings(folder)
             self.assertEqual(settings.data, DEFAULTS)
             self.assertTrue(settings.error)

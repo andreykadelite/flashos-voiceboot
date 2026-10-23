@@ -83,9 +83,12 @@ class PreferencesClient:
                     job.update('Сохраняю настройки. Дождитесь проверки записи.')
                 elif action == 'orca-preview':
                     job.update('Пробная речь Orca. Escape останавливает пример и возвращает в настройки.')
-                _, output = job.command(command, timeout=120, accepted=None, output_limit=32768,
+                code, output = job.command(command, timeout=120, accepted=None, output_limit=32768,
                     cleanup=mutation, resource='applications')
                 data = result_json(output)
+                if code:
+                    raise RuntimeError('Утилита настроек завершилась с ошибкой (код ' + str(code) +
+                                       '). Повторите чтение настроек, чтобы проверить сохранённые значения.')
                 if mutation:
                     job.cancel_event.clear()
                 job.payload = data

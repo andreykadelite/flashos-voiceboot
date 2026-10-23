@@ -157,6 +157,7 @@ try {
   if($request.action -eq 'format') {
     Phase 'format' 'Форматирование. Не отключайте флешку; остановка станет возможна после завершения этого этапа.'
     $null=Assert-Target
+    Check-Cancel
     $script:changed=$true
     Event 'log' 'Начало изменения разметки выбранной флешки.'
     $disk | Clear-Disk -RemoveData -RemoveOEM -Confirm:$false
@@ -185,6 +186,7 @@ try {
     $null=Assert-Target
     $argsList=@('VTOYCLI','/I',('/PhyDrive:'+$disk.Number),'/R:512','/FS:EXFAT')
     if($request.style -eq 'GPT') { $argsList+='/GPT' }
+    Check-Cancel
     $script:changed=$true
     Event 'log' 'Начало изменения разметки выбранной флешки.'
     $process=Start-Process -FilePath (Join-Path $request.engine 'Ventoy2Disk.exe') -ArgumentList $argsList -WorkingDirectory $request.engine -WindowStyle Hidden -PassThru

@@ -139,6 +139,24 @@ class ConnectionTests(unittest.TestCase):
                 self.assertIsInstance(job.store_connection_error, StoreConnectionError)
             self.assertEqual(environment.open.call_count, 2)
 
+    def test_nonzero_service_exit_cannot_commit_a_successful_json_result(self):
+        import tempfile
+        for action in ('catalog', 'apply', 'repair'):
+            with self.subTest(action=action), tempfile.TemporaryDirectory() as folder:
+                environment = Mock(root=Path(folder))
+                environment.lock.side_effect = lambda: contextlib.nullcontext()
+                client = StoreClient(environment)
+                job = SimpleNamespace(update=Mock(), check=Mock(), log=Mock(),
+                                      cancel_event=Mock(), cancellation_deferred=False,
+                                      command=Mock(return_value=(7, json.dumps({
+                                          'format': 1, 'ok': True, 'data': {'message': 'success'}}))))
+                with self.assertRaisesRegex(RuntimeError, '7'):
+                    client.call(job, action)
+                self.assertFalse(hasattr(job, 'payload'))
+                self.assertFalse(hasattr(job, 'result'))
+                job.cancel_event.clear.assert_not_called()
+                self.assertFalse(job.cancellation_deferred)
+
 
 if __name__ == '__main__':
     unittest.main()

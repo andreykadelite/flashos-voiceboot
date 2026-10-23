@@ -24,7 +24,7 @@ class WorkerLifecycleTests(unittest.TestCase):
                 destination.mkdir()
             bundle.extract.side_effect = extract
             process = MagicMock()
-            process.stdout = io.BytesIO(output or (json.dumps(dict(kind='complete', message='done', percent=100))+'\n').encode())
+            process.stdout = io.BytesIO(output if output is not None else (json.dumps(dict(kind='complete', message='done', percent=100))+'\n').encode())
             process.wait.return_value = code
             process.poll.return_value = code
             group = MagicMock()
@@ -66,6 +66,23 @@ class WorkerLifecycleTests(unittest.TestCase):
         events, order, *_ = self.execute(code=1)
         self.assertNotIn('complete', order)
         self.assertIn('error', order)
+
+    def test_writer_failure_cannot_be_overridden_by_later_success(self):
+        for failure in ('error', 'cancelled'):
+            for kinds in ((failure, 'complete'), ('complete', failure)):
+                with self.subTest(kinds=kinds):
+                    output = b''.join((json.dumps(dict(kind=kind, message=kind)) + '\n').encode()
+                                      for kind in kinds)
+                    events, order, bundle, group, check_boot = self.execute(output=output)
+                    self.assertEqual([failure], [e['kind'] for e in events
+                                                if e['kind'] in ('error', 'cancelled', 'complete')])
+                    check_boot.assert_not_called()
+
+    def test_missing_writer_report_is_an_error(self):
+        events, order, bundle, group, check_boot = self.execute(output=b'')
+        self.assertIn('error', order)
+        self.assertNotIn('complete', order)
+        check_boot.assert_not_called()
 
     def test_early_cancel_or_replacement_never_starts_disk_writer(self):
         for options in ({'cancelled': True}, {'replacement': True}):

@@ -6,11 +6,15 @@ A talking multiboot USB system and a standalone Windows installer, in one reposi
 
 Copy your `.iso` files into the USB drive's `iso` folder. At each boot, FlashOS scans the folder, reads the available choices aloud and prepares the selected image for Ventoy. Adding or deleting an ISO requires no configuration changes.
 
-**[Download the Windows EXE](https://github.com/andreykadelite/flashos-voiceboot/releases/latest/download/FlashOS-Setup.exe)** · [All release files](https://github.com/andreykadelite/flashos-voiceboot/releases/latest) · [User guide](docs/en/guide.md)
+**[Download the Windows EXE](https://github.com/andreykadelite/flashos-voiceboot/releases/latest/download/FlashOS-Setup.exe)** · [All release files](https://github.com/andreykadelite/flashos-voiceboot/releases/latest) · [User guide](docs/en/guide.md) · [What’s new](docs/en/release-2026.10.22.md)
 
-New release: FlashOS 2026.10.13.2 and installer 1.0.8. The new Debian store installs applications, dependencies and updates in persistent storage on USB. Other additions include saved network profiles, Orca speech settings and interruptible announcements, along with updated drivers and firmware. [Release overview and downloads](docs/en/release-2026.10.13.md).
+Current release: FlashOS **2026.10.22.2**, installer **1.0.10**.
 
-Wi-Fi discovery now retries adapter detection, loads a missed driver when appropriate and retains connection details. A failed quick connection restores the previous network. Fixes also cover browsing large folders, text previews, passing ISO selections and GPT handling in the installer. System and installer version numbers remain unchanged.
+The Tools menu includes a [spoken system terminal](docs/en/guide.md#spoken-system-terminal): full Bash with history, Tab completion and normal application keys. Read the screen or individual lines, choose input echo, toggle automatic output reading and stop speech. The terminal runs graphically as root in the live system; it needs no application-store setup or internet connection.
+
+The store recovers interrupted operations, checks dependency files and available space before unpacking, and updates dependencies from their selected sources. Search covers package names and full descriptions. Diagnostics distinguish unavailable logs from logs without errors, account for service failures and reject invalid sensor readings. SHA256 checks use the entry for the selected ISO.
+
+Wi-Fi discovery retries adapter detection, loads a missed driver when appropriate and retains connection details. A failed quick connection restores the previous network. Previous fixes for browsing large folders, text previews, passing ISO selections and GPT handling remain included.
 
 Ethernet and Wi-Fi settings include DHCP/static IPv4 and IPv6, DNS, routes and proxies, saved profiles matched to the PC and adapter, an encrypted password vault with a shared master password, and connection confirmation with rollback. A store connection failure offers networking tools and an explicit download retry. [Network settings and limits](docs/en/guide.md#ethernet-wi-fi-and-saved-profiles).
 
@@ -28,9 +32,11 @@ The application interface and spoken help are currently in Russian. English docu
 The installer uses native Qt 6 widgets and Windows accessibility interfaces. It is compiled with Nuitka into one EXE containing the system, bootloaders, drivers, voices and tools. The destination PC needs no Python, Qt installation or internet connection. Windows and Linux installation ISOs are supplied by the user.
 
 <details>
-<summary>Screenshots: talking menu and Windows installer</summary>
+<summary>Screenshots: talking menu, terminal and Windows installer</summary>
 
-![FlashOS main menu: Start a system, Tools, Diagnostics, Power, Voice settings and Help, with a highlighted keyboard selection.](docs/images/flashos.png)
+![FlashOS main menu: Start a system, Tools, Diagnostics, Applications, Utilities, Power, Voice settings and Help, with a highlighted keyboard selection.](docs/images/flashos.png)
+
+![Bash terminal with screen reading, automatic speech, stop, help and close controls.](docs/images/terminal.png)
 
 ![Flash OS Installer showing a fictitious USB drive, installation, verification and format controls, progress and log.](docs/images/installer.png)
 
@@ -56,6 +62,7 @@ The main menu contains Start a system, Tools, Diagnostics, Applications, Utiliti
 - Diagnostics: available RAM with memtester, CPU, filesystems, network, sensors, audio and keyboard.
 - Recovery: Partclone partition images with verification and restore; ddrescue disk-to-file copying; PhotoRec file recovery; supported filesystem repairs.
 - Files and networking: file browsing/copying, Wi-Fi connection and report export.
+- Bash terminal: spoken commands, output and screen lines, with history and Tab completion.
 - Speech: five RHVoice voices, eSpeak NG fallback, output selection and saved voice settings.
 
 See [the guide](docs/en/guide.md) for which operations change disks and what each check can establish. Installing a command-line package does not mean every one of its modes has an accessible menu action.

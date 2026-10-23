@@ -17,6 +17,20 @@ USB_FILES = {
 }
 ROOT_DOCS = ('README.md', 'README.en.md', 'LICENSE', 'NOTICE.md',
              'THIRD-PARTY.md', 'CHANGELOG.md', 'CONTRIBUTING.md')
+BOOT_STAGED_CONFIGS = {
+    'debian-grub.cfg': ('dist/boot/flashos/efi/grub.cfg', 'dist/boot/EFI/debian/grub.cfg'),
+    'ventoy_grub.cfg': ('dist/usb/ventoy/ventoy_grub.cfg',),
+    'ventoy.json': ('dist/usb/ventoy/ventoy.json',),
+}
+BOOT_ROOT_CONFIGS = {
+    'flashos.service': 'etc/systemd/system/flashos.service',
+    'flashos-apps.service': 'etc/systemd/system/flashos-apps.service',
+    'pipewire-flashos.conf': 'etc/pipewire/pipewire.conf.d/90-flashos.conf',
+    'wireplumber-flashos.conf': 'etc/wireplumber/wireplumber.conf.d/90-flashos.conf',
+}
+BOOT_ARTIFACTS = sorted({'dist/boot/' + name for name in BOOT_FILES} |
+                        {path for paths in BOOT_STAGED_CONFIGS.values() for path in paths} |
+                        {'dist/ventoy.disk.img.xz', 'dist/ventoy-efi.img'})
 
 
 def safe_path(root, path):
@@ -101,15 +115,47 @@ def python_source_hashes(content):
     return hashes
 
 
+def boot_source_hashes(root):
+    return {path.relative_to(root / 'boot').as_posix(): python_source_hashes(path.read_bytes())
+            for path in regular_tree(root, root / 'boot')}
+
+
+def certified_hashes_match(certified, current):
+    return (isinstance(certified, dict) and set(certified) == set(current)
+            and all(isinstance(certified[name], str) and certified[name] in hashes
+                    for name, hashes in current.items()))
+
+
+def verify_boot_configs(root):
+    """Both EFI paths and the USB menu must contain the reviewed configuration."""
+    for name, targets in BOOT_STAGED_CONFIGS.items():
+        source = safe_path(root, root / 'boot' / name).read_bytes()
+        for target in targets:
+            content = safe_path(root, root / target).read_bytes()
+            if hashlib.sha256(content).hexdigest() not in python_source_hashes(source):
+                raise ValueError('Stale boot configuration: ' + target)
+
+
+def boot_artifact_hashes(root):
+    text_files = {path for paths in BOOT_STAGED_CONFIGS.values() for path in paths}
+    result = {}
+    for name in BOOT_ARTIFACTS:
+        path = safe_path(root, root / name)
+        if name in text_files:
+            result[name] = python_source_hashes(path.read_bytes())
+        else:
+            with path.open('rb') as stream:
+                result[name] = {hashlib.file_digest(stream, 'sha256').hexdigest()}
+    return result
+
+
 def verified_system(root, version):
     """Require evidence for this exact live image and the current application sources."""
     report = json.loads(safe_path(root, root / 'dist/toolkit-build-verification.json').read_text(encoding='utf-8'))
     sources = {path.relative_to(root / 'src').as_posix(): python_source_hashes(path.read_bytes())
                for path in regular_tree(root, root / 'src') if path.suffix == '.py'}
     certified_sources = report.get('sources_sha256')
-    sources_match = (isinstance(certified_sources, dict) and set(certified_sources) == set(sources)
-                     and all(isinstance(certified_sources[name], str) and certified_sources[name] in hashes
-                             for name, hashes in sources.items()))
+    sources_match = certified_hashes_match(certified_sources, sources)
     image = safe_path(root, root / 'dist/usb/flashos/filesystem.squashfs')
     with image.open('rb') as stream:
         image_hash = hashlib.file_digest(stream, 'sha256').hexdigest()
@@ -117,9 +163,18 @@ def verified_system(root, version):
             or not sources_match or report.get('squashfs_sha256') != image_hash
             or report.get('system_version') != version):
         raise ValueError('Live system is stale or unverified. Repack it and run tools/verify-toolkit-build.py before packaging.')
+    if (report.get('boot_sources_match') is not True or
+            not certified_hashes_match(report.get('boot_sources_sha256'), boot_source_hashes(root))):
+        raise ValueError('Boot sources are stale or unverified. Repack and certify the build before packaging.')
+    verify_boot_configs(root)
+    if not certified_hashes_match(report.get('boot_artifact_sha256'), boot_artifact_hashes(root)):
+        raise ValueError('Boot artifacts changed after verification. Repack and certify the build before packaging.')
     store = report.get('app_store', {})
     if store.get('verified') is not True or store.get('filesystem_sha256') != image_hash:
         raise ValueError('Application runtime is absent or stale. Run tools/verify-app-store-build.py and certify the build.')
+    terminal = report.get('terminal', {})
+    if terminal.get('verified') is not True or terminal.get('filesystem_sha256') != image_hash:
+        raise ValueError('Terminal runtime is absent or stale. Run tools/verify-terminal-build.py and certify the build.')
     hardware = report.get('hardware', {})
     if hardware.get('verified') is not True:
         raise ValueError('Hardware drivers are unverified. Run tools/verify-hardware-build.py and certify the build again.')

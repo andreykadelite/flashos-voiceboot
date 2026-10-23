@@ -1,16 +1,22 @@
 # Project architecture
 
-[Русский](../ru/architecture.md) · [Home](../../README.en.md)
+[Русский](../ru/architecture.md) · [Home](../../README.en.md) · [User guide](guide.md) · [Build instructions](build.md)
 
 FlashOS has two independent runtimes in one repository: a bootable Linux environment and a Windows USB installer.
 
-On USB boot, Ventoy and Debian boot components start Linux. The live system reads `filesystem.squashfs` with a temporary RAM overlay. Drivers, ALSA, PipeWire/WirePlumber and UCM profiles provide audio access. The Python menu uses RHVoice or eSpeak NG. Its graphical frontend is Tk/Xorg, with a talking text fallback.
+On USB boot, Ventoy and Debian boot components start Linux. The live system reads `filesystem.squashfs` with a temporary RAM overlay. Drivers, ALSA, PipeWire/WirePlumber and UCM profiles provide audio access. The Python menu uses RHVoice or eSpeak NG. The main graphical menu uses Tk/Xorg; the terminal uses GTK 3/VTE. A talking text fallback is available without the graphical terminal.
+
+`launch.py` starts Xorg and the menu under `flashos.service`. A graphics failure or startup timeout exits the service; systemd stops its entire control group and resets the virtual console before restarting in text mode. `KillMode=control-group` covers Xorg and client processes even in separate process groups. If earlier processes remain in the service group, startup does not begin new disk operations.
 
 `speech.py` runs speech on a separate thread; the default voice is Elena RHVoice. F7 stops the current utterance without cancelling the selected action or job. `interface.UI.speak_wait` handles keys during introductory announcements: Enter, Space and F7 interrupt only speech, while navigation is passed to the next menu. Skipping an announcement cannot accept a confirmation. ISO selection and application launch use asynchronous announcements, so handoff does not depend on the spoken name's length.
 
+The terminal in Tools runs as root in the live root, independently of `store.ext4`. `terminal.py` prepares temporary interactive Bash settings and launches `terminal_window.py`. GTK/VTE creates a real PTY; Bash supplies history and completion, while signals and interactive programs use normal terminal mechanisms. Readline reports only submitted shell commands; hidden program input does not enter that metadata. Bash history and session files stay in RAM; launched programs may save their own files.
+
+`terminal_window.py` handles the window, visible-screen and history-line reading, input echo, pasting and confirmations. `terminal_speech.py` compares screen snapshots and manages a bounded speech queue with an omission notice; `terminal_help.py` supplies shared help for the window and FlashOS menu. Speech uses `speech.py` with the current FlashOS settings. In the live system a transient `flashos-terminal-*.service` is bound to `flashos.service` through `BindsTo`; closing stops its control group, including Bash child processes. `KillMode=control-group`, `TimeoutStopSec=5s` and `SendSIGKILL=yes` define session cleanup. [Terminal controls and limits](guide.md#spoken-system-terminal).
+
 The catalog is built from `iso`. A choice is stored as a one-time job on FLASHBOOT. After restart, Ventoy's configuration reads and clears it, then boots the ISO. This accounts for the restart and the need to reselect USB on some BIOS machines. Signed EFI files are separate from the modified GRUB configuration.
 
-Applications use a separate Debian root inside `flashos/applications/store.ext4` on the main USB partition (`DATA_USB` in code). A verified `/opt/flashos/app-runtime.tar.xz` seeds it; application files and dpkg state are separate from the live root, while the kernel and hardware drivers are shared. This separates package installation rather than running a separate VM.
+Applications use a separate Debian root inside `flashos/applications/store.ext4` on the main USB partition (`DATA_USB` in code). A verified `/opt/flashos/app-runtime.tar.xz` seeds it; application files and dpkg state are separate from the live root, while the kernel and hardware drivers are shared. Package installation takes place in this root; external applications run as UID 1000. This is a separate package-installation environment rather than a VM.
 
 `store.py` implements spoken tabs and change-plan review; `store_storage.py` validates the boot medium and manages file allocation and loop mounts; `store_packages.py` handles signed APT indexes, dependencies, reviewed versions and result verification. User settings live inside the image. An external session runs Openbox, Orca and the application as UID 1000; `store_launch.py` and `store_session.py` manage exit and Ctrl+Alt+Escape return. Application AT-SPI support determines window accessibility.
 
@@ -34,9 +40,11 @@ Tools share job handling for device selection, preconditions, speech, logs, canc
 
 The installer uses PySide6/Qt Widgets. Discovery and writing run separately from the UI. Device properties are checked again before a destructive operation. SHA256 validates the embedded payload, ACLs protect the working directory and a Windows Job Object contains writer subprocesses. Completion includes file, partition and boot-structure verification. See `installer/model.py`, `backend.py`, `secure_run.py`, `disk_lease.py`, `process_group.py`, `engine.ps1` and `boot_verify.py`.
 
+`tools/Build-Installer.ps1` prepares public documentation, builds the payload from the completed `dist` tree and compiles the application with Nuitka. `tools/build-installer-payload.py` streams large system files into ZIP64, deduplicating objects by SHA256; the manifest digest and writer from `engine.ps1` are pinned in generated `installer/_release.py`. In `onefile` mode, `tools/append-installer-payload.py` streams the ZIP onto the small EXE outside the mapped PE image. The resulting `release/FlashOS-Setup.exe` contains the application, system files, documentation and licenses; the final file is replaced atomically. Public-documentation changes require a new payload and EXE build. [Build procedure](build.md#windows-exe).
+
 | Directory | Contents |
 | --- | --- |
-| `src` | Menu, speech, ISO catalog, diagnostics, recovery and application store |
+| `src` | Menu, speech, terminal, ISO catalog, diagnostics, recovery and application store |
 | `installer` | Qt GUI, USB discovery, writing and verification |
 | `boot` | systemd, audio and boot configuration |
 | `build` | Debian provisioning and system image build |

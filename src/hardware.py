@@ -1,5 +1,6 @@
 """Read available sensors without probing or changing hardware settings."""
 import json
+import math
 from pathlib import Path
 
 
@@ -67,17 +68,26 @@ def battery_lines(battery):
 
 def temperature_job(job):
     count = 0
+    partial = False
     sensor_rows = []
     try:
         status, raw = job.command(['sensors', '-j'], timeout=10, accepted=None, log_output=False)
         job.attachments['sensors.json'] = raw
-        data = json.loads(raw) if raw.strip().startswith('{') else {}
+        data = json.loads(raw)
+        if not isinstance(data, dict):
+            raise ValueError('Некорректный формат показаний sensors.')
+        if status:
+            partial = True
+            job.log('Не все показания sensors прочитаны. Код завершения: ' + str(status))
         units = {'temp': ('градусов Цельсия', 1), 'fan': ('оборотов в минуту', 1),
                  'in': ('вольт', 1), 'curr': ('ампер', 1), 'power': ('ватт', 1), 'humidity': ('процентов', 1)}
         limits = {'input': 'Текущее', 'min': 'Минимум', 'max': 'Максимум', 'crit': 'Критический предел',
                   'lcrit': 'Нижний критический предел', 'alarm': 'Тревога', 'crit_alarm': 'Критическая тревога',
                   'fault': 'Ошибка датчика', 'average': 'Среднее'}
         for chip, features in data.items():
+            if not isinstance(features, dict):
+                partial = True
+                continue
             for label, values in features.items():
                 if not isinstance(values, dict):
                     continue
@@ -85,14 +95,27 @@ def temperature_job(job):
                     job.check()
                     metric, _, detail = key.partition('_')
                     unit = next((item[0] for prefix, item in units.items() if metric.startswith(prefix)), '')
-                    if detail in limits and isinstance(value, (int, float)):
+                    if detail in limits:
+                        if not isinstance(value, (int, float)) or isinstance(value, bool):
+                            partial = True
+                            continue
                         alarm = 'alarm' in detail or detail == 'fault'
-                        display = ('да' if value else 'нет') if alarm else f'{value:g} {unit}'
+                        try:
+                            # JSON integers can exceed the float range used by
+                            # both isfinite() and the general numeric formatter.
+                            if not math.isfinite(value):
+                                partial = True
+                                continue
+                            display = ('да' if value else 'нет') if alarm else f'{value:g} {unit}'
+                        except (OverflowError, ValueError):
+                            partial = True
+                            continue
                         sensor_rows.append(f'{chip}, {label}. {limits[detail]}: {display}')
                         count += detail in ('input', 'average')
                         if alarm and value:
                             job.warning = True
     except (OSError, ValueError, RuntimeError) as error:
+        partial = True
         job.log('Основной запрос датчиков недоступен: ' + str(error))
     # ACPI zones may be exposed without a hwmon driver.
     for zone in sorted(Path('/sys/class/thermal').glob('thermal_zone*')):
@@ -109,6 +132,10 @@ def temperature_job(job):
         job.sections.append(('Температуры, вентиляторы и напряжения', sensor_rows))
     if batteries:
         job.sections.append(('Аккумуляторы', batteries))
-    job.incomplete = not count and not batteries
-    job.result = ('Датчик сообщает тревогу. Проверьте показания.' if job.warning else 'Показания готовы.'
-                  if count or batteries else 'Поддерживаемые датчики не найдены.')
+    job.incomplete = partial or (not count and not batteries)
+    if job.warning:
+        job.result = 'Датчик сообщает тревогу. Проверьте показания.'
+    elif count or batteries:
+        job.result = 'Показания получены частично.' if partial else 'Показания готовы.'
+    else:
+        job.result = 'Поддерживаемые датчики не найдены.'

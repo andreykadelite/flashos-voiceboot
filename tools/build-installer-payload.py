@@ -3,24 +3,33 @@ from pathlib import Path
 import hashlib
 import importlib.metadata
 import json
+import sys
 import zipfile
 from public_payload import payload_files, pinned_zip, safe_path, verified_system
 
 ROOT = Path(__file__).resolve().parents[1]
-SYSTEM_VERSION = '2026.10.13.2'
-INSTALLER_VERSION = '1.0.8'
+sys.path.insert(0, str(ROOT))
+from installer.model import SYSTEM_VERSION, VERSION as INSTALLER_VERSION
 OUT = ROOT / 'build/installer/payload.zip'
 OUT.parent.mkdir(parents=True, exist_ok=True)
 records, objects = [], {}
 
 
 def include(section, path, source):
-    content = source if isinstance(source, bytes) else source.read_bytes()
-    digest = hashlib.sha256(content).hexdigest()
-    records.append(dict(section=section, path=path, bytes=len(content), sha256=digest))
+    if isinstance(source, bytes):
+        digest = hashlib.sha256(source).hexdigest()
+        size = len(source)
+    else:
+        with source.open('rb') as stream:
+            digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+        size = source.stat().st_size
+    records.append(dict(section=section, path=path, bytes=size, sha256=digest))
     if digest not in objects:
-        archive.writestr('objects/' + digest, content)
-        objects[digest] = len(content)
+        if isinstance(source, bytes):
+            archive.writestr('objects/' + digest, source)
+        else:
+            archive.write(source, 'objects/' + digest)
+        objects[digest] = size
 
 
 verified_system(ROOT, SYSTEM_VERSION)
@@ -33,7 +42,7 @@ with zipfile.ZipFile(OUT, 'w', compression=zipfile.ZIP_STORED, allowZip64=True) 
             relative = item.filename.split('/', 1)[-1]
             if item.is_dir() or not (relative in ('Ventoy2Disk.exe', 'README', 'FOR_X64_ARM.txt') or relative.startswith(('ventoy/', 'boot/', 'altexe/'))):
                 continue
-            content = safe_path(ROOT, ROOT / 'dist/ventoy.disk.img.xz').read_bytes() if relative == 'ventoy/ventoy.disk.img.xz' else ventoy.read(item)
+            content = safe_path(ROOT, ROOT / 'dist/ventoy.disk.img.xz') if relative == 'ventoy/ventoy.disk.img.xz' else ventoy.read(item)
             include('engine', relative, content)
     include('info', 'packages.tsv', ROOT / 'dist/packages.tsv')
     license_notice = (ROOT / 'THIRD-PARTY.md').read_text(encoding='utf-8') + '\n\n'

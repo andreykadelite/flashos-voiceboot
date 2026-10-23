@@ -260,7 +260,10 @@ class ApplicationStore:
                 label = name + (' — ' + summary[:160] if summary else '') + ('; ' + version if version else '')
                 items.append((label, ('package', entry), entry.get('description', summary)))
             if not entries:
-                items.append(('Приложения не найдены. Обновите каталог или измените поиск.', ('empty', None)))
+                empty = ('Обновления не найдены. F5 — обновить каталог через интернет.' if self.tab == 2 else
+                         'Через магазин пока не установлено приложений.' if self.tab == 1 else
+                         'Приложения не найдены. Обновите каталог или измените поиск.')
+                items.append((empty, ('empty', None)))
             if self.tab == 0:
                 total = data.get('total', len(entries))
                 if self.offset:
@@ -299,7 +302,7 @@ class ApplicationStore:
             elif command == 'package':
                 self.package(value)
             elif command == 'upgrade-all':
-                self.transaction('upgrade', [entry.get('name', entry.get('package')) for entry in entries])
+                self.transaction('upgrade', [])
 
     def installed(self):
         while True:
@@ -392,6 +395,8 @@ class ApplicationStore:
             lines.append('Зависимые приложения, указанные в плане, также будут удалены. '
                          'Личные настройки сохраняются. Ненужные зависимости не удаляются без отдельного плана.')
         title = ('Удалить' if operation == 'remove' else 'Установить обновления для' if operation == 'upgrade' else 'Установить') + ' ' + ', '.join(packages[:3])
+        if operation == 'upgrade' and not packages:
+            title = 'Обновить все приложения и зависимости'
         self.ui.focus[title] = 0
         while True:
             confirmation = self.ui.choose(title,

@@ -13,7 +13,7 @@ from audio import Audio
 
 
 class Speech:
-    def __init__(self, audio=None, watch=True):
+    def __init__(self, audio=None, watch=True, preferred_output=None):
         self.audio = audio or Audio()
         self.volume = 75
         self.voice = 'espeak'
@@ -26,7 +26,7 @@ class Speech:
         self._stopped = False
         self.error = ''
         self.outputs = []
-        self.manual = None
+        self.manual = preferred_output if isinstance(preferred_output, str) else None
         self.failed = {}
         self.retry_at = 0
         self.processes = []
@@ -42,6 +42,13 @@ class Speech:
 
     def _current(self):
         return self.outputs[self.index] if self.outputs else None
+
+    @property
+    def output_name(self):
+        """Stable PipeWire name for handing speech to another FlashOS process."""
+        with self.lock:
+            current = self._current()
+            return current.name if current else None
 
     def refresh(self, announce=True):
         try:
