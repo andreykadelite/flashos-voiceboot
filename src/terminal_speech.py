@@ -40,6 +40,7 @@ class _Utterance:
     text: str
     automatic: bool
     notice: bool = False
+    input_echo: bool = False
 
 
 class TerminalSpeech:
@@ -82,6 +83,23 @@ class TerminalSpeech:
     def enqueue_output(self, text):
         """Queue new visible output, unless automatic reading is disabled."""
         return self.speak(text, manual=False)
+
+    def echo(self, text, interrupt=True):
+        """Echo input in order without resuming stopped or paused output."""
+        if self.closed:
+            return False
+        text = normalize_text(text)
+        if not text:
+            return False
+        if interrupt and self._active is not None and not self._active.input_echo:
+            self._interrupt()
+        queued = list(self._queue)
+        index = next((index for index, item in enumerate(queued) if not item.input_echo), len(queued))
+        queued.insert(index, _Utterance(text[:self.chunk_chars], False, input_echo=True))
+        if len(queued) > self.max_messages and not self._overflow_announced and not any(item.notice for item in queued[:self.max_messages]):
+            queued[self.max_messages - 1] = _Utterance(OVERFLOW_NOTICE, False, notice=True)
+        self._queue = deque(queued[:self.max_messages])
+        return True
 
     def _enqueue(self, text, *, automatic, priority):
         # Also bound temporary normalization/chunking work for a huge paste/log.

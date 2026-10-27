@@ -13,11 +13,27 @@ HISTFILE=/dev/null
 HISTSIZE=1000
 HISTFILESIZE=0
 HISTCONTROL=ignoreboth
-PS1='\[\e[1;36m\]FlashOS \w\[\e[0m\] # '
+PS1='\[\e[1;36m\]FlashOS ${__flashos_prompt_directory}\[\e[0m\] # '
 # Prompt decoding consumes one backslash before printf sees the newline.
 PS2='$(builtin printf "ready\\n" > "$FLASHOS_TERMINAL_STATE/state")...> '
 __flashos_serial=0
-__flashos_ready() { builtin printf 'ready\n' > "$FLASHOS_TERMINAL_STATE/state"; }
+__flashos_prompt_serial=0
+__flashos_ready() {
+    local __flashos_status=$?
+    __flashos_prompt_directory=$PWD
+    if [[ -n ${HOME:-} ]]; then
+        if [[ $PWD == "$HOME" ]]; then
+            __flashos_prompt_directory='~'
+        elif [[ $PWD == "$HOME/"* ]]; then
+            __flashos_prompt_directory="~/${PWD#"$HOME/"}"
+        fi
+    fi
+    ((__flashos_prompt_serial+=1))
+    builtin printf '%s\0' "FlashOS $__flashos_prompt_directory # " > "$FLASHOS_TERMINAL_STATE/prompt_text"
+    builtin printf '%s\n' "$__flashos_prompt_serial" > "$FLASHOS_TERMINAL_STATE/prompt"
+    builtin printf 'ready\n' > "$FLASHOS_TERMINAL_STATE/state"
+    return "$__flashos_status"
+}
 __flashos_accept() {
     local __flashos_state
     IFS= builtin read -r __flashos_state < "$FLASHOS_TERMINAL_STATE/state"
@@ -57,6 +73,12 @@ class ShellSession:
         value = {key: val for key, val in os.environ.items()
                  if key not in ('BASH_ENV', 'ENV', 'PROMPT_COMMAND', 'SHELLOPTS', 'BASHOPTS')
                  and not key.startswith('BASH_FUNC_')}
+        if not value.get('HOME'):
+            if os.name == 'posix':
+                import pwd
+                value['HOME'] = pwd.getpwuid(os.getuid()).pw_dir
+            else:
+                value['HOME'] = str(Path.home())
         value.update(FLASHOS_TERMINAL_STATE=str(self.path), TERM='xterm-256color',
                      COLORTERM='truecolor', HISTFILE='/dev/null', LANG='C.UTF-8')
         return value
@@ -67,6 +89,24 @@ class ShellSession:
                 return stream.read(16).strip() == b'ready'
         except OSError:
             return False
+
+    def prompt_serial(self):
+        try:
+            with (self.path / 'prompt').open('rb') as stream:
+                value = stream.read(25)
+            return int(value) if len(value) <= 24 and value.strip().isdigit() else None
+        except (OSError, ValueError):
+            return None
+
+    def prompt_text(self):
+        try:
+            with (self.path / 'prompt_text').open('rb') as stream:
+                value = stream.read(16385)
+            if len(value) <= 16384 and value.endswith(b'\0') and b'\0' not in value[:-1]:
+                return value[:-1].decode('utf-8', errors='replace')
+        except OSError:
+            pass
+        return None
 
     def command(self):
         try:
@@ -97,7 +137,7 @@ def paste_text(value):
     return value
 
 
-def launch(ui, working_directory):
+def launch(ui, working_directory, preferences=False):
     if not getattr(ui.screen, 'graphical', False):
         ui.message('Терминал', 'Полноценный терминал с озвучкой доступен в графическом режиме FlashOS. '
                    'Диагностика и остальные инструменты работают и в текстовом меню.')
@@ -105,6 +145,11 @@ def launch(ui, working_directory):
     settings = {name: ui.settings.data[name] for name in ('voice', 'rate', 'pitch', 'volume', 'signals')}
     command = [sys.executable, str(Path(__file__).with_name('terminal_window.py')),
                '--settings', json.dumps(settings, ensure_ascii=False)]
+    state_root = getattr(ui, 'state_root', None)
+    if isinstance(state_root, (str, Path)):
+        command.extend(['--state-root', str(state_root)])
+    if preferences:
+        command.append('--preferences')
     output = getattr(ui.speech, 'output_name', None)
     if isinstance(output, str) and output:
         command.extend(['--output', output])
@@ -117,7 +162,7 @@ def launch(ui, working_directory):
                   '--property=KillMode=control-group', '--property=TimeoutStopSec=5s',
                   '--property=SendSIGKILL=yes', '--property=BindsTo=flashos.service',
                   '--property=After=flashos.service']
-        for name in ('DISPLAY', 'XAUTHORITY', 'LANG', 'LC_ALL', 'XDG_RUNTIME_DIR',
+        for name in ('DISPLAY', 'XAUTHORITY', 'LANG', 'LC_ALL', 'XDG_RUNTIME_DIR', 'XCURSOR_SIZE',
                      'PIPEWIRE_RUNTIME_DIR', 'PIPEWIRE_REMOTE', 'PULSE_SERVER'):
             if name in os.environ:
                 prefix.append('--setenv=' + name + '=' + os.environ[name])

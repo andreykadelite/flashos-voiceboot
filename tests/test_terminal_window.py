@@ -63,6 +63,7 @@ class TerminalWindowTests(unittest.TestCase):
         self.window.echo_mode = 'off'
         self.wait_for(lambda: self.window.alive and self.window.session.state(), 'Bash prompt')
         self.wait_for(lambda: self.window.is_active() and self.window.terminal.is_focus(), 'bare X keyboard focus')
+        self.pump(.3)
 
     def tearDown(self):
         if not self.window.closed:
@@ -82,6 +83,260 @@ class TerminalWindowTests(unittest.TestCase):
                            'checks': self.checks},
                           stream, ensure_ascii=False, indent=2)
         self.assertEqual(self.callback_errors, [], 'GTK signal/timeout callback raised an exception')
+
+    def test_default_character_echo_names_letters_space_and_punctuation_in_order(self):
+        self.window.echo_mode = 'characters'
+        self.speech.calls.clear()
+        self.type_text('Ab /_')
+        self.pump(1)
+        expected = ['A', 'b', 'пробел', 'косая черта', 'подчёркивание']
+        self.assertEqual(self.speech.calls, expected)
+        self.keys('ctrl+c')
+
+    def test_rapid_word_echo_reads_each_word_once_in_order(self):
+        self.window.echo_mode = 'words'
+        self.speech.calls.clear()
+        self.type_text('one two three ')
+        self.pump(.6)
+        self.assertEqual(self.speech.calls, ['one', 'two', 'three'])
+        self.keys('ctrl+c')
+
+    def test_cyrillic_character_echo_preserves_unicode_and_announces_capitals(self):
+        self.window.echo_mode = 'characters'
+        self.window.options['capital_letters'] = True
+        self.speech.calls.clear()
+        process = subprocess.Popen(['xdotool', 'type', '--clearmodifiers', '--delay', '80', '--', 'ёжЖ'])
+        while process.poll() is None:
+            self.pump(.02)
+        self.assertEqual(process.returncode, 0)
+        self.pump(.5)
+        self.assertEqual(self.speech.calls, ['ё', 'ж', 'Заглавная Ж'])
+        self.keys('ctrl+c')
+
+    def test_enter_echoes_last_word_when_submitted_command_echo_is_disabled(self):
+        self.window.echo_mode = 'words'
+        self.window.options['speak_commands'] = False
+        self.speech.calls.clear()
+        self.type_text('true')
+        self.keys('Return')
+        self.wait_for(lambda: 'true' in self.speech.calls, 'last word on Enter')
+        self.assertEqual(self.speech.calls.count('true'), 1)
+
+    @unittest.skipUnless(shutil.which('setxkbmap'), 'setxkbmap is needed for secondary-layout shortcut QA')
+    def test_settings_shortcut_uses_hardware_key_under_secondary_cyrillic_layout(self):
+        subprocess.run(['setxkbmap', '-layout', 'us,ru'], check=True)
+        try:
+            self.pump(.1)
+            event = Gdk.Event.new(Gdk.EventType.KEY_PRESS)
+            event.keyval = Gdk.KEY_Cyrillic_ze
+            event.hardware_keycode = 33  # The physical P key on the Xorg evdev keyboard.
+            event.state = Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK
+            self.assertTrue(self.window.key(self.window.terminal, event))
+            self.assertIsNotNone(self.window.dialog)
+            self.assertEqual(self.window.dialog.get_title(), 'Настройки терминала')
+            self.window.close_dialog()
+        finally:
+            subprocess.run(['setxkbmap', '-layout', 'us'], check=True)
+            self.pump(.1)
+
+    def test_background_output_appended_to_draft_is_read_without_speaking_the_draft(self):
+        self.type_text("(sleep .6; printf 'QA_BESIDE_DRAFT') &")
+        self.keys('Return')
+        self.wait_for(self.window.session.state, 'background job prompt')
+        self.pump(.15)
+        self.type_text('QA_PRIVATE_DRAFT')
+        self.wait_for(lambda: 'QA_BESIDE_DRAFT' in self.speech.calls, 'background suffix beside input')
+        self.assertFalse(any('QA_PRIVATE_DRAFT' in text for text in self.speech.calls))
+        self.keys('ctrl+c')
+
+    def test_background_newline_immediately_after_typing_is_not_lost_to_input_delay(self):
+        self.type_text('QA_NEAR_OUTPUT_PRIVATE_DRAFT')
+        self.window.last_input = time.monotonic()
+        self.window.terminal.feed(b'\r\nQA_NEAR_INPUT_OUTPUT\r\n')
+        self.window.poll()
+        self.wait_for(lambda: 'QA_NEAR_INPUT_OUTPUT' in self.speech.calls, 'output inside former 150ms delay')
+        self.assertFalse(any('QA_NEAR_OUTPUT_PRIVATE_DRAFT' in text for text in self.speech.calls))
+        self.keys('ctrl+c')
+
+    def test_prompt_is_announced_only_once_and_typing_never_repeats_its_suffix(self):
+        self.speech.calls.clear()
+        self.window.echo_mode = 'characters'
+        self.type_text('a')
+        self.pump(.3)
+        self.type_text('b')
+        self.pump(.3)
+        self.keys('ctrl+c')
+        self.wait_for(self.window.session.state, 'cancel typed draft')
+        self.command("printf 'QA_PROMPT_ONCE\\n'", 'QA_PROMPT_ONCE')
+        self.assertFalse(any('FlashOS ' in text or text.strip() == '#' for text in self.speech.calls))
+
+    def test_output_without_newline_keeps_output_and_separates_prompt_in_once_and_always_modes(self):
+        for mode in ('once', 'always'):
+            with self.subTest(mode=mode):
+                self.wait_for(lambda: self.window.reader.pending_count == 0
+                              and self.window.prompt_serial == self.window.session.prompt_serial(),
+                              'previous prompt frame and speech drained')
+                self.window.options['prompt_mode'] = mode
+                self.window.echo_mode = 'off'
+                self.speech.calls.clear()
+                serial = self.window.session.prompt_serial()
+                marker = 'QA_NO_NEWLINE_' + mode.upper()
+                self.type_text("printf '" + marker + "'")
+                self.keys('Return')
+                self.wait_for(lambda: self.window.session.prompt_serial() > serial, 'new no-newline prompt generation')
+                self.pump(.4)
+                output = [text for text in self.speech.calls if not text.startswith('Команда:')]
+                expected = [marker]
+                if mode == 'always':
+                    expected.append(self.window.session.prompt_text().strip())
+                self.assertEqual(output, expected)
+                self.speech.calls.clear()
+                self.window.echo_mode = 'characters'
+                self.type_text('abc')
+                self.pump(.3)
+                self.assertEqual(self.speech.calls, ['a', 'b', 'c'])
+                serial = self.window.session.prompt_serial()
+                self.keys('ctrl+c')
+                self.wait_for(lambda: self.window.session.prompt_serial() > serial
+                              and self.window.prompt_serial == self.window.session.prompt_serial(),
+                              'cancelled draft prompt rendered')
+
+    def test_new_prompt_metadata_waits_for_vte_instead_of_reclassifying_submitted_editor(self):
+        self.type_text('true')
+        self.window.remember_submission()
+        actual_serial = self.window.session.prompt_serial()
+        self.window.prompt_row = self.window.submitted_row - 1  # Prior Ctrl+C frame was not observed yet.
+        self.speech.calls.clear()
+        with patch.object(self.window.session, 'prompt_serial', return_value=actual_serial + 1), \
+                patch.object(self.window.session, 'command', return_value='true') as command:
+            self.window.poll()
+            self.assertEqual(self.window.prompt_serial, actual_serial)
+            command.return_value = None
+            self.window.terminal.feed(('\r\nQA_DELAYED_FRAME' + self.window.session.prompt_text()).encode())
+            self.wait_for(lambda: self.window.prompt_serial == actual_serial + 1, 'fresh VTE prompt after metadata')
+            self.wait_for(lambda: 'QA_DELAYED_FRAME' in self.speech.calls, 'preserved delayed output prefix')
+        self.assertEqual(self.speech.calls.count('Команда: true'), 1)
+        self.assertFalse(any('QA_DELAYED_FRAMEFlashOS' in value for value in self.speech.calls))
+        self.window.prompt_serial = actual_serial
+
+    def test_prompt_path_with_delimiter_and_wrapping_is_not_mistaken_for_input_or_output(self):
+        folder = Path(self.temporary.name) / ('qa # path ' + 'x' * 90)
+        folder.mkdir()
+        self.window.resize(640, 480)
+        self.pump(.2)
+        self.type_text("cd '" + str(folder) + "'")
+        self.keys('Return')
+        self.wait_for(lambda: str(folder) in (self.window.session.prompt_text() or ''), 'exact prompt with delimiter')
+        self.pump(.3)
+        self.window.options['prompt_mode'] = 'always'
+        self.speech.calls.clear()
+        serial = self.window.session.prompt_serial()
+        self.type_text("printf 'QA_WRAPPED_PROMPT'")
+        self.keys('Return')
+        self.wait_for(lambda: self.window.session.prompt_serial() > serial, 'wrapped prompt generation')
+        self.pump(.4)
+        output = [text for text in self.speech.calls if not text.startswith('Команда:')]
+        self.assertEqual(output, ['QA_WRAPPED_PROMPT', self.window.session.prompt_text().strip()])
+        self.speech.calls.clear()
+        self.window.echo_mode = 'words'
+        self.keys('Up')
+        self.pump(.3)
+        self.assertEqual(self.speech.calls, ["printf 'QA_WRAPPED_PROMPT'"])
+        self.keys('ctrl+c')
+
+    def test_program_output_resembling_prompt_is_read_and_fast_commands_repeat_prompt_when_requested(self):
+        self.window.options['prompt_mode'] = 'always'
+        self.speech.calls.clear()
+        self.command("printf 'FlashOS test # QA_LITERAL_PROMPT\\n'", 'FlashOS test # QA_LITERAL_PROMPT')
+        self.wait_for(lambda: 'FlashOS test # QA_LITERAL_PROMPT' in self.speech.calls, 'literal prompt-like output')
+        self.wait_for(lambda: any(text.startswith('FlashOS /tmp/') for text in self.speech.calls), 'new prompt after fast command')
+
+    def test_clear_screen_reuses_rows_without_suppressing_new_output(self):
+        self.command("printf '\\033[2J\\033[HQA_AFTER_CLEAR\\n'", 'QA_AFTER_CLEAR')
+        self.wait_for(lambda: 'QA_AFTER_CLEAR' in self.speech.calls, 'output in reused screen row')
+
+    def test_preferences_dialog_applies_settings_and_returns_keyboard_focus(self):
+        self.keys('ctrl+shift+p')
+        self.wait_for(lambda: self.window.dialog is not None, 'preferences dialog')
+        self.assertEqual(self.window.dialog.get_title(), 'Настройки терминала')
+        self.window.preference_controls['speak_commands'].set_active(False)
+        self.window.preference_controls['cursor_blink'].set_active(True)
+        self.window.preference_controls['input_echo'].set_active(1)
+        self.window.dialog.response(Gtk.ResponseType.OK)
+        self.pump(.2)
+        self.assertIsNone(self.window.dialog)
+        self.assertEqual(self.window.echo_mode, 'words')
+        self.assertFalse(self.window.options['speak_commands'])
+        self.assertTrue(self.window.terminal.is_focus())
+        self.speech.calls.clear()
+        self.command("printf 'QA_NO_COMMAND_ECHO\\n'", 'QA_NO_COMMAND_ECHO')
+        self.wait_for(lambda: 'QA_NO_COMMAND_ECHO' in self.speech.calls, 'output with submitted echo off')
+        self.assertFalse(any(text.startswith('Команда:') for text in self.speech.calls))
+
+    def test_single_step_zoom_persists_and_preferences_can_reopen_at_that_size(self):
+        from terminal_preferences import OPTIONS, TerminalPreferences
+        self.window.preferences = TerminalPreferences(self.temporary.name)
+        self.keys('ctrl+plus')
+        self.assertEqual(self.window.font_size, 15)
+        self.assertEqual(TerminalPreferences(self.temporary.name).data['font_size'], 15)
+        self.keys('ctrl+shift+p')
+        self.wait_for(lambda: self.window.dialog is not None, 'preferences after single-step zoom')
+        index = self.window.preference_controls['font_size'].get_active()
+        self.assertEqual(OPTIONS['font_size'][1][index][0], 15)
+        self.window.close_dialog()
+
+    def test_cursor_and_deletion_echo_read_actual_characters_and_respect_disabled_options(self):
+        self.type_text('abc')
+        self.window.echo_mode = 'characters'
+        for action, expected in (('Left', 'c'), ('Delete', 'Удалено c'), ('BackSpace', 'Удалено b')):
+            with self.subTest(action=action):
+                self.speech.calls.clear()
+                self.keys(action)
+                self.pump(.2)
+                self.assertEqual(self.speech.calls, [expected])
+        self.window.options.update(cursor_echo=False, delete_echo=False)
+        self.speech.calls.clear()
+        self.keys('Left', 'Delete', 'BackSpace')
+        self.pump(.3)
+        self.assertEqual(self.speech.calls, [])
+        self.keys('ctrl+c')
+
+    def test_backspace_on_empty_prompt_and_delete_at_end_do_not_announce_nonexistent_deletion(self):
+        self.window.echo_mode = 'characters'
+        self.speech.calls.clear()
+        self.keys('BackSpace', 'Delete')
+        self.pump(.2)
+        self.assertEqual(self.speech.calls, [])
+        self.type_text('abc')
+        self.pump(.3)
+        self.speech.calls.clear()
+        self.keys('Delete')
+        self.pump(.2)
+        self.assertEqual(self.speech.calls, [])
+        self.keys('ctrl+c')
+
+    def test_backspace_at_physical_wrap_reads_character_from_previous_row(self):
+        self.window.resize(640, 480)
+        self.pump(.2)
+        column, _ = self.window.terminal.get_cursor_position()
+        count = self.window.terminal.get_column_count() - column
+        self.type_text('z' * count)
+        self.assertEqual(self.window.terminal.get_cursor_position()[0], 0)
+        self.window.echo_mode = 'characters'
+        self.speech.calls.clear()
+        self.keys('BackSpace')
+        self.pump(.2)
+        self.assertEqual(self.speech.calls, ['Удалено z'])
+        self.keys('ctrl+c')
+
+    def test_manual_review_uses_the_configured_history_limit(self):
+        self.window.options['scrollback'] = 1000
+        content = '\n'.join('QA_REVIEW_' + str(index) for index in range(1001)).encode()
+        with patch.object(self.window.terminal, 'write_contents_sync',
+                          side_effect=lambda stream, *_: stream.write_all(content, None)):
+            self.window.review(edge='first')
+        self.assertEqual(len(self.window.review_lines), 1000)
+        self.assertEqual(self.window.review_lines[0], 'QA_REVIEW_1')
 
     @staticmethod
     def pump(duration=.05):
@@ -243,9 +498,11 @@ class TerminalWindowTests(unittest.TestCase):
         self.command("printf 'QA_SCROLL_%05d\\n' {1..5100}", 'QA_SCROLL_05100')
         self.wait_for(lambda: any(text.startswith('Часть быстрого вывода не озвучена.')
                                  for text in self.speech.calls), 'fast output omission notice')
+        first_call = len(self.speech.calls)
         self.keys('ctrl+shift+Home')
-        self.wait_for(lambda: bool(re.fullmatch(r'QA_SCROLL_\d{5}', self.speech.calls[-1])), 'first retained scrollback row')
-        first_line = self.speech.calls[-1]
+        first_line = self.window.review_lines[0]
+        self.wait_for(lambda: first_line in self.speech.calls[first_call:], 'first retained scrollback row')
+        self.assertRegex(first_line, r'^QA_SCROLL_\d{5}$')
         self.assertGreater(int(first_line.rsplit('_', 1)[1]), 1)
         self.assertLess(int(first_line.rsplit('_', 1)[1]), 200)
         self.window.adjustment.set_value(self.window.adjustment.get_lower())
@@ -300,6 +557,28 @@ class TerminalWindowTests(unittest.TestCase):
         self.wait_for(lambda: any('QA_RESUMED_OUTPUT' in text for text in self.speech.calls), 'resumed output speech')
         self.assertFalse(self.window.reader.stopped)
         self.assertTrue(self.window.status.get_text().startswith('Авточтение: вкл'))
+
+    def test_typing_after_stop_echoes_input_but_background_waits_for_an_accepted_command(self):
+        self.type_text("(sleep .8; printf '\\nQA_STOPPED_BACKGROUND\\n') & disown")
+        self.keys('Return')
+        self.wait_for(lambda: self.window.session.state()
+                      and self.window.prompt_serial == self.window.session.prompt_serial(), 'background job ready')
+        self.keys('ctrl+shift+space')
+        self.speech.calls.clear()
+        self.window.echo_mode = 'characters'
+        self.type_text('t')
+        self.wait_for(lambda: 't' in self.speech.calls, 'input echo while output is stopped')
+        self.wait_for(lambda: 'QA_STOPPED_BACKGROUND' in self.screen().splitlines(), 'visible stopped background output')
+        self.pump(.2)
+        self.assertTrue(self.window.reader.stopped)
+        self.assertTrue(self.window.status.get_text().startswith('Авточтение: остановлено'))
+        self.assertFalse(any('QA_STOPPED_BACKGROUND' in text for text in self.speech.calls))
+        self.type_text("rue; printf '\\nQA_AFTER_STOP_ENTER\\n'")
+        self.keys('Return')
+        self.wait_for(lambda: 'QA_AFTER_STOP_ENTER' in self.speech.calls, 'output resumes after accepted command')
+        self.assertFalse(self.window.reader.stopped)
+        self.assertTrue(self.window.status.get_text().startswith('Авточтение: вкл'))
+        self.assertFalse(any('QA_STOPPED_BACKGROUND' in text for text in self.speech.calls))
 
     def test_manual_speech_refreshes_stopped_status_preserving_pause_and_history_details(self):
         self.command("printf 'QA_STATUS_REVIEW\\n'", 'QA_STATUS_REVIEW')

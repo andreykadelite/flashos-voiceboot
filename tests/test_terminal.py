@@ -50,6 +50,21 @@ class ShellSessionTests(unittest.TestCase):
             self.assertNotIn(key, result)
         self.assertEqual(environment['HISTFILE'], '/mnt/usb/history')
 
+    def test_environment_restores_missing_or_empty_home_from_the_current_account(self):
+        for home in (None, ''):
+            with self.subTest(home=home), mock.patch.dict(os.environ, {}, clear=True):
+                if home is not None:
+                    os.environ['HOME'] = home
+                if os.name == 'posix':
+                    with mock.patch('pwd.getpwuid', return_value=mock.Mock(pw_dir='/account/home')) as account:
+                        result = self.session.environment()
+                    self.assertEqual(result['HOME'], '/account/home')
+                    account.assert_called_once_with(os.getuid())
+                else:
+                    with mock.patch('terminal.Path.home', return_value=Path('C:/account/home')):
+                        result = self.session.environment()
+                    self.assertEqual(result['HOME'], str(Path('C:/account/home')))
+
     def test_commands_are_consumed_once_and_monotonically(self):
         command = self.session.path / 'command'
         command.write_bytes(b'1\0printf "hello"\0')
@@ -91,6 +106,24 @@ class ShellSessionTests(unittest.TestCase):
         state.mkdir()
         self.assertFalse(self.session.state())
 
+    def test_prompt_serial_rejects_partial_malformed_or_oversized_metadata(self):
+        path = self.session.path / 'prompt'
+        self.assertIsNone(self.session.prompt_serial())
+        for value in (b'', b'-1\n', b'x\n', b'9' * 25):
+            path.write_bytes(value)
+            self.assertIsNone(self.session.prompt_serial())
+        path.write_bytes(b'45\n')
+        self.assertEqual(self.session.prompt_serial(), 45)
+
+    def test_prompt_text_keeps_delimiters_and_rejects_partial_or_oversized_metadata(self):
+        path = self.session.path / 'prompt_text'
+        self.assertIsNone(self.session.prompt_text())
+        for value in (b'partial', b'a\0extra\0', b'x' * 16384 + b'\0'):
+            path.write_bytes(value)
+            self.assertIsNone(self.session.prompt_text())
+        path.write_bytes('FlashOS /tmp/каталог # имя # \0'.encode())
+        self.assertEqual(self.session.prompt_text(), 'FlashOS /tmp/каталог # имя # ')
+
 
 class PasteTests(unittest.TestCase):
     def test_printable_paths_tabs_and_multiline_are_preserved(self):
@@ -127,6 +160,15 @@ class TerminalLauncherTests(unittest.TestCase):
         argv = spawn.call_args.args[0]
         self.assertEqual(argv[argv.index('--output') + 1], name)
         self.assertEqual(argv[-2:], ['--directory', '/tmp'])
+
+    def test_preferences_launch_passes_the_usb_state_root_to_the_child(self):
+        self.ui.state_root = Path('/run/flashos-boot')
+        with mock.patch('terminal.subprocess.Popen', return_value=self.process) as spawn, \
+                mock.patch('terminal.subprocess.run'), mock.patch('time.sleep'):
+            terminal.launch(self.ui, '/mnt/FLASHOS', preferences=True)
+        argv = spawn.call_args.args[0]
+        self.assertEqual(argv[argv.index('--state-root') + 1], str(self.ui.state_root))
+        self.assertIn('--preferences', argv)
 
     def test_production_launch_is_cgroup_scoped_and_restores_menu(self):
         environment = {'DISPLAY': ':7', 'XAUTHORITY': '/run/display/auth', 'PIPEWIRE_REMOTE': 'pipewire-0'}
@@ -183,7 +225,7 @@ class TerminalLauncherTests(unittest.TestCase):
 
 class BashPTY:
     """Own a real interactive Bash and controlling PTY in an isolated RAM session."""
-    def __init__(self, session, directory):
+    def __init__(self, session, directory, environment_changes=None, home_from_session=False):
         import pty
         self.session = session
         self.buffer = b''
@@ -192,7 +234,14 @@ class BashPTY:
             try:
                 os.chdir(directory)
                 environment = session.environment()
-                environment.update(HOME=str(directory), INPUTRC='/dev/null', LC_ALL='C.UTF-8')
+                environment.update(INPUTRC='/dev/null', LC_ALL='C.UTF-8')
+                if not home_from_session:
+                    environment['HOME'] = str(directory)
+                for key, value in (environment_changes or {}).items():
+                    if value is None:
+                        environment.pop(key, None)
+                    else:
+                        environment[key] = value
                 os.execvpe(session.argv[0], session.argv, environment)
             finally:
                 os._exit(127)
@@ -269,6 +318,72 @@ class BashPTY:
                 pass
             os.waitpid(self.pid, 0)
         os.close(self.fd)
+
+
+@unittest.skipUnless(os.name == 'posix' and Path('/bin/bash').is_file(), 'Real Bash/PTY requires Linux')
+class BashHomePromptTests(unittest.TestCase):
+    def test_startup_with_unset_or_empty_home_keeps_the_absolute_working_directory(self):
+        for home in (None, ''):
+            with self.subTest(home=home), tempfile.TemporaryDirectory() as folder:
+                session = terminal.ShellSession(folder)
+                try:
+                    shell = BashPTY(session, folder, {'HOME': home})
+                    try:
+                        self.assertEqual(session.prompt_text(), 'FlashOS ' + folder + ' # ')
+                        self.assertNotIn(b'FlashOS ~/', shell.output)
+                    finally:
+                        shell.close()
+                finally:
+                    session.close()
+
+    def test_real_home_and_its_child_directory_still_use_the_home_abbreviation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            home = Path(folder)
+            (home / 'child').mkdir()
+            for directory, expected in ((home, '~'), (home / 'child', '~/child')):
+                with self.subTest(directory=directory):
+                    session = terminal.ShellSession(folder)
+                    try:
+                        shell = BashPTY(session, directory, {'HOME': str(home)})
+                        try:
+                            self.assertEqual(session.prompt_text(), 'FlashOS ' + expected + ' # ')
+                        finally:
+                            shell.close()
+                    finally:
+                        session.close()
+
+    def test_unsetting_or_emptying_home_inside_the_shell_keeps_an_absolute_prompt(self):
+        with tempfile.TemporaryDirectory() as folder:
+            session = terminal.ShellSession(folder)
+            try:
+                shell = BashPTY(session, folder)
+                try:
+                    for command in ('unset HOME', "HOME='' "):
+                        shell.run(command)
+                        self.assertEqual(session.prompt_text(), 'FlashOS ' + folder + ' # ')
+                finally:
+                    shell.close()
+            finally:
+                session.close()
+
+    def test_restored_session_home_supports_cd_without_an_argument(self):
+        import pwd
+        expected_home = pwd.getpwuid(os.getuid()).pw_dir
+        if not Path(expected_home).is_dir():
+            self.skipTest('Current account home directory does not exist')
+        with tempfile.TemporaryDirectory() as folder, mock.patch.dict(os.environ, {'HOME': ''}):
+            session = terminal.ShellSession(folder)
+            try:
+                shell = BashPTY(session, folder, home_from_session=True)
+                try:
+                    self.assertEqual(session.prompt_text(), 'FlashOS ' + folder + ' # ')
+                    shell.run('cd')
+                    self.assertEqual(session.prompt_text(), 'FlashOS ~ # ')
+                    self.assertNotIn(b'HOME not set', shell.output)
+                finally:
+                    shell.close()
+            finally:
+                session.close()
 
 
 @unittest.skipUnless(os.name == 'posix' and Path('/bin/bash').is_file(), 'Real Bash/PTY requires Linux')

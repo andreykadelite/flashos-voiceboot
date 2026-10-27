@@ -36,6 +36,50 @@ class TerminalSpeechTests(unittest.TestCase):
         self.speech = FakeSpeech()
         self.queue = TerminalSpeech(self.speech)
 
+    def test_rapid_character_echo_keeps_typing_order_and_precedes_pending_output(self):
+        self.queue.enqueue_output('Pending output')
+        for char in 'abc':
+            self.queue.echo(char)
+        self.drain()
+        self.assertEqual(self.speech.calls, ['a', 'b', 'c', 'Pending output'])
+
+    def test_input_echo_interrupts_output_once_without_interrupting_previous_character(self):
+        self.queue.enqueue_output('Long output')
+        self.queue.tick()
+        self.queue.echo('a')
+        self.queue.tick()
+        stops = self.speech.stops
+        self.queue.echo('b')
+        self.assertEqual(self.speech.stops, stops)
+        self.drain()
+        self.assertEqual(self.speech.calls, ['Long output', 'a', 'b'])
+
+    def test_input_echo_overflow_reports_any_displaced_output(self):
+        queue = TerminalSpeech(self.speech, max_messages=3)
+        queue.enqueue_output('One')
+        queue.enqueue_output('Two')
+        queue.enqueue_output('Three')
+        queue.echo('a')
+        self.drain(queue)
+        self.assertIn(OVERFLOW_NOTICE, self.speech.calls)
+        self.assertLessEqual(len(self.speech.calls), 3)
+
+    def test_input_echo_preserves_stop_and_pause_until_an_explicit_resume_action(self):
+        for paused in (False, True):
+            with self.subTest(paused=paused):
+                queue = TerminalSpeech(self.speech)
+                queue.stop()
+                if paused:
+                    queue.pause()
+                self.assertTrue(queue.echo('a'))
+                self.assertTrue(queue.stopped)
+                self.assertEqual(queue.paused, paused)
+                self.assertFalse(queue.enqueue_output('Do not resume background output'))
+                self.drain(queue)
+                self.assertTrue(queue.stopped)
+                self.assertEqual(queue.paused, paused)
+                self.assertEqual(self.speech.calls[-1], 'a')
+
     def drain(self, queue=None):
         queue = queue or self.queue
         for _ in range(200):
