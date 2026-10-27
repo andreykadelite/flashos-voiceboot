@@ -81,11 +81,105 @@ class DisplayTests(unittest.TestCase):
         self.assertEqual(self.screen.queue.popleft(), ('tab', 2))
         top, bottom, index = self.screen.regions[-1]
         self.screen.click(types.SimpleNamespace(x=80, y=(top + bottom) / 2))
-        self.assertEqual(self.screen.queue.popleft(), graphical.curses.KEY_HOME)
-        self.assertEqual(list(self.screen.queue), [graphical.curses.KEY_DOWN] * index)
+        self.assertEqual(self.screen.queue.popleft(), ('row', 'Магазин', index, False))
+        self.assertFalse(self.screen.queue)
         self.screen.queue.clear()
         self.screen.key(types.SimpleNamespace(keysym='F3', char=''))
         self.assertEqual(self.screen.queue.popleft(), graphical.curses.KEY_F3)
+
+    def test_pointer_controls_wheel_and_single_click(self):
+        self.screen.render('Меню', ['Один', 'Два', 'Три'])
+        self.screen.pointer_values.update(activation='single', wheel_lines=3)
+        top, bottom, index = self.screen.regions[-1]
+        self.screen.click(types.SimpleNamespace(x=80, y=(top + bottom) / 2))
+        self.assertEqual(self.screen.queue.popleft(), ('row', 'Меню', index, True))
+        self.screen.activate(types.SimpleNamespace(x=80, y=(top + bottom) / 2))
+        self.assertFalse(self.screen.queue, 'Second press of a single-activation double click acted twice')
+        self.screen.scroll(1)
+        self.assertEqual(self.screen.queue.popleft(), ('scroll', 'Меню', 3))
+        for left, right, top, bottom, key in self.screen.action_regions:
+            self.screen.click(types.SimpleNamespace(x=(left + right) / 2, y=(top + bottom) / 2))
+            self.assertEqual(self.screen.queue.popleft(), key)
+
+    def test_native_mouse_events_reach_the_same_safe_actions(self):
+        import shutil
+        import subprocess
+        if not shutil.which('xdotool'):
+            self.skipTest('xdotool is required to inject real X11 pointer events')
+        self.screen.render('Меню', ['Один', 'Два', 'Три'])
+        self.screen.root.update()
+        top, bottom, index = self.screen.regions[-1]
+        subprocess.run(['xdotool', 'mousemove', str(self.screen.canvas.winfo_rootx() + 80),
+                        str(int(self.screen.canvas.winfo_rooty() + (top + bottom) / 2)),
+                        'click', '--repeat', '2', '--delay', '80', '1'], check=True, timeout=5)
+        self.screen.root.update()
+        events = list(self.screen.queue)
+        self.assertIn(('row', 'Меню', index, False), events)
+        self.assertIn(('row', 'Меню', index, True), events)
+        self.screen.queue.clear()
+        subprocess.run(['xdotool', 'click', '3', 'click', '5'], check=True, timeout=5)
+        self.screen.root.update()
+        self.assertEqual(list(self.screen.queue), [27, ('scroll', 'Меню', 1)])
+
+    @unittest.skipUnless(os.name == 'posix', 'Russian XKB layout requires X11')
+    def test_russian_layout_preserves_physical_pointer_rescue_shortcut(self):
+        import shutil
+        import subprocess
+        from pointer_settings import DEFAULTS
+        if not shutil.which('xdotool') or not shutil.which('setxkbmap'):
+            self.skipTest('xdotool and setxkbmap are required for real XKB input')
+        self.screen.configure_pointer({**DEFAULTS, 'visible': False})
+        self.screen.root.update()
+        try:
+            subprocess.run(['setxkbmap', '-layout', 'ru'], check=True, timeout=5)
+            subprocess.run(['xdotool', 'key', '--clearmodifiers', 'Cyrillic_ze'],
+                           check=True, timeout=5)
+            self.screen.root.update()
+            self.assertEqual(self.screen.queue.pop(), 'з', 'Ordinary Russian input was intercepted')
+            subprocess.run(['xdotool', 'key', '--clearmodifiers', 'ctrl+alt+Cyrillic_ze'],
+                           check=True, timeout=5)
+            self.screen.root.update()
+            self.assertTrue(self.screen.pointer_values['visible'])
+            self.assertFalse(self.screen.pointer_cursor.hidden)
+            self.assertIn(('pointer-visible', True), self.screen.queue)
+            self.screen.queue.clear()
+            self.screen.configure_pointer({**DEFAULTS, 'visible': False})
+            self.screen.root.event_generate('<Control-Alt-KeyPress-Cyrillic_ZE>')
+            self.screen.root.update()
+            self.assertTrue(self.screen.pointer_values['visible'])
+            self.assertEqual(self.screen.queue.pop(), ('pointer-visible', True))
+        finally:
+            subprocess.run(['setxkbmap', '-layout', 'us'], check=True, timeout=5)
+
+    @unittest.skipUnless(os.name == 'posix', 'Native Xcursor/XFixes requires X11')
+    def test_x11_cursor_size_color_visibility_and_rescue(self):
+        import ctypes as c
+        from pointer_settings import DEFAULTS
+        class CursorImage(c.Structure):
+            _fields_ = [('x', c.c_short), ('y', c.c_short), ('width', c.c_ushort),
+                        ('height', c.c_ushort), ('xhot', c.c_ushort), ('yhot', c.c_ushort),
+                        ('serial', c.c_ulong), ('pixels', c.POINTER(c.c_ulong))]
+        for size, color in ((24, 'white'), (48, 'black'), (64, 'yellow')):
+            self.screen.configure_pointer({**DEFAULTS, 'size': size, 'color': color})
+            self.assertEqual(self.screen.pointer_error, '')
+            cursor = self.screen.pointer_cursor
+            self.screen.canvas.event_generate('<Motion>', x=80, y=160, warp=True)
+            self.screen.root.update()
+            cursor.xfixes.XFixesGetCursorImage.argtypes = [c.c_void_p]
+            cursor.xfixes.XFixesGetCursorImage.restype = c.POINTER(CursorImage)
+            image = cursor.xfixes.XFixesGetCursorImage(cursor.display)
+            try:
+                self.assertEqual((image.contents.width, image.contents.height), (size, size))
+                self.assertIn({'white': 0xffffffff, 'black': 0xff111111, 'yellow': 0xffffdf00}[color],
+                              [image.contents.pixels[i] & 0xffffffff for i in range(size * size)])
+            finally:
+                cursor.xlib.XFree.argtypes = [c.c_void_p]
+                cursor.xlib.XFree(image)
+        self.screen.configure_pointer({**DEFAULTS, 'visible': False})
+        self.assertTrue(self.screen.pointer_cursor.hidden)
+        self.screen.reveal_pointer()
+        self.assertFalse(self.screen.pointer_cursor.hidden)
+        self.assertEqual(self.screen.queue.pop(), ('pointer-visible', True))
 
 
 class WindowManagerTests(unittest.TestCase):

@@ -1,9 +1,11 @@
 """Native adaptive display, sharing the console's navigation and speech logic."""
 from collections import deque
 import curses
+import os
 import time
 import tkinter as tk
 from tkinter import font
+from pointer_settings import DEFAULTS as POINTER_DEFAULTS, validate as validate_pointer, PointerMonitor, X11Cursor
 
 
 # Shared work surface, blue selection and an amber focus rail.
@@ -86,15 +88,78 @@ class GraphicalScreen:
         self.previous = None
         self.regions = []
         self.tab_regions = []
+        self.action_regions = []
+        self.pointer_values = dict(POINTER_DEFAULTS)
+        self.pointer_monitor = None
+        self.pointer_cursor = None
+        self.pointer_error = ''
+        self.pointer_title = ''
+        self._wheel_remainder = 0
         self.root.bind('<KeyPress>', self.key)
         self.root.bind('<Configure>', lambda event: setattr(self, 'previous', None))
         self.canvas.bind('<Button-1>', self.click)
         self.canvas.bind('<Double-Button-1>', self.activate)
-        self.canvas.bind('<Button-4>', lambda event: self.queue.append(curses.KEY_UP))
-        self.canvas.bind('<Button-5>', lambda event: self.queue.append(curses.KEY_DOWN))
+        self.canvas.bind('<Button-3>', lambda event: self.queue.append(27))
+        self.canvas.bind('<Button-4>', lambda event: self.scroll(-1))
+        self.canvas.bind('<Button-5>', lambda event: self.scroll(1))
+        self.canvas.bind('<MouseWheel>', self.wheel)
+        for keysym in ('p', 'P', 'Cyrillic_ze', 'Cyrillic_ZE'):
+            try:
+                self.root.bind('<Control-Alt-' + keysym + '>', self.reveal_pointer)
+            except tk.TclError:
+                # Some non-X11 Tk builds omit the X11 Cyrillic keysym table.
+                continue
         self.root.protocol('WM_DELETE_WINDOW', lambda: self.queue.append(curses.KEY_F10))
         self.root.update()
         self.root.focus_force()
+
+    def configure_pointer(self, values):
+        self.pointer_values = validate_pointer(values)
+        self.pointer_error = ''
+        os.environ['XCURSOR_SIZE'] = str(self.pointer_values['size'])
+        if os.name == 'posix' and os.environ.get('DISPLAY'):
+            if self.pointer_monitor is None:
+                self.pointer_monitor = PointerMonitor(self.pointer_values)
+            else:
+                self.pointer_monitor.configure(self.pointer_values)
+            try:
+                if self.pointer_cursor is None:
+                    self.pointer_cursor = X11Cursor()
+                self.root.update_idletasks()
+                self.pointer_cursor.configure(self.pointer_values,
+                    [self.root.winfo_id(), self.canvas.winfo_id()])
+                if not self.pointer_values['visible'] and not self.pointer_cursor.visibility:
+                    self.pointer_error = 'Сервер X11 не поддерживает скрытие указателя во внешних окнах.'
+            except (OSError, AttributeError) as error:
+                self.pointer_error = 'Внешний вид указателя X11: ' + str(error)[:250]
+        # A Tk fallback preserves visibility if Xcursor is unavailable.
+        self.canvas.configure(cursor='none' if not self.pointer_values['visible'] else
+                              '' if self.pointer_cursor else 'arrow')
+
+    def pointer_status(self):
+        lines = self.pointer_monitor.snapshot() if self.pointer_monitor else [
+            'Настройки драйвера применяются в графическом режиме Linux после загрузки с флешки.']
+        return ([self.pointer_error] if self.pointer_error else []) + lines
+
+    def reveal_pointer(self, event=None):
+        self.configure_pointer({**self.pointer_values, 'visible': True})
+        # UI persists this rescue action using the same preferences path.
+        self.queue.append(('pointer-visible', True))
+        return 'break'
+
+    def scroll(self, amount):
+        self.queue.append(('scroll', self.pointer_title, amount * self.pointer_values['wheel_lines']))
+        return 'break'
+
+    def wheel(self, event):
+        # Windows uses 120 per notch; high-resolution touchpads may send less.
+        delta = event.delta
+        if self.root.tk.call('tk', 'windowingsystem') == 'aqua':
+            return self.scroll(-1 if delta > 0 else 1) if delta else 'break'
+        self._wheel_remainder += delta
+        steps = int(self._wheel_remainder / 120)
+        self._wheel_remainder -= steps * 120
+        return self.scroll(-steps) if steps else 'break'
 
     def key(self, event):
         if event.keysym in KEYS:
@@ -104,6 +169,10 @@ class GraphicalScreen:
         return 'break'
 
     def click(self, event):
+        for left, right, top, bottom, key in self.action_regions:
+            if left <= event.x <= right and top <= event.y <= bottom:
+                self.queue.append(key)
+                return True
         for left, right, top, bottom, index in self.tab_regions:
             if left <= event.x <= right and top <= event.y <= bottom:
                 self.queue.append(('tab', index))
@@ -113,14 +182,23 @@ class GraphicalScreen:
             return False
         for top, bottom, index in self.regions:
             if top <= event.y <= bottom:
-                self.queue.append(curses.KEY_HOME)
-                self.queue.extend([curses.KEY_DOWN] * index)
+                self.queue.append(('row', self.pointer_title, index,
+                                   self.pointer_values['activation'] == 'single'))
                 return True
         return False
 
     def activate(self, event):
-        if self.click(event) and not (self.queue and isinstance(self.queue[-1], tuple)):
-            self.queue.append(10)
+        if self.pointer_values['activation'] == 'single':
+            # The first press already selected/opened the target. A second
+            # press of the same double click must not act in the next menu.
+            return False
+        for top, bottom, index in self.regions:
+            if top <= event.y <= bottom:
+                pad = max(16, min(40, self.canvas.winfo_width() // 24))
+                if pad <= event.x <= self.canvas.winfo_width() - pad:
+                    self.queue.append(('row', self.pointer_title, index, True))
+                    return True
+        return False
 
     def keypad(self, enabled):
         pass
@@ -150,6 +228,7 @@ class GraphicalScreen:
         return self.root.winfo_height() // 24, self.root.winfo_width() // 12
 
     def render(self, title, rows, selected=0, footer='', tabs=None, tab_index=0, detail=''):
+        self.pointer_title = title
         width, height = self.canvas.winfo_width(), self.canvas.winfo_height()
         selected = max(0, min(selected, len(rows) - 1))
         state = (title, tuple(rows), selected, footer, width, height, tuple(tabs or ()), tab_index, detail)
@@ -158,7 +237,7 @@ class GraphicalScreen:
         self.previous = state
         c = self.canvas
         c.delete('all')
-        self.regions, self.tab_regions = [], []
+        self.regions, self.tab_regions, self.action_regions = [], [], []
         pad = max(16, min(40, width // 24))
         body_width = max(1, width - pad * 2)
         compact = height < 660 or width < 850
@@ -185,11 +264,20 @@ class GraphicalScreen:
         nav_lines = [part for line in navigation for part in wrap_pixels(line, small_font.measure, body_width)]
         status = wrap_pixels(footer, small_font.measure, body_width, maximum=2)
         small_height = small_font.metrics('linespace')
-        footer_top = height - (len(nav_lines) + len(status)) * small_height - 32
+        footer_top = height - (len(nav_lines) + len(status)) * small_height - 84
         c.create_rectangle(0, footer_top, width, height, fill=COLORS['surface'], outline='')
         c.create_line(pad, footer_top, width - pad, footer_top, fill=COLORS['border'])
         text(pad, footer_top + 10, '\n'.join(status), small_font, COLORS['muted'])
         text(pad, footer_top + 18 + len(status) * small_height, '\n'.join(nav_lines), small_font)
+        button_top = height - 50
+        button_width = body_width / 4
+        for number, (label, key) in enumerate((('Назад', 27), ('Открыть', 10),
+                                               ('Справка', curses.KEY_F1), ('Стоп речи', curses.KEY_F7))):
+            left, right = pad + number * button_width, pad + (number + 1) * button_width - 6
+            c.create_rectangle(left, button_top, right, button_top + 44,
+                               fill=COLORS['background'], outline=COLORS['border'])
+            text((left + right) / 2, button_top + 22, label, small_font, anchor='center')
+            self.action_regions.append((left, right, button_top, button_top + 44, key))
 
         text(pad, 15, 'FLASH OS', tab_font, COLORS['selected'])
         position = f'{selected + 1} из {len(rows)}' if rows else 'Нет пунктов'
@@ -260,6 +348,11 @@ class GraphicalScreen:
         self.root.focus_force()
         self.previous = None
         self.root.update()
+        self.configure_pointer(self.pointer_values)
 
     def close(self):
+        if self.pointer_monitor is not None:
+            self.pointer_monitor.close()
+        if self.pointer_cursor is not None:
+            self.pointer_cursor.close()
         self.root.destroy()

@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+from pointer_settings import DEFAULTS as POINTER_DEFAULTS, validate as validate_pointer
 
 VOICES = [
     ('elena', 'Елена, RHVoice'), ('irina', 'Ирина, RHVoice'),
@@ -9,7 +10,7 @@ VOICES = [
     ('aleksandr', 'Александр, RHVoice'), ('espeak', 'eSpeak, резервный голос'),
 ]
 DEFAULTS = {'voice': 'elena', 'rate': 100, 'pitch': 100, 'volume': 75,
-            'signals': True, 'progress_seconds': 30}
+            'signals': True, 'progress_seconds': 30, 'pointer': dict(POINTER_DEFAULTS)}
 
 
 class DurabilityError(OSError):
@@ -18,6 +19,7 @@ class DurabilityError(OSError):
 
 def validate(data):
     result = dict(DEFAULTS)
+    result['pointer'] = validate_pointer(None)
     if not isinstance(data, dict):
         return result
     if isinstance(data.get('voice'), str) and data['voice'] in {item[0] for item in VOICES}:
@@ -28,13 +30,14 @@ def validate(data):
             result[key] = max(low, min(high, data[key]))
     if type(data.get('signals')) is bool:
         result['signals'] = data['signals']
+    result['pointer'] = validate_pointer(data.get('pointer'))
     return result
 
 
 class Settings:
     def __init__(self, state_root):
         self.path = Path(state_root) / 'flashos/settings.json'
-        self.data = dict(DEFAULTS)
+        self.data = validate({})
         self.error = ''
         try:
             if self.path.stat().st_size > 4096:

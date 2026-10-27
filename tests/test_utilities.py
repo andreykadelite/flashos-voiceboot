@@ -150,6 +150,17 @@ class PreferenceTests(unittest.TestCase):
 
 
 class UtilityUITests(unittest.TestCase):
+    def test_pointer_false_value_is_saved_and_applied_without_application_store(self):
+        from pointer_settings import DEFAULTS
+        utility, ui, apps = self.utility(['visible', False, None])
+        ui.settings.data = {'pointer': dict(DEFAULTS)}
+        ui.screen.graphical = True
+        utility.pointer()
+        ui.change_settings.assert_called_once_with({'pointer': {**DEFAULTS, 'visible': False}},
+                                                   'Указатель на экране: Выключено')
+        ui.screen.configure_pointer.assert_called_once_with({**DEFAULTS, 'visible': False})
+        apps.ready.assert_not_called()
+
     def utility(self, selections, confirm=True, demo=False):
         ui = mock.Mock(demo=demo)
         ui.choose.side_effect = selections

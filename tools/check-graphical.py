@@ -43,7 +43,7 @@ try:
         screen.activate(SimpleNamespace(x=1, y=screen.regions[1][0] + 5))
         assert not screen.queue, 'Blank area activated confirmation'
         screen.activate(SimpleNamespace(x=width // 2, y=screen.regions[1][0] + 5))
-        assert list(screen.queue) == [curses.KEY_HOME, curses.KEY_DOWN, 10]
+        assert list(screen.queue) == [('row', screen.pointer_title, 1, True)]
         screen.queue.clear()
         ImageGrab.grab(bbox=(0, 0, width, height), xdisplay=os.environ['DISPLAY']).save(project / f'dist/graphical-confirm-{width}.png')
     (project / 'dist/graphical-verification.json').write_text(json.dumps(results, indent=2))

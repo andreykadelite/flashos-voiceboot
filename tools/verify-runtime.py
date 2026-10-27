@@ -12,7 +12,7 @@ commands = ['lshw', 'lscpu', 'free', 'dmidecode', 'lsblk', 'blkid', 'lspci', 'ls
     'fsck.exfat', 'nvme', 'curl', 'sensors', 'ethtool', 'lsscsi', 'iw', 'rfkill', 'cat', 'test',
     'nmcli', 'wpa_supplicant', 'modprobe', 'modinfo', 'depmod', 'rsync', 'dig', 'traceroute', 'hwinfo', 'mtr', 'photorec',
     'partclone.extfs', 'partclone.fat', 'partclone.exfat', 'partclone.ntfs', 'partclone.xfs',
-    'partclone.btrfs', 'partclone.chkimg', 'partclone.restore', 'partclone.info', 'Xorg', 'xinit', 'blockdev', 'udevadm', 'losetup', 'mkfs.ext4', 'resize2fs', 'systemd-run', 'xhost']
+    'partclone.btrfs', 'partclone.chkimg', 'partclone.restore', 'partclone.info', 'Xorg', 'xinit', 'blockdev', 'udevadm', 'losetup', 'mkfs.ext4', 'resize2fs', 'systemd-run', 'xhost', 'xinput']
 missing = [name for name in commands if not shutil.which(name)]
 assert not missing, 'Missing menu commands: ' + ', '.join(missing)
 print('Verified menu runtime commands:', len(commands))

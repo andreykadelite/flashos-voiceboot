@@ -9,6 +9,7 @@ import uuid
 from store_client import result_json
 from store_preferences import DEFAULTS
 from orca_settings import VOICES as ORCA_VOICES, DEFAULTS as ORCA_DEFAULTS, flashos_defaults
+import pointer_settings as pointer
 
 RUNTIME_BASE = Path('/run/flashos-preferences')
 LABELS = {'text_scale': 'Размер текста', 'contrast': 'Высокая контрастность',
@@ -121,6 +122,8 @@ class Utilities:
             selection = self.ui.choose('Утилиты',
                 [('Настройки доступности приложений Debian — GSettings', 'preferences'),
                  ('Настройки экранного диктора Orca — голос и речь', 'orca'),
+                 ('Доступность — курсор, мышь и тачпад', 'pointer'),
+                 ('Настройки терминала с озвучкой', 'terminal'),
                  ('Как пользоваться утилитой настроек', 'help')], prompt=True)
             if selection is None:
                 return
@@ -130,6 +133,53 @@ class Utilities:
                 self.preferences()
             elif selection == 'orca':
                 self.orca()
+            elif selection == 'pointer':
+                self.pointer()
+            elif selection == 'terminal':
+                from terminal import launch
+                launch(self.ui, self.ui.state_root, preferences=True)
+
+    def pointer(self):
+        self.ui.speak_wait('Курсор, мышь и тачпад. ' + pointer.HELP, title='Указатель и устройства ввода')
+        while True:
+            values = pointer.validate(self.ui.settings.data.get('pointer'))
+            items = [(label + ': ' + pointer.value_label(key, values[key]), key)
+                     for key, label in pointer.LABELS.items()]
+            items += [('Устройства и применение настроек', 'status'),
+                      ('Прочитать все настройки', 'read'), ('Стандартные настройки указателя', 'reset'),
+                      ('Справка о мыши, тачпаде и сохранении', 'help')]
+            selection = self.ui.choose('Курсор, мышь и тачпад', items, help_text=pointer.HELP, prompt=True)
+            if selection is None:
+                return
+            if selection == 'help':
+                self.ui.message('Указатель и устройства ввода', pointer.HELP)
+                continue
+            if selection == 'read':
+                self.ui.view('Настройки указателя', [label + ': ' + pointer.value_label(key, values[key])
+                             for key, label in pointer.LABELS.items()])
+                continue
+            if selection == 'status':
+                screen = self.ui.screen
+                lines = screen.pointer_status() if getattr(screen, 'graphical', False) else [
+                    'Изменения сохраняются; указатель и настройки устройств применятся при графическом запуске.']
+                self.ui.view('Устройства и применение', lines + [pointer.HELP])
+                continue
+            if selection == 'reset':
+                if not self.ui.confirm('Вернуть стандартные настройки курсора, мыши и тачпада?'):
+                    continue
+                updated = dict(pointer.DEFAULTS)
+                message = 'Стандартные настройки указателя восстановлены'
+            elif selection in pointer.LABELS:
+                value = self.ui.choose(pointer.LABELS[selection], [('Отмена', None)] + pointer.OPTIONS[selection], prompt=True)
+                if value is None:
+                    continue
+                updated = {**values, selection: value}
+                message = pointer.LABELS[selection] + ': ' + pointer.value_label(selection, value)
+            else:
+                continue
+            self.ui.change_settings({'pointer': updated}, message)
+            if getattr(self.ui.screen, 'graphical', False):
+                self.ui.screen.configure_pointer(updated)
 
     def task(self, action, request=None):
         result = self.ui.run_job('Настройки доступности приложений',

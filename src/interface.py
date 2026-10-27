@@ -25,6 +25,9 @@ class UI:
         self.state_root, self.demo = Path(state_root), demo
         self.focus = {}
         self.pending_keys = deque()
+        configure_pointer = getattr(screen, 'configure_pointer', None)
+        if getattr(screen, 'graphical', False) and callable(configure_pointer):
+            configure_pointer(settings.data.get('pointer'))
         if not getattr(screen, 'graphical', False):
             curses.curs_set(0)
         screen.keypad(True)
@@ -137,7 +140,11 @@ class UI:
                 self.speech.say(message)
 
     def global_key(self, key):
-        if key == curses.KEY_F7:
+        if isinstance(key, tuple) and key == ('pointer-visible', True):
+            from pointer_settings import validate as validate_pointer
+            values = validate_pointer(self.settings.data.get('pointer'))
+            self.change_settings({'pointer': {**values, 'visible': True}}, 'Указатель показан')
+        elif key == curses.KEY_F7:
             self.speech.stop()
         elif key == curses.KEY_F6:
             self.speech.next_output()
@@ -166,6 +173,18 @@ class UI:
             self.draw(title, [f'{i + 1}. {clean(item[0])}' for i, item in enumerate(items)], index,
                       tabs=tabs, tab_index=tab_index, detail=items[index][2] if len(items[index]) > 2 else '')
             key = self.read_key()
+            if isinstance(key, tuple) and len(key) == 4 and key[:2] == ('row', title):
+                index = max(0, min(len(items) - 1, key[2]))
+                self.focus[title] = index
+                self.announce(title, items, index)
+                if key[3]:
+                    return items[index][1]
+                continue
+            if isinstance(key, tuple) and len(key) == 3 and key[:2] == ('scroll', title):
+                index = max(0, min(len(items) - 1, index + key[2]))
+                self.focus[title] = index
+                self.announce(title, items, index)
+                continue
             if tabs:
                 if isinstance(key, tuple) and len(key) == 2 and key[0] == 'tab':
                     return ('__tab__', max(0, min(len(tabs) - 1, key[1])))
@@ -234,6 +253,16 @@ class UI:
                 return False
             self.draw(text, items, selected, f'Осталось {remaining} секунд. Escape — откат.')
             key = self.read_key()
+            if isinstance(key, tuple) and len(key) == 4 and key[:2] == ('row', text):
+                selected = max(0, min(1, key[2]))
+                self.speech.say(items[selected])
+                if key[3]:
+                    return selected == 1
+                continue
+            if isinstance(key, tuple) and len(key) == 3 and key[:2] == ('scroll', text):
+                selected = max(0, min(1, selected + key[2]))
+                self.speech.say(items[selected])
+                continue
             if key in (27, curses.KEY_BACKSPACE, 8, 127):
                 return False
             if key in (10, 13, curses.KEY_ENTER):
@@ -277,7 +306,7 @@ class UI:
             elif isinstance(key, str) and key.isprintable() and len(value) < limit:
                 value += key
                 self.speech.say('Символ' if secret else 'Пробел' if key == ' ' else key)
-            elif isinstance(key, int):
+            elif isinstance(key, (int, tuple)):
                 self.global_key(key)
 
     def save_report(self, title, result, lines, attachments=None):
@@ -353,7 +382,7 @@ class UI:
             key = self.screen.getch()
             if key in (27, curses.KEY_F10):
                 request_stop(key == curses.KEY_F10)
-            elif key == ord(' '):
+            elif key in (ord(' '), 10, 13, curses.KEY_ENTER):
                 self.speech.say(state)
             elif key == curses.KEY_F1:
                 self.speech.say('Короткий сигнал означает, что проверка продолжается. '
@@ -406,6 +435,10 @@ class UI:
                 continue
             if key == '\x1b':
                 return
+            if isinstance(key, tuple):
+                if self.global_key(key):
+                    last = 'Указатель показан'
+                continue
             if key == curses.KEY_F7:
                 self.speech.stop()
                 last = 'F7 — речь остановлена'

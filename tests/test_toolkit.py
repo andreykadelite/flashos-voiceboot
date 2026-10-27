@@ -15,6 +15,46 @@ from toolkit import memory_budget, memory_job, smart_summary, smart_job, filesys
 
 
 class SettingsTests(unittest.TestCase):
+    def test_voice_reset_preserves_saved_pointer_preferences(self):
+        from menu import voice_menu
+        with tempfile.TemporaryDirectory() as folder:
+            settings = Settings(folder)
+            settings.save({'voice': 'anna', 'pointer': {**settings.data['pointer'],
+                                                       'visible': False, 'size': 64}})
+            ui = Mock(settings=settings)
+            ui.choose.side_effect = ['reset', None]
+            ui.confirm.return_value = True
+            ui.change_settings.side_effect = lambda changes, message: settings.save(changes)
+            voice_menu(ui)
+            saved = Settings(folder).data
+            self.assertEqual(saved['voice'], DEFAULTS['voice'])
+            self.assertFalse(saved['pointer']['visible'])
+            self.assertEqual(saved['pointer']['size'], 64)
+
+    def test_pointer_preferences_survive_voice_changes_and_reload(self):
+        with tempfile.TemporaryDirectory() as folder:
+            settings = Settings(folder)
+            settings.save({'pointer': {**settings.data['pointer'], 'visible': False,
+                                       'size': 64, 'natural_scroll': True}})
+            settings.save({'voice': 'anna', 'volume': 60})
+            reloaded = Settings(folder)
+            self.assertFalse(reloaded.data['pointer']['visible'])
+            self.assertEqual(reloaded.data['pointer']['size'], 64)
+            self.assertTrue(reloaded.data['pointer']['natural_scroll'])
+            self.assertEqual(reloaded.data['voice'], 'anna')
+            self.assertLess(settings.path.stat().st_size, 4096)
+
+    def test_pointer_validation_isolated_from_defaults_and_voice(self):
+        values = validate({'pointer': {'visible': 'false', 'size': True,
+                                       'speed': 75, 'unknown': 'ignored'}, 'rate': 150})
+        self.assertTrue(values['pointer']['visible'])
+        self.assertEqual(values['pointer']['size'], DEFAULTS['pointer']['size'])
+        self.assertEqual(values['pointer']['speed'], 75)
+        self.assertNotIn('unknown', values['pointer'])
+        values['pointer']['visible'] = False
+        self.assertTrue(validate({})['pointer']['visible'])
+        self.assertEqual(values['rate'], 150)
+
     def test_directory_flush_failure_keeps_committed_state(self):
         with tempfile.TemporaryDirectory() as folder:
             settings = Settings(folder)

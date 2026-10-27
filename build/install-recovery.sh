@@ -9,5 +9,5 @@ cp /etc/resolv.conf "$root/etc/resolv.conf"
 chroot "$root" apt-get update
 chroot "$root" apt-get install -y --no-install-recommends partclone testdisk hwinfo mtr-tiny \
     python3-tk xserver-xorg-core xserver-xorg-input-libinput xserver-xorg-video-fbdev \
-    xserver-xorg-video-vesa xinit x11-xserver-utils fonts-dejavu-core
+    xserver-xorg-video-vesa xinit x11-xserver-utils xinput fonts-dejavu-core
 chroot "$root" apt-get clean

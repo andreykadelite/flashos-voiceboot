@@ -313,7 +313,8 @@ def voice_menu(ui):
         elif key == 'output':
             ui.speech.next_output()
         elif key == 'reset' and ui.confirm('Вернуть стандартные настройки голоса?'):
-            ui.change_settings(DEFAULTS, 'Стандартные настройки восстановлены')
+            ui.change_settings({key: value for key, value in DEFAULTS.items() if key != 'pointer'},
+                               'Стандартные настройки голоса восстановлены')
         elif key == 'licenses':
             ui.message('Голоса', 'Елена, Ирина, Анна, Александр и Юрий — голоса RHVoice. '
                 'Юрий RHVoice отличается от одноимённого Nuance. Для Юрия действуют ограничения '

@@ -18,6 +18,7 @@ REQUIRED_MODULES = {
              'ath12k', 'mt7921e', 'mt7925e', 'rtw88_8822ce', 'rtw89_8852be', 'brcmfmac'],
     'graphics': ['i915', 'xe', 'amdgpu', 'radeon', 'nouveau'],
     'storage': ['nvme', 'ahci', 'usb_storage', 'uas', 'xhci_pci'],
+    'input': ['usbhid', 'hid_generic', 'hid_multitouch', 'psmouse', 'i2c_hid_acpi', 'i2c_hid'],
 }
 REQUIRED_PACKAGES = [
     'firmware-linux-free', 'firmware-iwlwifi', 'firmware-realtek', 'firmware-atheros',
@@ -27,6 +28,7 @@ REQUIRED_PACKAGES = [
     'firmware-misc-nonfree', 'firmware-intel-graphics', 'firmware-amd-graphics',
     'firmware-nvidia-graphics', 'intel-microcode', 'amd64-microcode',
     'alsa-ucm-conf', 'alsa-topology-conf', 'wireless-regdb', 'wpasupplicant',
+    'xinput', 'xserver-xorg-input-libinput', 'libxcursor1', 'libxfixes3',
 ]
 NOTEBOOK_DEVICES = [
     {'name': 'Intel Wi-Fi 6E AX211', 'driver': 'iwlwifi',

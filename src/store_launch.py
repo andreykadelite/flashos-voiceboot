@@ -88,6 +88,8 @@ class StoreLauncher:
                        'SPEECHD_ADDRESS': 'unix_socket:/run/user/1000/speech-dispatcher/speechd.sock',
                        'NO_AT_BRIDGE': '0', 'GTK_MODULES': 'atk-bridge',
                        'QT_ACCESSIBILITY': '1', 'QT_LINUX_ACCESSIBILITY_ALWAYS_ON': '1'}
+        if os.environ.get('XCURSOR_SIZE') in ('24', '32', '48', '64'):
+            environment['XCURSOR_SIZE'] = os.environ['XCURSOR_SIZE']
         command = ['systemd-run', '--quiet', '--collect', '--service-type=exec', '--expand-environment=no',
                    '--unit=' + self.unit]
         command += ['--property=' + item for item in properties]
