@@ -6,7 +6,7 @@ This release adds a standalone terminal with spoken commands and output,
 and improves the application store, diagnostics and installer error handling.
 The application interface and spoken help remain in Russian.
 
-**[Download FlashOS-Setup.exe](https://github.com/andreykadelite/flashos-voiceboot/releases/latest/download/FlashOS-Setup.exe)** · [All release files](https://github.com/andreykadelite/flashos-voiceboot/releases/latest)
+**[Download FlashOS-Setup.exe](https://github.com/andreykadelite/flashos-voiceboot/releases/download/v2026.10.13.2-installer-1.0.8/FlashOS-Setup.exe)** · [All release files](https://github.com/andreykadelite/flashos-voiceboot/releases/tag/v2026.10.13.2-installer-1.0.8)
 
 ## Spoken terminal
 
@@ -71,13 +71,15 @@ internet connection to prepare the USB drive. Add your installation ISOs to the
 Before reinstalling, copy ISOs, documents, settings and the application store's
 `store.ext4` file to another device. [Installation steps](installer.md).
 
-- `FlashOS-Setup.exe`: ready-to-use Windows x64 installer.
-- `FlashOS-2026.10.22.2-system.7z`: prepared system tree for building the EXE.
-  It is not an ISO or an image for Rufus or dd.
-- `FlashOS-2026.10.22.2-source.zip`: project sources and documentation.
-- The other five `sources.zip` archives provide third-party sources. Dates in
-  their names identify the original source sets; these components remain part
-  of this release. [Licenses and source archives](../../THIRD-PARTY.md).
+On 27 October 2026, publication of the new release removed this release's
+uploaded `FlashOS-2026.10.22.2-system.7z`, `FlashOS-2026.10.22.2-source.zip`
+and five third-party source archives. The
+[installer 1.0.10 EXE](https://github.com/andreykadelite/flashos-voiceboot/releases/download/v2026.10.13.2-installer-1.0.8/FlashOS-Setup.exe) remains available.
+Project source and documentation for this version remain in the repository at
+[tag `v2026.10.22.2-installer-1.0.10`](https://github.com/andreykadelite/flashos-voiceboot/tree/v2026.10.22.2-installer-1.0.10).
+To build it yourself, check out the required tag and follow the full
+[Linux-system and EXE build](build.md). See [THIRD-PARTY](../../THIRD-PARTY.md)
+for matching third-party sources.
 
 ## Compatibility
 

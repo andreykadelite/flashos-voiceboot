@@ -2,13 +2,21 @@
 
 [Русский](../ru/build.md) · [Home](../../README.en.md)
 
-Build the Linux system first, then package it in the Windows EXE. These are source build instructions, not a claim of byte-for-byte reproducibility. Debian repository contents, compiler metadata and timestamps can change output. Exact published package/source versions and hashes are in `metadata/` and the release archives.
+Build the Linux system first, then package it in the Windows EXE. Debian repository contents, compiler metadata and timestamps can change output. Component versions and hashes are recorded in `metadata`; the [source guide](sources.md) identifies download locations. Historical ZIP inventories describe local source packages, without promising byte-for-byte reproduction of their containers or availability as release assets.
 
 ## Prepare a checkout
 
 Clone this repository and check out the release tag you need. Use a dedicated Debian 13 x86-64 VM or WSL distribution for Linux builds; the scripts provision `/opt/flashos-rootfs`. Do not point them at your running system. Allow at least 20 GB of free space for packages, source archives and intermediate files.
 
-From the repository root, run:
+Prepare the 2026.10.27.1 checkout as follows:
+
+```sh
+git clone https://github.com/andreykadelite/flashos-voiceboot.git
+cd flashos-voiceboot
+git checkout v2026.10.27.1-installer-1.0.11
+```
+
+For another version, select its tag. From the repository root, run:
 
 ```sh
 python3 tools/fetch-build-inputs.py
@@ -26,16 +34,16 @@ Repacking runs `depmod` and regenerates initrd for the installed FlashOS kernel,
 
 The output is `dist/usb`, `dist/boot`, `dist/ventoy.disk.img.xz` and `dist/packages.tsv`. Never place personal ISOs, backups, settings or reports in this packaging tree. `tools/package-public-docs.py` copies only public documentation. Test ISOs belong in separate VM fixtures.
 
-To build the EXE with a prepared system, use `FlashOS-2026.10.22.2-system.7z` from its matching [release](https://github.com/andreykadelite/flashos-voiceboot/releases). Open it in 7-Zip and extract at the root of a source checkout of the same tag to populate `dist`. Project sources are also available in `FlashOS-2026.10.22.2-source.zip`. The system archive contains the system certificate, metadata and `SYSTEM-SHA256SUMS.txt` for checking its contents. Component and source information is also included in the project source archive. The release page provides the ready-to-use EXE and archives. Use the EXE to prepare USB media: the archive contains build files and cannot be written with Rufus or dd.
+The [2026.10.27.1 release](https://github.com/andreykadelite/flashos-voiceboot/releases/tag/v2026.10.27.1-installer-1.0.11) provides only `FlashOS-Setup.exe`. Project source and documentation are in the matching tag checkout. To build the installer yourself, create `dist` with the complete Linux build above, then perform the Windows EXE build below. The previous release's `system.7z` and separate `source.zip` were removed from its release page on 27 October 2026.
 
-After changing FlashOS code, run `build/repack-system.sh` in the prepared Linux environment. `tools/verify-toolkit-build.py` compares the sources with files inside squashfs and records the image SHA256. Packaging stops if the system version, image or sources differ from that report. The prepared-system archive includes the report.
+After changing FlashOS code, run `build/repack-system.sh` in the prepared Linux environment. `tools/verify-toolkit-build.py` compares the sources with files inside squashfs and records the image SHA256. Packaging stops if the system version, image or sources differ from that report. The report is generated for the built image; reports for earlier images do not certify it.
 
-The full Linux build uses current trixie/backports indexes. To reconstruct older Debian package binaries, use the exact `.dsc`, original tarballs and Debian patches in the release's Debian source archive with `dpkg-source -x` and `dpkg-buildpackage` in the matching Debian environment. See `metadata/debian-sources.json` for source files and SHA256, and `metadata/source-archives.json` for archive membership. Release 2026.10.12.1 retains the 2026.09.09.3 source archives and adds new or changed Debian sources plus the original SOF 2026.09.2 asset in `FlashOS-2026.10.12.1-hardware-sources.zip`. Debian downloads are checked against signed deb-src indexes; SOF is checked against its pinned `metadata/build-inputs.json` record. Third-party source archives include upstream build instructions. Rebuilding signed upstream EFI binaries will not reproduce the upstream signing keys; use originals or your own trust setup.
+The full Linux build uses current trixie/backports indexes. To reconstruct an older Debian package, obtain its exact `.dsc`, original tarballs and Debian patches through the [source guide](sources.md), then use `dpkg-source -x` and `dpkg-buildpackage` in the matching Debian environment. `metadata/debian-sources.json` records URLs, file names and SHA256. `metadata/source-archives.json` retains historical local package inventories, including `FlashOS-2026.10.12.1-hardware-sources.zip`; a ZIP name there does not establish availability in GitHub Releases. Debian downloads are checked against signed deb-src indexes; SOF is checked against its pinned `metadata/build-inputs.json` record. Rebuilding EFI does not reproduce Debian or Ventoy signatures; modified bootloaders need your own trust setup.
 
-## Repacking and terminal dependencies
+## Repacking, terminal and pointer
 
-Before repacking a prepared live root for 2026.10.22.2, install the new
-terminal dependencies:
+Before repacking a prepared live root for 2026.10.27.1, install GTK/VTE
+and xinput for supported mouse and touchpad controls:
 
 ```sh
 sudo unshare --mount --propagation private bash -eu -c '
@@ -51,7 +59,9 @@ if [ "$(readlink "$root/etc/resolv.conf" || true)" = /run/NetworkManager/resolv.
     mount --bind /etc/resolv.conf "$root/run/NetworkManager/resolv.conf"
     mount -o remount,bind,ro "$root/run/NetworkManager/resolv.conf"
 fi
+chroot "$root" apt-get update
 bash build/install-terminal.sh
+chroot "$root" apt-get install -y --no-install-recommends xinput
 bash build/repack-system.sh
 '
 ```
@@ -59,7 +69,7 @@ bash build/repack-system.sh
 Virtual filesystems need mounting again after restarting the builder. This
 example uses a private mount namespace; its mounts are released when the
 process exits. For subsequent Python-only changes, repeat the example without
-the `install-terminal.sh` stage. `repack-system.sh` checks the mounts before
+package installation and `apt-get update`. `repack-system.sh` checks the mounts before
 changing the image and stops with an actionable error for an unprepared chroot.
 The read-only DNS bind is needed for package installation in a sanitized live
 root and stays outside the image (`run/*` is excluded).
@@ -70,6 +80,12 @@ refresh `metadata/debian-packages.json` and `metadata/packages.tsv` and check
 corresponding-source coverage for the exact versions. `verify-terminal-build.py`
 checks actual packages, libraries and typelibs inside squashfs; the main image
 certificate includes its result.
+
+New `terminal_preferences.py` and `pointer_settings.py` modules are copied automatically with all `src/*.py`. Image certification compares every module, so source changes require repacking rather than only a new EXE. Terminal preferences live in `flashos/terminal.json` on FLASHBOOT; pointer values live under `pointer` in `flashos/settings.json`. User settings must not enter the production payload.
+
+The sole added live package in release 2026.10.27.1 is `xinput 1.6.4-1`; exact source files and hashes are listed in the [source guide](sources.md) and `metadata/debian-sources.json`. `tools/verify-runtime.py` checks xinput, while hardware certification checks libinput/Xcursor/Xfixes libraries and USB HID, multitouch, PS/2 and I2C HID modules. Inventory checks do not establish compatibility with particular mice or touchpads. These host preferences do not change the embedded application seed.
+
+The 2026.10.27.1 sources require an image of the same version with current certification. The 2026.10.22.2 image does not contain the new terminal and pointer preferences.
 
 ## Application runtime and corresponding source
 
@@ -99,7 +115,7 @@ sudo python3 tools/collect-debian-sources.py --root /opt/flashos-rootfs \
   --output build/publication/applications-sources
 ```
 
-Enable matching signed deb-src indexes for trixie, updates, security and backports in the builder. `--reuse-directory` reuses downloaded files only after SHA256 verification. `FlashOS-2026.10.12.2-applications-sources.zip` supplements existing source archives; retain the complete matching set. Package licenses remain under `/usr/share/doc/*/copyright` inside each environment.
+Enable matching signed deb-src indexes for trixie, updates, security and backports in the builder. `--reuse-directory` reuses downloaded files only after SHA256 verification. `FlashOS-2026.10.12.2-applications-sources.zip` names a historical local package in the inventory; current source locations are documented in the [source guide](sources.md). Retain the complete set for the versions you use. Package licenses remain under `/usr/share/doc/*/copyright` inside each environment.
 
 ## Windows EXE
 
@@ -117,7 +133,7 @@ Pinned dependencies are PySide6/Qt **6.11.2**, Nuitka **4.2.1**, zstandard **0.2
 
 ## Replace Qt/PySide6
 
-Qt DLLs are dynamically linked. You may modify the LGPL libraries and debug those modifications; the project does not prohibit reverse engineering for that purpose. Sources for the actual Qt base and PySide/Shiboken releases are included with this release.
+Qt DLLs are dynamically linked. You may modify the LGPL libraries and debug those modifications; the project does not prohibit reverse engineering for that purpose. Versions and source locations for the actual Qt base and PySide/Shiboken releases are listed in the [source guide](sources.md).
 
 Build ABI-compatible Qt/PySide6 libraries using their included build instructions, install the resulting wheel/libraries into the dedicated Python environment, then run `Build-Installer.ps1 -Mode standalone`. In `build/installer/nuitka/entry.dist`, replace Qt/PySide/Shiboken libraries and platform/style plugins with a mutually compatible set. Run that directory's EXE directly. To obtain one file, run `-Mode onefile` using the same modified environment. Payload hashing covers the system data; it does not forbid replacing the Qt libraries or rebuilding the application. No FlashOS signing key is required to run a modified installer.
 
@@ -143,13 +159,6 @@ The disposable image is `dist/flashos-test.img`; QEMU receives that file, not ho
 
 Docker boot tests require loop/mount permissions and QEMU in the builder. In a minimal container without a running udev daemon, `make-test-disk.py` creates missing partition nodes only after checking the loop backing file and sysfs device numbers. Do not pass physical disks to the container. mac80211_hwsim testing does not establish compatibility with a physical PCI/USB Wi-Fi adapter.
 
-## Extract the release build archive
-
-Open `FlashOS-2026.10.22.2-system.7z` in 7-Zip and extract at the root of
-the matching source checkout. This is a single archive; no separate parts or
-Python join script are required. See the
-[release overview](release-2026.10.22.md#installation-and-release-files).
-
 ## Publish a derivative
 
-Keep the author/license notice and identify your changes. Review every bundled voice and firmware license, archive matching corresponding source, remove personal state from the live root and packaging tree, run the checks, then attach the EXE/system/source archives and hashes to a release. `tools/export-system.py` creates the system ZIP. Never commit the large generated files or private USB backups to Git.
+Keep the author/license notice and identify your changes. Review every bundled voice and firmware license, archive matching corresponding source, remove personal state from the live root and packaging tree, run the checks and publish the EXE. FlashOS source and documentation are published in Git; identify an accessible location for matching third-party source and retain hashes. `tools/export-system.py` creates the system ZIP. Never commit the large generated files or private USB backups to Git.

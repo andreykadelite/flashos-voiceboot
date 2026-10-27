@@ -1,3 +1,31 @@
+# Tests on 27 October 2026 — FlashOS 2026.10.27.1 / installer 1.0.11
+
+The prepack check passed 890 Linux tests in Debian WSL2 with Xvfb in 77.319 seconds, with 32 platform skips and no failures. The suite includes real GTK/VTE and Bash/PTY, including 38 terminal GUI scenarios, verified against the `TerminalWindowTests` methods. Windows passed 110 installer tests. Launch/return behaviour also passed a separate 28-test run. The normal pipeline repeats the complete suite before packaging; image and EXE checks are recorded separately.
+
+Checks cover character/word echo, Russian input and shortcuts with a secondary keyboard layout, a once-only prompt, new output and background lines while editing, hidden input, and preferences surviving reopening. Regression cases cover output in the first 150 milliseconds after typing, output without a trailing newline, an adjoining prompt and long-path wrapping. They verify actual cursor/deleted characters, empty/end-of-input boundaries without false deletion announcements, Backspace across wrapped lines and the configured history limit during manual review.
+
+Real X11 mouse, double-click, Back and wheel events were injected with xdotool; Xcursor size and colour were verified by XFixes readback. Tests cover hiding, restoring visibility and preventing stale events from accepting confirmations. A separate graphical check passed at 640×480, 800×600, 1280×800 and 1920×1080. New terminal, dialog and pointer-settings screenshots were captured from actual windows and visually inspected; these establish rendering, not human speech intelligibility.
+
+The final image passed BIOS and UEFI QEMU boots with normal shutdown. The 48 px pointer and Words echo preference survived between boots. Checks verified actual HOME/PWD and bare `cd`; after Stop, `c` is spoken in Characters mode while the status remains stopped, and Enter restores output reading. Separate letter and command recordings contain nonzero PCM, while the silence control is zero. Complete mouse and USB-hotplug scenarios ran on the preceding development image; every report identifies its exact image SHA256. Human speech intelligibility was not assessed.
+
+A booted QEMU session exposed missing HOME in the service-launched terminal: plain `cd` failed, and the prompt incorrectly abbreviated `/run`. The fix restores HOME from the account; five additional regression tests are included in the final 890. The rebuilt image is checked separately during boot validation.
+
+Additional unit and GTK checks confirm Stop speech behaviour: character echo remains available while automatic output stays stopped. Typing letters does not resume background lines; submitted commands and explicit reading/resume controls retain their normal meaning.
+
+Docker Desktop is installed but failed during Inference manager initialization (`dockerInference`). Linux checks and image building use the existing Debian WSL2 `FlashOS-Builder`. Running the complete Linux suite on Windows is not a validation gate: Windows lacks Linux curses, PTY and some signals. The installer is tested separately on Windows.
+
+Linux runs use `PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`, so WSL interop does not pass Linux temporary-file paths to Windows PowerShell. Installer-engine checks run with the native interpreter on Windows.
+
+Local logs are `build/accessibility-stop-prepack-tests.log`, `build/accessibility-repack.log` and `build/accessibility-installer-tests.log`; graphical results are in `dist/graphical-verification.json`. The built image passed checks of drivers, libraries, boot files and exact agreement between all 47 Python modules and their sources. `metadata/testing.json` records the image hash and system checks. BIOS/UEFI results and compiled-EXE startup are tied to its SHA256 in the final local `release/FlashOS-Setup.verification.json` report; build details are in `release/FlashOS-Setup.build.json`. These reports are generated for each new artifact. The 22–23 October results retained below describe an earlier image.
+
+Image hardware certification checks HID/PS2/I2C modules and XInput/libinput/Xcursor/Xfixes; file presence does not establish device compatibility. Physical PCs, mice, touchpads and the user's USB drive were not retested during this development. The [release `v2026.10.27.1-installer-1.0.11`](https://github.com/andreykadelite/flashos-voiceboot/releases/tag/v2026.10.27.1-installer-1.0.11) contains the EXE; project source and documentation are published in Git. [Changes](release-2026.10.27.md) · [Obtaining component source](sources.md).
+
+## Design sources
+
+Separate character and word echo follows [Orca Echo Preferences](https://help.gnome.org/orca/preferences_key_echo.html) and the [NVDA user guide](https://download.nvaccess.org/documentation/userGuide.html). Device controls use [libinput configuration](https://wayland.freedesktop.org/libinput/doc/latest/configuration.html), [XInput properties](https://www.x.org/archive/X11R7.5/doc/man/man1/xinput.1.html) and [Xorg cursor handling](https://www.x.org/Development/Documentation/CursorHandling/). These references explain behaviour choices; FlashOS implements its own speech and does not claim all Orca/NVDA features or compatibility with every device.
+
+---
+
 # Tests on 22–23 October 2026 — FlashOS 2026.10.22.2 / installer 1.0.10
 
 The final sources passed 827 Linux tests both in the normal environment and

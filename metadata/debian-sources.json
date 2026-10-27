@@ -11154,6 +11154,36 @@
     ]
   },
   {
+    "package": "xinput",
+    "version": "1.6.4-1",
+    "files": [
+      {
+        "url": "http://deb.debian.org/debian/pool/main/x/xinput/xinput_1.6.4-1.dsc",
+        "file": "xinput_1.6.4-1.dsc",
+        "bytes": 2104,
+        "sha256": "82702ee65c9c4841ac94d5147b6dbe787415b2b384d454cc67be825777e70494"
+      },
+      {
+        "url": "http://deb.debian.org/debian/pool/main/x/xinput/xinput_1.6.4.orig.tar.gz",
+        "file": "xinput_1.6.4.orig.tar.gz",
+        "bytes": 208172,
+        "sha256": "64e25434af1309ed0abca1ebebd035f7631bb0bc1bfac5decefe9aa98ccaf611"
+      },
+      {
+        "url": "http://deb.debian.org/debian/pool/main/x/xinput/xinput_1.6.4.orig.tar.gz.asc",
+        "file": "xinput_1.6.4.orig.tar.gz.asc",
+        "bytes": 195,
+        "sha256": "f468c108ad04f627542f9616ce673f7acb82cd18addfe957a53c106d3976bc07"
+      },
+      {
+        "url": "http://deb.debian.org/debian/pool/main/x/xinput/xinput_1.6.4-1.diff.gz",
+        "file": "xinput_1.6.4-1.diff.gz",
+        "bytes": 9228,
+        "sha256": "46bca29df4b607be80e6540beeb539ef3a51b53b794e301f4839b98c7b356d65"
+      }
+    ]
+  },
+  {
     "package": "xkbset",
     "version": "0.8-1",
     "files": [

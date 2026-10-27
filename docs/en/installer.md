@@ -2,11 +2,11 @@
 
 [Русский](../ru/installer.md) · [Home](../../README.en.md)
 
-Installer 1.0.10 packages FlashOS 2026.10.22.2. It runs on Windows 10 1809+ and Windows 11 x64. It contains its runtime and system files; no Python, Qt installation or network connection is required. Allow several gigabytes of free local space for extraction.
+Installer 1.0.11 packages FlashOS 2026.10.27.1. See the [release notes](release-2026.10.27.md). It runs on Windows 10 1809+ and Windows 11 x64. It contains its runtime and system files; no Python, Qt installation or network connection is required. Allow several gigabytes of free local space for extraction.
 
 ## Install a USB drive
 
-1. Download [FlashOS-Setup.exe](https://github.com/andreykadelite/flashos-voiceboot/releases/latest/download/FlashOS-Setup.exe). The system and source archives are for developers; the EXE is sufficient for installation.
+1. Download [FlashOS-Setup.exe](https://github.com/andreykadelite/flashos-voiceboot/releases/latest/download/FlashOS-Setup.exe). The release contains only the EXE. [Source code and documentation](https://github.com/andreykadelite/flashos-voiceboot/tree/v2026.10.27.1-installer-1.0.11) are in the repository; developers can follow the [build instructions](build.md).
 2. Back up the USB drive. Connect a drive of at least 4 GB, preferably 16 GB or more for your ISOs.
 3. Run the EXE and allow the Windows administrator prompt before the menu opens. Select the drive by its model, size, disk number, volume letters and serial. If several drives are connected, choose one yourself.
 4. Choose **Установить** (Install). The erase confirmation opens immediately for the selected drive. The drive selection and options stay in the same window.

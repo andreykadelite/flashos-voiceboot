@@ -1,0 +1,32 @@
+[
+  {
+    "file": "Ventoy-1.1.17-source.tar.gz",
+    "url": "https://codeload.github.com/ventoy/Ventoy/tar.gz/refs/tags/v1.1.17",
+    "bytes": 81280287,
+    "sha256": "f8826dd29afc93ad599cc4840dcac6fa17b60d1ce3e9448dab7c4f4ac693d69c"
+  },
+  {
+    "file": "qtbase-everywhere-src-6.11.2.tar.xz",
+    "url": "https://download.qt.io/archive/qt/6.11/6.11.2/submodules/qtbase-everywhere-src-6.11.2.tar.xz",
+    "bytes": 50582668,
+    "sha256": "5b2e00eccaf5a4d8c14134ffa0ea8dfd0a35ae1ffc7f8d87fa4305a1ed23cf22"
+  },
+  {
+    "file": "pyside-setup-everywhere-src-6.11.2.tar.xz",
+    "url": "https://download.qt.io/official_releases/QtForPython/pyside6/PySide6-6.11.2-src/pyside-setup-everywhere-src-6.11.2.tar.xz",
+    "bytes": 18053248,
+    "sha256": "cba47efbaad1bedd529725cbc14e21f156c7a19366f07b3edfbb076ffd7afdf8"
+  },
+  {
+    "file": "Python-3.12.10.tar.xz",
+    "url": "https://www.python.org/ftp/python/3.12.10/Python-3.12.10.tar.xz",
+    "bytes": 20520960,
+    "sha256": "07ab697474595e06f06647417d3c7fa97ded07afc1a7e4454c5639919b46eaea"
+  },
+  {
+    "file": "sof-bin-2025.12.2.tar.gz",
+    "url": "https://github.com/thesofproject/sof-bin/releases/download/v2025.12.2/sof-bin-2025.12.2.tar.gz",
+    "bytes": 13486442,
+    "sha256": "533f63e3a6d94c09ce05a782657b675fa683ff20787c0979226cf563ec79f517"
+  }
+]

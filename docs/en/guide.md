@@ -2,7 +2,7 @@
 
 [Русский](../ru/guide.md) · [Home](../../README.en.md)
 
-FlashOS boots from USB and reads its menu aloud. This guide covers FlashOS 2026.10.13.2 and installer 1.0.8. Prepare the drive with the [Windows installer](installer.md). Menu labels and speech in this release are Russian.
+FlashOS boots from USB and reads its menu aloud. This guide covers FlashOS 2026.10.27.1 and installer 1.0.11. See the [release notes](release-2026.10.27.md) for the changes. Prepare the drive with the [Windows installer](installer.md). Menu labels and speech remain Russian.
 
 ## Images and boot
 
@@ -71,6 +71,32 @@ Settings are in `flashos/network/profiles.json` on the FLASHBOOT service partiti
 
 Each profile can set separate HTTP and HTTPS proxies, for example `http://proxy.example:3128`. Enter the username separately and the password in its protected field; do not embed them in the URL. Address and domain exclusions are supported. The proxy applies to the APT store and newly launched applications that honor `http_proxy`, `https_proxy` and `no_proxy`; restart already open applications. Configure programs with their own proxy settings separately. The editor does not support PAC/WPAD. Network diagnostics test direct access, so they can differ from the store's access through a proxy.
 
+## Cursor, mouse and touchpad
+
+![FlashOS cursor, mouse and touchpad settings with navigation controls](../images/pointer-settings.png)
+
+Open «Утилиты → Доступность — курсор, мышь и тачпад» (Utilities → Accessibility — cursor, mouse and touchpad). No store preparation is needed. Each item is spoken and keyboard accessible. Values save automatically under `pointer` in `flashos/settings.json` on FLASHBOOT and apply when the graphical menu starts and after device connection.
+
+| Preference | Choices |
+| --- | --- |
+| Pointer | Show/hide; sizes 24, 32, 48 or 64 pixels |
+| Colour | White, black or yellow with a contrasting outline |
+| Speed | Five levels from slow to very fast |
+| Acceleration | Adaptive or flat |
+| Primary button | Left or right |
+| Scrolling | Traditional or natural; menu wheel steps of 1, 3 or 5 items |
+| Touchpad | Tap to click, tap and drag, disable while typing |
+| Touchpad scroll method | Automatic, two-finger or edge scrolling |
+| Touchpad click method | Automatic, button areas or finger count |
+| Middle button | Emulate by pressing both buttons |
+| Item activation | Double click or single click |
+
+By default, one primary-button click selects and reads an item; a double click opens it. Wheel/touchpad scrolling moves the selection without wrapping between list ends. The secondary button returns; with right-primary mode the left button is secondary. Bottom buttons provide Back, Open, Help and Stop speech. Single-click mode opens an item immediately; destructive-action confirmations remain required.
+
+Hiding the cursor does not disable mouse or touchpad input. In the FlashOS menu, Ctrl+Alt+P shows the pointer and saves that value; the keyboard remains available. First close an external application or return to FlashOS using its normal shortcut. The custom cursor's size and colour apply in the menu, while child applications receive the Xcursor size; individual programs may draw their own pointers.
+
+«Прочитать все настройки» reads all values. «Устройства и применение» reports detected pointers and application errors. XInput settings apply only where the device advertises the required property and capability. A saved preference does not establish support by a particular touchpad. Text mode can save preferences for the next graphical launch. Touch screens and three-finger window-management gestures are outside this utility. Wireless mice with USB receivers use USB HID support; this utility does not configure Bluetooth pairing.
+
 ## Utilities and application settings
 
 **Утилиты** (Utilities) follows Applications in the main menu. Open **Настройки доступности приложений Debian — GSettings** (Debian application accessibility settings). FlashOS speaks each item and value: arrows select, Enter opens and Escape returns. Save documents and close external applications first. If persistent storage is absent, FlashOS offers to prepare it.
@@ -129,7 +155,7 @@ PhotoRec recovers files by content into `recovery` on the USB drive without modi
 
 FLASHOS is the main exFAT data/system partition. VTOYEFI is Ventoy's 32 MiB service partition. FLASHBOOT is about 512 MiB FAT32 and contains the kernel, initrd, boot files and settings. Do not remove service files or use Ventoy's standard Update action, which may replace FlashOS configuration.
 
-Before reinstalling, copy your ISO files, backups, recovered files, reports, `flashos/settings.json`, the complete `flashos/network` directory and `flashos/applications/store.ext4` from the respective partitions to another drive. The EXE's Install action erases them. Remove the drive after a normal shutdown.
+Before reinstalling, copy your ISO files, backups, recovered files, reports, `flashos/settings.json`, `flashos/terminal.json`, the complete `flashos/network` directory and `flashos/applications/store.ext4` from the respective partitions to another drive. The EXE's Install action erases them. Remove the drive after a normal shutdown.
 
 
 ### Interrupted storage preparation
@@ -158,28 +184,58 @@ also lists these shortcuts.
 
 ## Spoken system terminal
 
-![Bash terminal with screen reading, automatic speech, stop, help and close controls](../images/terminal.png)
+![Bash terminal with speech controls](../images/terminal.png)
 
-Open Tools → the spoken terminal. It runs Bash in the live system as root,
-independently of the application store. GTK/VTE provides a real PTY terminal,
-history, Tab completion, interactive applications and the normal Ctrl+C/Ctrl+D
-keys. The graphical display is required; console fallback retains the existing
-spoken diagnostic tools.
+Open Tools → the spoken terminal. It runs full Bash in the live system as root, with history, completion and diagnostic utilities. It needs neither internet nor application-store preparation. The graphical display is required; console fallback retains the existing spoken tools.
 
-Enter reads and submits a command. Ctrl+Shift+A toggles new-output reading;
-Ctrl+Shift+Space stops speech and its queue. Ctrl+Shift+R reads the visible
-screen, Ctrl+Shift+L the cursor line, and Ctrl+Shift+Up/Down reviews a retained
-history snapshot. Ctrl+Shift+Home selects its first line; Ctrl+Shift+End refreshes
-it and reads the last. Shift+PageUp/PageDown scrolls the terminal itself.
+Typed characters are spoken by default. The shell prompt — the text before a command — is read once when the window opens. Automatic reading then speaks new output; the submitted command is announced separately after Enter if enabled. Character echo, submitted-command speech and output reading have independent controls. Editing a command should not repeat the entire prompt.
 
-Ctrl+Shift+E changes word/character input echo. Ctrl+Tab focuses the toolbar;
-Tab chooses a button and Escape returns to terminal input. Ctrl+Shift+C/V
-copies/pastes, Ctrl+plus/minus changes the font, Ctrl+Shift+F6 changes audio,
-and Ctrl+Shift+F1 opens help. Multiline paste and Ctrl+Shift+Q closing require
-confirmation. Closing the production session stops its child processes.
+`pwd` shows the current directory; plain `cd` returns to the home directory. If a system service supplies no HOME, startup restores it from the account. The prompt uses `~` only for that home directory; with the standard account environment, `/run` remains `/run`.
 
-Hidden program input is not spoken. Turn off input echo and automatic reading
-before entering commands containing secrets. Session history is kept in memory,
-with up to 5000 terminal rows; applications may save their own files. Speech is
-bounded and reports omissions. Use `less` or redirect output to a chosen file
-for large logs.
+Tab completes names; Up/Down selects command history. Ctrl+C interrupts a program and Ctrl+D sends end of input. Application keys keep their normal meaning.
+
+| Shortcut | Action |
+| --- | --- |
+| Ctrl+Shift+P | Terminal preferences |
+| Ctrl+Shift+E | Cycle character, word, both and disabled input echo |
+| Ctrl+Shift+A | Toggle new-output reading |
+| Ctrl+Shift+Space or Ctrl+Shift+F7 | Stop speech and clear its queue |
+| Ctrl+Shift+R / Ctrl+Shift+L | Read visible screen / cursor line |
+| Ctrl+Shift+Up/Down | Previous / next line of the output-history snapshot |
+| Ctrl+Shift+Home / Ctrl+Shift+End | First snapshot line / refresh and read the last line |
+| Shift+PageUp / Shift+PageDown | Scroll the terminal |
+| Ctrl+Tab, then Tab | Focus and navigate toolbar buttons |
+| Escape | Return focus to the terminal or cancel a dialog |
+| Ctrl+Shift+C / Ctrl+Shift+V | Copy / paste |
+| Shift+Insert | Paste the selection |
+| Ctrl+plus / Ctrl+minus | Change font size |
+| Ctrl+Shift+F6 | Next audio output |
+| Ctrl+Shift+F1 | Help |
+| Ctrl+Shift+Q | Request closure with confirmation |
+
+After Stop speech, automatic output stays stopped. Character echo continues, but typing alone does not clear the stopped state. Submitting a command with Enter, explicitly reading or resuming permits output again if automatic reading is enabled. Paused output reading discards the stale backlog. Reviewing a history snapshot does not move Bash's editing cursor.
+
+### Terminal preferences
+
+![Terminal preferences showing character echo, prompt, punctuation, speech queue, font and reading checkboxes](../images/terminal-settings.png)
+
+Choose «Настройки терминала» or press Ctrl+Shift+P. Tab/Shift+Tab move among spoken fields, arrows change selections and Space toggles checkboxes. «Сохранить» applies and saves; «Отмена» retains previous values. «Стандартные» fills the dialog with defaults, which must still be saved.
+
+| Preferences | Choices |
+| --- | --- |
+| Input echo | Characters, words, both, off |
+| Shell prompt | Once per window, after each command, off |
+| Command/output punctuation | Voice default, main symbols, all symbols |
+| Editing speech | Separate command-history, cursor character, deletion and Tab-completion controls |
+| Speech while typing | Interrupt the current utterance; announce capital letters |
+| Output and command reading | Separate new-output and submitted-command controls |
+| Speech queue | 20, 80 or 200 chunks; 200, 800 or 1600 characters per chunk |
+| Text | Font size from 9 to 28; 1000, 5000 or 20000 scrollback rows |
+| Text cursor | Block, I-beam or underline; blinking |
+| Other controls | Scroll on output, audible bell, middle-button paste, opening hint and shell-exit announcement |
+
+Preferences persist in `flashos/terminal.json` on FLASHBOOT, separately from `flashos/settings.json`; no application store is required. The voice, rate and volume come from FlashOS speech settings when opening the window. Input-echo, automatic-reading and quick font-size shortcuts also save their values. Save failures are spoken. Keep the USB connected until normal shutdown.
+
+Direct key echo applies while editing a Bash command. Input inside external programs is not intercepted; their text is available through output and screen review. Hidden program input is not spoken. Secrets entered as visible command text remain visible: disable input echo, submitted-command speech and automatic reading before entering them. Bash history and session metadata stay in RAM and are absent from the settings file; applications may save their own files. A bounded queue announces overflow; retained terminal text remains available for review. Use `less` or redirect to a chosen file for large logs.
+
+Multiline paste and closing an active session require confirmation. Closing the production session stops child processes. Store applications still use a separate user; configure their Orca speech in Utilities.

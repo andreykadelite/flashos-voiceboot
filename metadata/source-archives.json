@@ -4917,7 +4917,9 @@
         "bytes": 1325737,
         "sha256": "60dd315c07f616887caa029408308a018ace66e3d142726a97db164b3b8f69fb"
       }
-    ]
+    ],
+    "distribution": "local_packaging_inventory_not_release_asset",
+    "source_instructions": "docs/en/sources.md"
   },
   {
     "archive": "FlashOS-2026.09.09.3-upstream-sources.zip",
@@ -5142,7 +5144,9 @@
         "bytes": 688210,
         "sha256": "8fe9294755bf853e7f879bfb4b12a4c39512c20ea8801227ef043117c3ee09a3"
       }
-    ]
+    ],
+    "distribution": "local_packaging_inventory_not_release_asset",
+    "source_instructions": "docs/en/sources.md"
   },
   {
     "archive": "FlashOS-2026.10.12.1-hardware-sources.zip",
@@ -5333,7 +5337,9 @@
     ],
     "previous_archive_sha256": "c34bd21b2a6c0caf225dd9ffc8f31065010b01ae905dc2950cb23ff482fa89a4",
     "previous_archive_bytes": 635356805,
-    "repacked_from_verified_members": true
+    "repacked_from_verified_members": true,
+    "distribution": "local_packaging_inventory_not_release_asset",
+    "source_instructions": "docs/en/sources.md"
   },
   {
     "archive": "FlashOS-2026.10.12.2-applications-sources.zip",
@@ -7614,7 +7620,9 @@
     ],
     "previous_archive_sha256": "ce76719877fbbc78dc0d84e38b30a4a7d70a2676284603206115bede2809bca7",
     "previous_archive_bytes": 532330224,
-    "repacked_from_verified_members": true
+    "repacked_from_verified_members": true,
+    "distribution": "local_packaging_inventory_not_release_asset",
+    "source_instructions": "docs/en/sources.md"
   },
   {
     "archive": "FlashOS-2026.10.13.1-network-sources.zip",
@@ -7682,6 +7690,47 @@
         "sha256": "5ef9f0dfe37677f9433950081c12530a8793969a26bedec543e6725b5f8d0ea8"
       }
     ],
-    "publication_target_tag": "v2026.10.13.2-installer-1.0.8"
+    "distribution": "local_packaging_inventory_not_release_asset",
+    "source_instructions": "docs/en/sources.md",
+    "former_publication_target_tag": "v2026.10.13.2-installer-1.0.8"
+  },
+  {
+    "archive": "FlashOS-2026.10.27.1-accessibility-sources.zip",
+    "bytes": 228483,
+    "sha256": "716b3dc70908319ac490f1a3e1d0f98741762be221b7bce44329ebfe36daa905",
+    "files": [
+      {
+        "file": "xinput_1.6.4-1.dsc",
+        "bytes": 2104,
+        "sha256": "82702ee65c9c4841ac94d5147b6dbe787415b2b384d454cc67be825777e70494"
+      },
+      {
+        "file": "xinput_1.6.4.orig.tar.gz",
+        "bytes": 208172,
+        "sha256": "64e25434af1309ed0abca1ebebd035f7631bb0bc1bfac5decefe9aa98ccaf611"
+      },
+      {
+        "file": "xinput_1.6.4.orig.tar.gz.asc",
+        "bytes": 195,
+        "sha256": "f468c108ad04f627542f9616ce673f7acb82cd18addfe957a53c106d3976bc07"
+      },
+      {
+        "file": "xinput_1.6.4-1.diff.gz",
+        "bytes": 9228,
+        "sha256": "46bca29df4b607be80e6540beeb539ef3a51b53b794e301f4839b98c7b356d65"
+      },
+      {
+        "file": "metadata/sources.json",
+        "bytes": 1116,
+        "sha256": "edf2cf0958f718543b3459d705a6a5fa2ba0601f94985a3f039c27f87d8e2d14"
+      },
+      {
+        "file": "metadata/packages.json",
+        "bytes": 78206,
+        "sha256": "5e1d0f0d5428e69287ae6e1d3715b497ba0840f39ef12154f1b5839ae8af1698"
+      }
+    ],
+    "distribution": "local_packaging_inventory_not_release_asset",
+    "source_instructions": "docs/en/sources.md"
   }
 ]

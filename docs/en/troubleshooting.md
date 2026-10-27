@@ -8,7 +8,7 @@ Press F5, try another USB port and check Windows Disk Management. The installer 
 
 ## Windows reports an unknown publisher
 
-The EXE is unsigned. Get it from the [project release](https://github.com/andreykadelite/flashos-voiceboot/releases/latest). If needed, compare `Get-FileHash .\FlashOS-Setup.exe -Algorithm SHA256` with the file's digest in GitHub Releases. Checksums and technical reports are also included inside the system archive. Organisational Windows policies may block unsigned applications; FlashOS does not bypass them.
+The EXE is unsigned. Get it from the [project release](https://github.com/andreykadelite/flashos-voiceboot/releases/latest). If needed, compare `Get-FileHash .\FlashOS-Setup.exe -Algorithm SHA256` with the file's digest in GitHub Releases. Organisational Windows policies may block unsigned applications; FlashOS does not bypass them.
 
 ## A write failed or was cancelled
 
@@ -37,6 +37,20 @@ A missing interface needs the exact PCI/USB ID, driver binding and requested fir
 When booting after Windows, check its Fast Startup setting: ordinary shutdown with this enabled can retain hardware state. For comparison, hold Shift while choosing Shut down, then boot FlashOS. The [iwlwifi documentation describes this dual-boot factor](https://wireless.docs.kernel.org/en/latest/en/users/drivers/iwlwifi.html). It is a possible cause; a missing-interface message alone cannot establish the diagnosis.
 
 Clear hardware blocks using the switch/key or BIOS/UEFI setting. Firmware failures require that PC's kernel messages. Mention whether the issue persists after a full shutdown. A failed quick connection attempts to restore the previous connection; saved profiles and unrelated connections are retained.
+
+## The terminal does not echo characters or repeats the prompt
+
+Open the terminal and press Ctrl+Shift+P. Select characters or characters and words under input echo; Ctrl+Shift+E cycles the modes. Set the shell prompt to once per window. New-output reading has a separate checkbox and Ctrl+Shift+A shortcut. To avoid repeating the complete submitted command after Enter, turn off submitted-command speech. Choose «Сохранить» (Save).
+
+Hidden password input intentionally has no echo. After Ctrl+Shift+Space stops speech, the next command permits automatic reading again if enabled. Ctrl+Shift+R reads the screen and Ctrl+Shift+L the cursor line. For complete silence, check Ctrl+Shift+F6 in the terminal and global voice settings. Preferences live in `flashos/terminal.json` on FLASHBOOT. An invalid file produces a warning and uses defaults; saving writes a validated file again. Command contents are not stored there.
+
+If the prompt path is confusing, check it with `pwd`. This build restores missing HOME when starting from the service, and plain `cd` opens the home directory. Incorrectly abbreviating `/run` as `~/run` when HOME is empty has been fixed. If you manually changed or removed HOME inside Bash, use an explicit path or restore the intended value.
+
+## The cursor is hidden or touchpad behaviour is unexpected
+
+Return to the graphical FlashOS menu and press Ctrl+Alt+P. Open Utilities → Accessibility — cursor, mouse and touchpad. Hiding preserves clicks; physical devices are not disabled. All controls remain keyboard accessible. Check the primary-button preference: selecting right-primary makes the left button the secondary Back button.
+
+«Устройства и применение» reports detected devices and errors. Allow a few seconds after connecting a USB mouse. Saving cannot enable an unsupported hardware feature: the driver must expose its XInput/libinput properties. An external program may draw its own cursor with a different colour. For hardware failures, save Diagnostics → Drivers information and provide the model, USB/PS2/I2C connection and exact symptom. Virtual-machine checks do not establish compatibility with a particular touchpad.
 
 ## An ISO is missing or fails to boot
 

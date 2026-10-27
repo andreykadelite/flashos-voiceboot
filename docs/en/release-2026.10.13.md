@@ -2,6 +2,8 @@
 
 [Русский](../ru/release-2026.10.13.md) · [Home](../../README.en.md)
 
+Historical release description. The system and source ZIP/7z archives mentioned below are no longer uploaded to releases. For the current version, use the [EXE](https://github.com/andreykadelite/flashos-voiceboot/releases/latest), [component source instructions](sources.md) and [build instructions](build.md).
+
 This release replaces FlashOS 2026.09.12.1 with installer 1.0.4. It adds a
 Debian application store, persistent applications on USB and Orca speech
 for external applications that support AT-SPI.

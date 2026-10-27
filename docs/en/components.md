@@ -2,7 +2,7 @@
 
 [Русский](../ru/components.md) · [Home](../../README.en.md)
 
-FlashOS 2026.10.22.2; installer 1.0.10. Build and verification results are recorded in the [report](testing.md). Exact Linux binary versions are in [packages.tsv](../../metadata/packages.tsv); their source-package mapping is in [debian-packages.json](../../metadata/debian-packages.json).
+FlashOS 2026.10.27.1; installer 1.0.11. Build and verification results are recorded in the [report](testing.md). Exact Linux binary versions are in [packages.tsv](../../metadata/packages.tsv); their source-package mapping is in [debian-packages.json](../../metadata/debian-packages.json).
 
 | Component | Version | Purpose |
 | --- | --- | --- |
@@ -10,6 +10,7 @@ FlashOS 2026.10.22.2; installer 1.0.10. Build and verification results are recor
 | Booted Linux kernel | 7.2.6-1~bpo13+1 | Drivers and hardware access |
 | Ventoy | 1.1.17 | BIOS/UEFI and ISO boot |
 | GTK / VTE / Bash | 3.24.49 / 0.80.1 / 5.2.37 | Full spoken terminal in the live system |
+| XInput / libinput / Xorg input driver | 1.6.4-1 / 1.28.1-1+deb13u1 / 1.5.0-1 | Supported mouse and touchpad preferences |
 | RHVoice | 1.18.4 | Menu and Orca speech; Elena by default |
 | eSpeak NG | 1.52.0+dfsg-5 | Menu fallback and available Orca synthesizer |
 | Orca | 48.1-1+deb13u2 | External application screen reader |

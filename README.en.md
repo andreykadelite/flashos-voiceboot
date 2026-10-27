@@ -6,11 +6,13 @@ A talking multiboot USB system and a standalone Windows installer, in one reposi
 
 Copy your `.iso` files into the USB drive's `iso` folder. At each boot, FlashOS scans the folder, reads the available choices aloud and prepares the selected image for Ventoy. Adding or deleting an ISO requires no configuration changes.
 
-**[Download the Windows EXE](https://github.com/andreykadelite/flashos-voiceboot/releases/latest/download/FlashOS-Setup.exe)** · [All release files](https://github.com/andreykadelite/flashos-voiceboot/releases/latest) · [User guide](docs/en/guide.md) · [What’s new](docs/en/release-2026.10.22.md)
+**[Download the published Windows EXE](https://github.com/andreykadelite/flashos-voiceboot/releases/latest/download/FlashOS-Setup.exe)** · [Published release files](https://github.com/andreykadelite/flashos-voiceboot/releases/latest) · [User guide](docs/en/guide.md) · [What’s new](docs/en/release-2026.10.27.md)
 
-Current release: FlashOS **2026.10.22.2**, installer **1.0.10**.
+Current release: FlashOS **2026.10.27.1**, installer **1.0.11**. The [release](https://github.com/andreykadelite/flashos-voiceboot/releases/tag/v2026.10.27.1-installer-1.0.11) provides `FlashOS-Setup.exe`; [source code and documentation](https://github.com/andreykadelite/flashos-voiceboot/tree/v2026.10.27.1-installer-1.0.11) are available in the repository at tag `v2026.10.27.1-installer-1.0.11`.
 
-The Tools menu includes a [spoken system terminal](docs/en/guide.md#spoken-system-terminal): full Bash with history, Tab completion and normal application keys. Read the screen or individual lines, choose input echo, toggle automatic output reading and stop speech. The terminal runs graphically as root in the live system; it needs no application-store setup or internet connection.
+The Tools menu includes a [spoken system terminal](docs/en/guide.md#spoken-system-terminal): typed characters are spoken, the shell prompt is read once by default, and subsequent automatic speech reads new output. Separate input, output and reading preferences persist on USB. Full Bash provides history, Tab completion, screen and line review. The terminal runs graphically as root in the live system; it needs no application-store setup or internet connection.
+
+Utilities adds [cursor, mouse and touchpad controls](docs/en/guide.md#cursor-mouse-and-touchpad): pointer visibility, size and outlined colour, speed, buttons, scrolling and supported touchpad features. Values persist on USB. Menu clicks, wheel navigation and action buttons complement full keyboard operation.
 
 The store recovers interrupted operations, checks dependency files and available space before unpacking, and updates dependencies from their selected sources. Search covers package names and full descriptions. Diagnostics distinguish unavailable logs from logs without errors, account for service failures and reject invalid sensor readings. SHA256 checks use the entry for the selected ISO.
 
@@ -82,10 +84,10 @@ The EXE is currently unsigned. Download it from the project release page.
 - [Using FlashOS](docs/en/guide.md) · [Windows installer](docs/en/installer.md)
 - [Building both parts](docs/en/build.md) · [Architecture](docs/en/architecture.md)
 - [Troubleshooting](docs/en/troubleshooting.md)
-- [Components and versions](docs/en/components.md) · [Licenses and source archives](THIRD-PARTY.md)
+- [Components and versions](docs/en/components.md) · [Component licenses](THIRD-PARTY.md) · [Obtaining source](docs/en/sources.md)
 - [Contributing](CONTRIBUTING.md) · [Change log](CHANGELOG.md)
 
-`src/` holds the talking system; `installer/` holds the Qt application and Windows writer; `boot/` holds boot configuration. `build/`, `tools/` and `tests/` contain the build scripts and checks. Large system files and the EXE are release assets, not Git history.
+`src/` holds the talking system; `installer/` holds the Qt application and Windows writer; `boot/` holds boot configuration. `build/`, `tools/` and `tests/` contain the build scripts and checks. Releases provide the EXE; large generated build files stay outside Git history.
 
 ## Author and license
 

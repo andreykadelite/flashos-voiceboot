@@ -1,0 +1,20 @@
+[
+  {
+    "file": "openssl-3.0.16.tar.gz",
+    "url": "https://codeload.github.com/openssl/openssl/tar.gz/refs/tags/openssl-3.0.16",
+    "bytes": 15486066,
+    "sha256": "9642aa3d97ac37da45dadabb3b576f399016acdb1df5d0e2751733e1cdf9f328"
+  },
+  {
+    "file": "libffi-3.4.4.tar.gz",
+    "url": "https://codeload.github.com/libffi/libffi/tar.gz/refs/tags/v3.4.4",
+    "bytes": 574196,
+    "sha256": "828639972716ed18833df7b659b32060591fe0eb625a8d34078920d33c2dc867"
+  },
+  {
+    "file": "nuitka-4.2.1.tar.gz",
+    "url": "https://files.pythonhosted.org/packages/c7/ce/38409fc853cc26d86ab71ccd53f7dfddbc7a84d4821b9b54db428b35779b/nuitka-4.2.1.tar.gz",
+    "bytes": 4632551,
+    "sha256": "815c6e571a7a6424af384fe9d95d4ba38f1634d39a5515e8094d7fbfa090cbcb"
+  }
+]

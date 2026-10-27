@@ -5,7 +5,7 @@
 В этом выпуске появился самостоятельный терминал с озвучкой команд и вывода.
 Улучшены работа магазина приложений, диагностика и обработка ошибок установщика.
 
-**[Скачать FlashOS-Setup.exe](https://github.com/andreykadelite/flashos-voiceboot/releases/latest/download/FlashOS-Setup.exe)** · [Все файлы выпуска](https://github.com/andreykadelite/flashos-voiceboot/releases/latest)
+**[Скачать FlashOS-Setup.exe](https://github.com/andreykadelite/flashos-voiceboot/releases/download/v2026.10.13.2-installer-1.0.8/FlashOS-Setup.exe)** · [Все файлы выпуска](https://github.com/andreykadelite/flashos-voiceboot/releases/tag/v2026.10.13.2-installer-1.0.8)
 
 ## Терминал с озвучкой
 
@@ -69,13 +69,15 @@ FlashOS, загрузчики, драйверы и голоса. Python, Qt и �
 сохраните ISO, документы, настройки и файл хранилища приложений `store.ext4`
 на другом носителе. [Пошаговая инструкция](installer.md).
 
-- `FlashOS-Setup.exe` — готовый установщик для Windows x64.
-- `FlashOS-2026.10.22.2-system.7z` — подготовленное дерево системы для сборки EXE.
-  Это не ISO и не образ для записи через Rufus или dd.
-- `FlashOS-2026.10.22.2-source.zip` — исходники проекта и документация.
-- Остальные пять архивов `sources.zip` — исходники сторонних компонентов.
-  Даты в их именах обозначают происхождение комплектов; эти компоненты входят
-  и в текущий выпуск. [Лицензии и состав исходников](../../THIRD-PARTY.md).
+27 октября 2026 года при публикации нового выпуска из этого релиза сняты
+загруженные архивы `FlashOS-2026.10.22.2-system.7z`,
+`FlashOS-2026.10.22.2-source.zip` и пять архивов сторонних исходников.
+[EXE установщика 1.0.10](https://github.com/andreykadelite/flashos-voiceboot/releases/download/v2026.10.13.2-installer-1.0.8/FlashOS-Setup.exe) сохранён.
+Исходники проекта и документация этой версии доступны в репозитории по
+[тегу `v2026.10.22.2-installer-1.0.10`](https://github.com/andreykadelite/flashos-voiceboot/tree/v2026.10.22.2-installer-1.0.10).
+Для самостоятельной сборки используйте checkout нужного тега и полную
+[сборку Linux-системы и EXE](build.md). Соответствующие сторонние исходники
+описаны в [THIRD-PARTY](../../THIRD-PARTY.md).
 
 ## Совместимость
 

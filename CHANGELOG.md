@@ -1,5 +1,16 @@
 # Изменения / Change log
 
+## FlashOS 2026.10.27.1 · Установщик / Installer 1.0.11 — 2026-10-27
+
+Исправлено эхо набираемых символов терминала; приглашение Bash по умолчанию читается один раз, новый вывод отделён от редактируемой команды. Добавлен озвучиваемый диалог Ctrl+Shift+P с 22 параметрами речи, истории и отображения, сохраняемыми в `flashos/terminal.json` на FLASHBOOT. Переключатели эха, авточтения и масштаба также сохраняются. Скрытый ввод не читается.
+
+В «Утилитах» появились 15 параметров курсора, мыши и тачпада: видимость, размер и цвет, скорость, ускорение, кнопки, прокрутка, касание, перетаскивание и защита при печати. Значения сохраняются в разделе `pointer` общих настроек. Добавлены кнопки навигации, прокрутка мышью/тачпадом и восстановление видимости Ctrl+Alt+P в меню. Возможности устройств проверяются перед применением. Добавлен xinput; проверка образа охватывает входные модули и библиотеки указателя.
+
+Fixed terminal character echo and repeated prompts; added 22 persistent terminal preferences and 15 pointer/mouse/touchpad controls, menu action buttons and capability-aware XInput application. Preferences remain on USB. Source code and documentation are available at tag `v2026.10.27.1-installer-1.0.11`; the release asset is `FlashOS-Setup.exe`.
+
+[Описание выпуска / Release notes](docs/ru/release-2026.10.27.md) · [English](docs/en/release-2026.10.27.md).
+
+
 ## FlashOS 2026.10.22.2 · Установщик / Installer 1.0.10 — 2026-10-23
 
 В «Инструментах» появился самостоятельный GTK/VTE-терминал live-системы:
